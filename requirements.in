@@ -1,0 +1,10 @@
+## --- Geometry ---
+# For representing arbitrary polygon vertices without metadata
+shapely
+
+## --- Data managers ---
+# Raster image library
+rasterio
+
+# OGR files
+fiona

@@ -1,0 +1,22 @@
+# --- Requirements for development and tests. ---
+
+# Library requirements must also be available during development
+-r requirements.txt
+
+# Code linting using flake8 with extensions
+-r requirements-flake8.txt
+
+# Type linting
+mypy
+
+# For locking dependencies
+pip-tools
+
+# Main testing framework 
+pytest
+
+# Run flake8 as part of the pytest test suite
+pytest-flake8
+
+# Run mypy as part of the pytest test suite
+pytest-mypy
