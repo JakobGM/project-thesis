@@ -1,0 +1,102 @@
+# Sample sizes of Trondheim dataset
+
+* 70.082 individual buildings.
+* 47.853 cadastral plots.
+* 39.049 cadastral plots containing buildings.
+  * Q1/Q2/Q3: 375/674/1121 m^2
+  * Mean: 6862 m^2
+
+# Cadastre bounding box
+
+## Distribution of pixels size in cadastre bounding box
+
+The bounding box is forced to have no angular orientation
+with respect to the north-bound direction.
+
+```{r}
+library(tidyverse)
+bbox_stats <- read_delim("../data/bbox_stats.csv", delim=",")
+bbox_stats %>%
+  filter(area < quantile(area, 0.95)) %>%
+  ggplot() +
+    aes(x = sqrt(area * 16)) +
+    geom_histogram(binwidth=4) +
+    geom_vline(
+      aes(
+        xintercept = median(sqrt(area * 16))
+      )
+    ) +
+    xlab("sqrt(total pixels)")
+```
+
+## Distribution of width and height of cadastre bounding box in pixels
+
+```{r}
+bbox_stats %>%
+  gather(key, value, width, height) %>%
+  filter(value < quantile(value, 0.95)) %>%
+  ggplot() +
+    aes(x = value * 4) +
+    geom_histogram(binwidth=1) +
+    geom_vline(
+      aes(
+        xintercept = median(value * 4)
+      )
+    ) +
+    facet_wrap(~key) +
+    xlab("Pixels")
+```
+
+# Cadastre minimal rectangle
+
+The minimal rectangle can have arbitrary orientations.
+
+## Distribution of pixels size in cadastre minimal oriented rectangle
+
+```{r}
+library(tidyverse)
+minrec_stats <- read_delim("../data/minrec_stats.csv", delim=",")
+minrec_stats %>%
+  filter(area < quantile(area, 0.95)) %>%
+  ggplot() +
+    aes(x = sqrt(area * 16)) +
+    geom_histogram(binwidth=4) +
+    geom_vline(
+      aes(
+        xintercept = median(sqrt(area * 16))
+      )
+    ) +
+    xlab("sqrt(total pixels)")
+```
+
+## Distribution of width and height of cadastre minimal rectangle
+
+```{r}
+minrec_stats %>%
+  gather(key, value, width, height) %>%
+  filter(value < quantile(value, 0.95)) %>%
+  ggplot() +
+    aes(x = value * 4) +
+    geom_histogram(binwidth=1) +
+    geom_vline(
+      aes(
+        xintercept = median(value * 4)
+      )
+    ) +
+    facet_wrap(~key) +
+    xlab("Pixels")
+```
+
+## Distribution of orientation
+
+```{r}
+minrec_stats %>%
+  ggplot() +
+    aes(x = angle * pi / 180, y = ..density..) +
+    geom_histogram(binwidth=1) +
+    coord_polar(start = pi) +
+    theme(
+      aspect.ratio = 1
+    )
+```
+
