@@ -20,3 +20,12 @@ pytest-flake8
 
 # Run mypy as part of the pytest test suite
 pytest-mypy
+
+# Better python REPL
+ipython
+
+# Interactive notebook for experimentation
+jupyterlab
+
+# Progressbars in terminal and jupyter notebooks
+ipypb
