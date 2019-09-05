@@ -1,0 +1,35 @@
+% Add support for UTF-8 character set for those engines that do not support it natively.
+\usepackage[utf8]{inputenc}
+
+% Very common math environments such as \begin{align}, and much, much more.
+% Docs: http://texdoc.net/texmf-dist/doc/latex/amsmath/amsldoc.pdf
+\usepackage{amsmath}
+
+% Extended symbol collection
+\usepackage{amssymb}
+
+% Enhanced version of \newtheorem{}, which also allows non-numbered theorems.
+\usepackage{amsthm}
+
+% Add \od{}{} for ordinary derivatives, \pd{}{} for partial derivatives, and \del{} for delimiters.
+% Docs: http://ctan.math.washington.edu/tex-archive/macros/latex/contrib/commath/commath.pdf
+\usepackage{commath}
+
+% Allows definition of colors using \definecolor{}{}{}
+\usepackage{xcolor}
+
+% For including source code with syntax highlighting.
+% Docs: https://github.com/gpoore/minted/blob/master/source/minted.pdf
+\usepackage{minted}
+% Enables the use of \begin{pythoncode}
+\newminted{python}{python3=true}
+% Enables the use of \begin{shellcode}
+\definecolor{bgshell}{rgb}{0.95,0.95,0.95}
+\newminted{shell}{bgcolor=bgshell,fontfamily=tt}
+
+% Sitation management.
+% Docs: http://ctan.uib.no/macros/latex/contrib/biblatex/doc/biblatex.pdf
+% Tutorial: https://www.overleaf.com/learn/latex/Articles/Getting_started_with_BibLaTeX
+\usepackage[style=numeric,backend=biber]{biblatex}
+% Specify file containing all bibliographic metadata.
+\addbibresource{bibliography.bib}

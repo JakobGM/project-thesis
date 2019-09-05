@@ -1,0 +1,8 @@
+According to \cite{hame_shapefile_2019} GPKG is to be preferred for vectorized data.
+
+\begin{shellcode}
+  ogr2ogr \
+    -f "GPKG" \
+    "buildings.gpkg" \
+    "Basisdata_5001_Trondheim_5972_FKB-Bygning_GML.gml"
+\end{shellcode}
