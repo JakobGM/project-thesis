@@ -4,7 +4,7 @@ from typing import Dict
 
 import fiona
 
-from shapely.geometry import Polygon, shape
+from shapely.geometry import MultiPolygon, Polygon, shape
 
 
 def fiona_polygon(fiona_item: Dict) -> Polygon:
@@ -24,3 +24,11 @@ def fetch_cadastre(path: Path, index: int) -> Polygon:
         assert srid == 25832
         item = src[index + 1]
         return fiona_polygon(item)
+
+
+def fetch_buildings(path: Path) -> MultiPolygon:
+    """Fetch all buildings from dataset."""
+    with fiona.open(path, layer="Bygning") as src:
+        srid = int(src.crs["init"].split(":")[1])
+        assert srid == 25832
+        return MultiPolygon([fiona_polygon(item) for item in src])
