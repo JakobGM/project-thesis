@@ -1,5 +1,22 @@
 """Implementation of U-Net in Tensorflow v2."""
-from tensorflow.keras import Model, activations, initializers, layers
+# Silence verbose logging in Tensorflow
+import os
+from pathlib import Path
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+from matplotlib import pyplot as plt
+
+import numpy as np
+
+import tensorflow as tf
+from tensorflow.keras import (
+    Model,
+    activations,
+    callbacks,
+    initializers,
+    layers,
+)
 
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
@@ -81,4 +98,57 @@ outputs = layers.Conv2D(
 
 model = Model(inputs=[inputs], outputs=[outputs])
 model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
-model.summary()
+# model.summary()
+
+early_stopper = callbacks.EarlyStopping(patience=15, verbose=1)
+checkpointer = callbacks.ModelCheckpoint("model_unet_checkpoint.h5", verbose=1, save_best_only=True)
+
+
+class Dataset:
+    directory = Path("~/dev/project-thesis/data/nuclei").expanduser()
+
+    def __init__(self):
+        assert self.directory.exists()
+        self.samples = list((self.directory / "train").iterdir())
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        image_path = next((self.samples[index] / "images").iterdir())
+        raw_image = tf.io.read_file(str(image_path))
+        image_tensor = tf.image.decode_image(raw_image)
+        image_tensor /= 255
+        image_tensor = tf.image.resize(
+            tf.expand_dims(image_tensor, -1),
+            shape=(256, 256),
+        )
+
+        mask_paths = list((self.samples[index] / "masks").iterdir())
+        raw_masks = [tf.io.read_file(str(mask_path)) for mask_path in mask_paths]
+        mask_tensors = [tf.image.decode_image(raw_mask) for raw_mask in raw_masks]
+        mask_tensor = tf.squeeze(tf.add_n(mask_tensors) / 255)
+        mask_tensor = tf.image.resize(
+            tf.expand_dims(mask_tensor, -1),
+            shape=(256, 256),
+        )
+        return image_tensor, mask_tensor
+
+    def data(self):
+        images, masks = [], []
+        for image, mask in self:
+            images.append(image)
+            masks.append(mask)
+        return tf.data.Dataset.from_tensor_slices((images, masks))
+
+    def display(self, index):
+        image_tensor, mask_tensor = self[index]
+
+        plt.figure(figsize=(15, 15))
+        plt.subplot(1, 2, 1)
+        plt.imshow(image_tensor.numpy())
+        plt.subplot(1, 2, 2)
+        plt.imshow(mask_tensor.numpy())
+        plt.show()
+
+
