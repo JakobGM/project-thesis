@@ -29,3 +29,6 @@ jupyterlab
 
 # Progressbars in terminal and jupyter notebooks
 ipypb
+
+# Plotting library
+matplotlib

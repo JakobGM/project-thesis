@@ -10,7 +10,7 @@ from tensorflow.keras.utils import Sequence
 
 
 class Dataset(Sequence):
-    directory = Path("~/dev/project-thesis/data/nuclei").expanduser()
+    directory = Path("/code/data/nuclei")
     IMG_HEIGHT = 256
     IMG_WIDTH = 256
     IMG_CHANNELS = 4
@@ -83,25 +83,3 @@ class Dataset(Sequence):
         plt.subplot(1, 2, 2)
         plt.imshow(tf.squeeze(mask_tensor).numpy())
         plt.show()
-
-    def generator(self):
-        for inputs, targets in self:
-            yield inputs, targets
-
-    def tf_dataset(self):
-        return tf.data.Dataset.from_generator(
-            generator=self.generator,
-            output_types=(tf.float32, tf.float32),
-            output_shapes=((256, 256), (256, 256)),
-        )
-
-    def xy(self):
-        sample_size = len(self)
-        x_train = np.zeros(shape=(sample_size, 256, 256, 4))
-        y_train = np.zeros(shape=(sample_size, 256, 256, 1))
-
-        for index, (inputs, target) in enumerate(self):
-            x_train[index, :, :, :] = inputs.numpy()
-            y_train[index, :, :, 0] = target.numpy().reshape(256, 256)
-
-        return x_train, y_train
