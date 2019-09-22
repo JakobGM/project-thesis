@@ -8,3 +8,6 @@ rasterio
 
 # OGR files
 fiona
+
+# For image handling
+scikit-image

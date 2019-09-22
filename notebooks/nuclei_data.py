@@ -119,7 +119,7 @@ class Dataset(Sequence):
         prediction_ax.set_title("Prediction")
         if prediction is not None:
             prediction_ax.imshow(
-                prediction.reshape(self.IMG_HEIGHT, self.IMG_WIDTH),
+                prediction.reshape(self.IMG_HEIGHT, self.IMG_WIDTH).round(),
             )
         else:
             prediction_ax.imshow(np.ones_like(image_tensor.numpy()))
