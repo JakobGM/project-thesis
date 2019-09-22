@@ -22,6 +22,10 @@ EXPOSE 8888
 # Copy over jupyter lab startup script and use it as the default container command
 COPY ./.docker/jupyter/jupyter-entrypoint.sh /jupyter-entrypoint.sh
 
+# Install vim keybindings for jupyter lab
+RUN apt-get update && apt-get install -y nodejs npm
+RUN jupyter labextension install jupyterlab_vim
+
 # Add volume mount point for source code
 RUN mkdir /code
 VOLUME ["/code"]
