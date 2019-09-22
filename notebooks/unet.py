@@ -6,6 +6,7 @@ from tensorflow.keras import (
     callbacks,
     initializers,
     layers,
+    metrics,
 )
 
 IMG_HEIGHT = 256
@@ -87,7 +88,12 @@ outputs = layers.Conv2D(
 )(decoder_1)
 
 model = Model(inputs=[inputs], outputs=[outputs])
-model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+
+model.compile(
+    optimizer="adam",
+    loss="binary_crossentropy",
+    metrics=[metrics.MeanIoU(num_classes=2)],
+)
 # model.summary()
 
 early_stopper = callbacks.EarlyStopping(patience=15, verbose=1)
