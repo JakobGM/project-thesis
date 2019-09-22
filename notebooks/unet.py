@@ -1,12 +1,5 @@
 """Implementation of U-Net in Tensorflow v2."""
 # Silence verbose logging in Tensorflow
-from pathlib import Path
-
-from matplotlib import pyplot as plt
-
-import numpy as np
-
-import tensorflow as tf
 from tensorflow.keras import (
     Model,
     activations,
@@ -17,7 +10,7 @@ from tensorflow.keras import (
 
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
-IMG_CHANNELS = 4
+IMG_CHANNELS = 3
 
 inputs = layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
 normalized_inputs = layers.Lambda(lambda x: x / 255)(inputs)
