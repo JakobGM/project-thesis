@@ -22,6 +22,7 @@ class Dataset(Sequence):
         self.samples = list(self.directory.iterdir())
         self.num_samples = len(self.samples)
         self.with_mask = with_mask
+        self._cache = {}
 
     def __len__(self):
         """Return number of batches."""
@@ -29,6 +30,9 @@ class Dataset(Sequence):
 
     def __getitem__(self, index):
         """Return batch."""
+        if index in self._cache:
+            return self._cache[index]
+
         start_index = index * self.batch_size
         end_index = (index + 1) * self.batch_size
         inputs = np.zeros(
@@ -53,12 +57,14 @@ class Dataset(Sequence):
                 inputs[batch_index] = input.numpy()
                 targets[batch_index] = target.numpy()
 
+            self._cache[index] = (inputs, targets)
             return inputs, targets
         else:
             for batch_index, img_index in enumerate(range(start_index, end_index)):
                 input = self.image(index=img_index)
                 inputs[batch_index] = input.numpy()
 
+            self._cache[index] = inputs
             return inputs
 
     def image(self, index):
