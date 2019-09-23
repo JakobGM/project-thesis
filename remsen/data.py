@@ -79,7 +79,7 @@ class Dataset:
         with rasterio.open(self.lidar_path) as src:
             assert str(src.crs["proj"]) == "utm" and int(src.crs["zone"]) == 32
             cropped_data, affine_transformation = mask(
-                src, shapes=[cadastre], all_touched=True, crop=True
+                src, shapes=[cadastre], all_touched=True, crop=True, filled=False
             )
 
             metadata = src.meta.copy()
