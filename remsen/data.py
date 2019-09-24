@@ -1,5 +1,6 @@
 """Module responsible for fetching, pre-processing, and preparing data."""
 import math
+import pickle
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
@@ -43,9 +44,10 @@ class Dataset:
 
     def __init__(
         self,
-        buildings_path: Path,
-        cadastre_path: Path,
-        lidar_path: Path,
+        buildings_path: Path = Path("data/building.gpkg"),
+        cadastre_path: Path = Path("data/cadastre.gpkg"),
+        lidar_path: Path = Path("data/lidar.vrt"),
+        cache_dir: Path = Path(".cache/"),
     ) -> None:
         """Censtruct dataset."""
         assert buildings_path.exists()
@@ -57,6 +59,9 @@ class Dataset:
         assert lidar_path.exists()
         self.lidar_path = lidar_path
 
+        self.cache_dir = cache_dir
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
     def cadastre(self, index: int) -> Polygon:
         """Fetch cadastre from dataset."""
         with fiona.open(self.cadastre_path, layer="Teig") as src:
@@ -67,16 +72,27 @@ class Dataset:
 
     def buildings(self) -> MultiPolygon:
         """Fetch all buildings from dataset."""
+        buildings_cache = self.cache_dir / "fixed_buildings.pkl"
         if hasattr(self, "_buildings"):
+            # In-memory cache
+            return self._buildings
+        elif buildings_cache.exists():
+            # On-disk cache
+            self._buildings = pickle.loads(buildings_cache.read_bytes())
+            return self._buildings
+        else:
+            # Populate both caches with buffer-fixed buildings
+            with fiona.open(self.buildings_path, "r", layer="Bygning") as src:
+                srid = int(src.crs["init"].split(":")[1])
+                assert srid == 25832
+                buildings = MultiPolygon([fiona_polygon(item) for item in src])
+                self._buildings = buildings.buffer(0.0)
+
+            buildings_cache.write_bytes(
+                pickle.dumps(self._buildings, protocol=pickle.HIGHEST_PROTOCOL),
+            )
             return self._buildings
 
-        with fiona.open(self.buildings_path, layer="Bygning") as src:
-            srid = int(src.crs["init"].split(":")[1])
-            assert srid == 25832
-            buildings = MultiPolygon([fiona_polygon(item) for item in src])
-            self._buildings = buildings.buffer(0.0)
-
-        return self._buildings
 
     def building(self, index: int) -> Polygon:
         """Fetch specific building from dataset."""
