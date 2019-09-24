@@ -267,12 +267,10 @@ class Dataset:
         masks = []
         for cadastre_index in irange(index.start, index.stop):
             image, mask = self.tiles(cadastre_index=cadastre_index)
-            images.append(np.squeeze(image))
-            masks.append(np.squeeze(mask))
+            images.append(image)
+            masks.append(mask)
 
-        images = np.array(images)
-        masks = np.array(masks)
         return (
-            tf.convert_to_tensor(np.expand_dims(images, -1)),
-            tf.convert_to_tensor(np.expand_dims(masks, -1)),
+            np.expand_dims(np.concatenate(images, axis=0), -1),
+            np.expand_dims(np.concatenate(masks, axis=0), -1),
         )
