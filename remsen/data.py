@@ -1,10 +1,11 @@
 """Module responsible for fetching, pre-processing, and preparing data."""
-import math
 import pickle
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
 import fiona
+
+import h5py
 
 from ipypb import irange
 
@@ -260,7 +261,7 @@ class Dataset:
     def generator(self):
         def _generator():
             for index in range(0, 1_000_000):
-                for lidar_array, building_array in zip(*self.tiles(index)):
+                for lidar_array, building_array in zip(*self.tiles_cache(index)):
                     yield np.expand_dims(lidar_array, -1), building_array
 
         return _generator
@@ -275,10 +276,95 @@ class Dataset:
             args=None,
         )
 
+    def build_tile_cache(self, batches: int = None, batch_size: int = 64):
+        """
+        Construct tile cache by preprocessing cadastral data.
+
+        cadastral_offsets[cadastral_index] = (first_tile_index, last_tile_index)
+        """
+        # H5PY cache file
+        array_cache = Path(".cache/arrays.h5")
+
+        if array_cache.exists():
+            # The cache already exists, retrieve existing values
+            with h5py.File(array_cache, "r") as h5_handler:
+                images = [*h5_handler["tiles/lidar"][:]]
+                masks = [*h5_handler["tiles/buildings"][:]]
+                cadastral_offsets = h5_handler["tiles/cadastral_offsets"][:].tolist()
+
+                # First cadastre to retrieve
+                cadastre_index_start = len(cadastral_offsets)
+
+                # First tile number to store
+                tile_number = len(images) - 1
+        else:
+            images = []
+            masks = []
+            cadastral_offsets = []
+
+            # We start with the first cadastral index
+            cadastre_index_start = 0
+
+            # And the first tile
+            tile_number = 0
+
+        # Batch loop
+        for _ in range(batches or 1_000_000):
+            # Cadastre loop
+            for cadastre_index in irange(
+                    cadastre_index_start, cadastre_index_start + batch_size,
+            ):
+                image_tiles, mask_tiles, (height, width) = self.tiles(
+                    cadastre_index=cadastre_index, with_tile_dimensions=True
+                )
+                cadastral_offsets.append([
+                    tile_number,
+                    tile_number + len(image_tiles) - 1,
+                    height,
+                    width,
+                ])
+                images.extend(image_tiles)
+                masks.extend(mask_tiles)
+
+                tile_number += len(image_tiles)
+
+            with h5py.File(array_cache, "w") as h5_handler:
+                h5_handler["tiles/lidar"] = np.array(images)
+                h5_handler["tiles/buildings"] = np.array(masks)
+                h5_handler["tiles/cadastral_offsets"] = np.array(cadastral_offsets)
+
+            cadastre_index_start += batch_size
+
+    def tiles_cache(
+        self,
+        cadastre_index,
+        with_tile_dimensions: bool = False,
+    ) -> np.ndarray:
+        array_cache = Path(".cache/arrays.h5")
+        if not hasattr(self, "_images"):
+            with h5py.File(array_cache, "r") as h5_handler:
+                self._images = np.array(h5_handler["tiles/lidar"][:])
+                self._masks = np.array(h5_handler["tiles/buildings"][:])
+                self._cadastral_offsets = np.array(h5_handler["tiles/cadastral_offsets"][:])
+
+        start_index, stop_index, *tile_dimensions = self._cadastral_offsets[cadastre_index]
+        lidar_tiles = self._images[start_index:stop_index + 1]
+        building_tiles = self._masks[start_index:stop_index + 1]
+
+        if with_tile_dimensions:
+            return lidar_tiles, building_tiles, tile_dimensions
+        return lidar_tiles, building_tiles
+
     def __len__(self) -> int:
         return len(self.buildings())
 
     def __getitem__(self, index):
+        """
+        Return LiDAR tiles and masks for the given cadastrals.
+
+        Returns a two tuple of two np.ndarrays, the first being all the LiDAR
+        tiles, the second being the building masks.
+        """
         images = []
         masks = []
         for cadastre_index in irange(index.start, index.stop):
