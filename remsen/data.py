@@ -62,6 +62,9 @@ class Dataset:
 
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_index_path = cache_dir / "cache_index.pkl"
+        self.tile_cache_path = cache_dir / "tiles"
+        self.tile_cache_path.mkdir(parents=True, exist_ok=True)
 
     def cadastre(self, index: int) -> Polygon:
         """Fetch cadastre from dataset."""
@@ -276,83 +279,89 @@ class Dataset:
             args=None,
         )
 
-    def build_tile_cache(self, batches: int = None, batch_size: int = 64):
+    def build_tile_cache(self, number_of_cadastre: int):
         """
         Construct tile cache by preprocessing cadastral data.
 
         cadastral_offsets[cadastral_index] = (first_tile_index, last_tile_index)
         """
+        def save_cache_index(cache_index):
+            self.cache_index_path.write_bytes(pickle.dumps(
+                cache_index,
+                protocol=pickle.HIGHEST_PROTOCOL,
+                fix_imports=False,
+            ))
+
         # H5PY cache file
-        array_cache = Path(".cache/arrays.h5")
-
-        if array_cache.exists():
-            # The cache already exists, retrieve existing values
-            with h5py.File(array_cache, "r") as h5_handler:
-                images = [*h5_handler["tiles/lidar"][:]]
-                masks = [*h5_handler["tiles/buildings"][:]]
-                cadastral_offsets = h5_handler["tiles/cadastral_offsets"][:].tolist()
-
-                # First cadastre to retrieve
-                cadastre_index_start = len(cadastral_offsets)
-
-                # First tile number to store
-                tile_number = len(images) - 1
+        # cache_index_path.unlink()
+        if self.cache_index_path.exists():
+            print("Importing cache index")
+            cache_index = pickle.loads(
+                self.cache_index_path.read_bytes(),
+                fix_imports=False,
+            )
         else:
-            images = []
-            masks = []
-            cadastral_offsets = []
+            print("Creating new cache index")
+            cache_index = {}
+            save_cache_index(cache_index)
 
-            # We start with the first cadastral index
-            cadastre_index_start = 0
+        cadastre_index_start = max(cache_index.keys() or [-1]) + 1
+        print(cadastre_index_start)
 
-            # And the first tile
-            tile_number = 0
-
-        # Batch loop
-        for _ in range(batches or 1_000_000):
-            # Cadastre loop
-            for cadastre_index in irange(
-                    cadastre_index_start, cadastre_index_start + batch_size,
-            ):
+        for cadastre_index in irange(
+            cadastre_index_start, cadastre_index_start + number_of_cadastre
+        ):
+            try:
                 image_tiles, mask_tiles, (height, width) = self.tiles(
                     cadastre_index=cadastre_index, with_tile_dimensions=True
                 )
-                cadastral_offsets.append([
-                    tile_number,
-                    tile_number + len(image_tiles) - 1,
-                    height,
-                    width,
-                ])
-                images.extend(image_tiles)
-                masks.extend(mask_tiles)
+                cache_path = self.tile_cache_path / f"{cadastre_index:07d}.npz"
+                np.savez_compressed(
+                    file=cache_path,
+                    lidar=image_tiles,
+                    buildings=mask_tiles,
+                )
+                cache_index[cadastre_index] = {
+                    "height": height,
+                    "width": width,
+                    "cache_path": cache_path,
+                }
+                if cadastre_index % 100 == 0:
+                    save_cache_index(cache_index)
+            except Exception as exc:
+                print(exc)
+                print(
+                    "Encountered exception for cadastre_index: "
+                    + str(cadastre_index)
+                )
 
-                tile_number += len(image_tiles)
-
-            with h5py.File(array_cache, "w") as h5_handler:
-                h5_handler["tiles/lidar"] = np.array(images)
-                h5_handler["tiles/buildings"] = np.array(masks)
-                h5_handler["tiles/cadastral_offsets"] = np.array(cadastral_offsets)
-
-            cadastre_index_start += batch_size
+        save_cache_index(cache_index)
 
     def tiles_cache(
         self,
         cadastre_index,
         with_tile_dimensions: bool = False,
     ) -> np.ndarray:
-        array_cache = Path(".cache/arrays.h5")
-        if not hasattr(self, "_images"):
-            with h5py.File(array_cache, "r") as h5_handler:
-                self._images = np.array(h5_handler["tiles/lidar"][:])
-                self._masks = np.array(h5_handler["tiles/buildings"][:])
-                self._cadastral_offsets = np.array(h5_handler["tiles/cadastral_offsets"][:])
-
-        start_index, stop_index, *tile_dimensions = self._cadastral_offsets[cadastre_index]
-        lidar_tiles = self._images[start_index:stop_index + 1]
-        building_tiles = self._masks[start_index:stop_index + 1]
+        cache_index = pickle.loads(
+            self.cache_index_path.read_bytes(),
+            fix_imports=False,
+        )
+        with np.load(
+            cache_index[cadastre_index]["cache_path"],
+            "r",
+        ) as cache_file:
+            lidar_tiles = cache_file["lidar"]
+            building_tiles = cache_file["buildings"]
 
         if with_tile_dimensions:
-            return lidar_tiles, building_tiles, tile_dimensions
+            return (
+                lidar_tiles,
+                building_tiles,
+                (
+                    cache_index[cadastre_index]["height"],
+                    cache_index[cadastre_index]["width"],
+                ),
+            )
         return lidar_tiles, building_tiles
 
     def __len__(self) -> int:
@@ -367,8 +376,9 @@ class Dataset:
         """
         images = []
         masks = []
-        for cadastre_index in irange(index.start, index.stop):
-            image, mask = self.tiles(cadastre_index=cadastre_index)
+        range_function = range if index.stop - index.stop < 50 else irange
+        for cadastre_index in range_function(index.start, index.stop):
+            image, mask = self.tiles_cache(cadastre_index=cadastre_index)
             images.append(image)
             masks.append(mask)
 
