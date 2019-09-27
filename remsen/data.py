@@ -237,7 +237,7 @@ class Dataset:
         return lidar_tiles, building_tiles
 
     def plot_tiles(self, cadastre_index: int, show: bool = True):
-        lidar_tiles, building_tiles, tile_dimensions = self.tiles(
+        lidar_tiles, building_tiles, tile_dimensions = self.tiles_cache(
             cadastre_index=cadastre_index, with_tile_dimensions=True,
         )
         fig, axes = plt.subplots(
@@ -260,21 +260,54 @@ class Dataset:
         else:
             return fig, axes
 
-    @property
-    def generator(self):
+    def plot_prediction(self, model, cadastre_index):
+        lidar_tiles, building_tiles, tile_dimensions = self.tiles_cache(
+            cadastre_index=cadastre_index, with_tile_dimensions=True,
+        )
+        fig, axes = plt.subplots(
+            nrows=tile_dimensions[0] * tile_dimensions[1],
+            ncols=3,
+            figsize=(15, 15),
+            sharex=True,
+            sharey=True,
+            squeeze=False,
+        )
+        axes[0][0].title.set_text("Original LiDAR data")
+        axes[0][1].title.set_text("Prediction probabilities")
+        axes[0][2].title.set_text("Predicted mask, cut-off = 0.5")
+        vmin = lidar_tiles.min()
+        vmax = lidar_tiles.max()
+
+        for (lidar_tile, building_tile), (lidar_ax, prediction_ax, mask_ax) \
+                in zip(zip(lidar_tiles, building_tiles), axes):
+            lidar_ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
+            lidar_ax.imshow(building_tile, alpha=0.1, cmap="binary")
+
+            building_tile = model.predict(np.expand_dims(np.expand_dims(lidar_tile, 0), -1))
+            building_tile = np.squeeze(building_tile)
+            prediction_ax.imshow(building_tile, cmap="seismic")
+
+            mask_ax.imshow((building_tile > 0.5).astype("uint8"), cmap="binary")
+
+        plt.tight_layout()
+        plt.show()
+
+    def tf_dataset(self):
         def _generator():
             for index in range(0, 1_000_000):
                 for lidar_array, building_array in zip(*self.tiles_cache(index)):
-                    yield np.expand_dims(lidar_array, -1), building_array
+                    if building_array.sum() < 64:
+                        continue
+                    yield (
+                        np.expand_dims(lidar_array, -1),
+                        np.expand_dims(building_array, -1),
+                    )
 
-        return _generator
-
-    def tf_dataset(self, buildings: int = 64):
         return tf.data.Dataset.from_generator(
-            generator=self.generator,
+            generator=_generator,
             output_types=(tf.float32, tf.uint8),
             output_shapes=(
-                tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256]),
+                tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
             ),
             args=None,
         )
