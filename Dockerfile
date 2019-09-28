@@ -30,5 +30,8 @@ RUN jupyter labextension install jupyterlab_vim
 RUN mkdir /code
 VOLUME ["/code"]
 
+# Fixes GPU OOM on newer NVidia RTX20XX cards
+ENV TF_FORCE_GPU_ALLOW_GROWTH="true"
+
 # Start the jupyter lab server
 CMD ["/jupyter-entrypoint.sh"]
