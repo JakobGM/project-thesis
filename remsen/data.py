@@ -5,8 +5,6 @@ from typing import Dict, Tuple, Union
 
 import fiona
 
-import h5py
-
 from ipypb import irange
 
 from matplotlib import pyplot as plt
@@ -96,7 +94,6 @@ class Dataset:
                 pickle.dumps(self._buildings, protocol=pickle.HIGHEST_PROTOCOL),
             )
             return self._buildings
-
 
     def building(self, index: int) -> Polygon:
         """Fetch specific building from dataset."""
@@ -260,6 +257,17 @@ class Dataset:
         else:
             return fig, axes
 
+    def input_tile_normalizer(self, tiles: np.ndarray) -> np.ndarray:
+        assert tiles.ndim == 4
+        normalized_tiles = tiles.copy()
+        for tile_number, original_tile in enumerate(tiles):
+            normalized_tiles[tile_number, :, :, 0] -= original_tile.min()
+            scaler = normalized_tiles[tile_number].max()
+            if scaler != 0:
+                normalized_tiles[tile_number, :, :, 0] /= scaler
+
+        return normalized_tiles
+
     def plot_prediction(self, model, cadastre_index):
         lidar_tiles, building_tiles, tile_dimensions = self.tiles_cache(
             cadastre_index=cadastre_index, with_tile_dimensions=True,
@@ -283,11 +291,15 @@ class Dataset:
             lidar_ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
             lidar_ax.imshow(building_tile, alpha=0.1, cmap="binary")
 
-            building_tile = model.predict(np.expand_dims(np.expand_dims(lidar_tile, 0), -1))
-            building_tile = np.squeeze(building_tile)
-            prediction_ax.imshow(building_tile, cmap="seismic")
+            lidar_tile = np.expand_dims(lidar_tile, 0)
+            lidar_tile = np.expand_dims(lidar_tile, -1)
+            normalized_lidar_tile = self.input_tile_normalizer(lidar_tile)
 
-            mask_ax.imshow((building_tile > 0.5).astype("uint8"), cmap="binary")
+            predicted_building_tile = model.predict(normalized_lidar_tile)
+            predicted_building_tile = np.squeeze(predicted_building_tile)
+            prediction_ax.imshow(predicted_building_tile, cmap="seismic")
+
+            mask_ax.imshow((predicted_building_tile > 0.5).astype("uint8"), cmap="binary")
 
         plt.tight_layout()
         plt.show()
@@ -299,7 +311,7 @@ class Dataset:
                     if building_array.sum() < 64:
                         continue
                     yield (
-                        np.expand_dims(lidar_array, -1),
+                        self.input_tile_normalizer(np.expand_dims(lidar_array, -1)),
                         np.expand_dims(building_array, -1),
                     )
 
@@ -415,7 +427,7 @@ class Dataset:
             images.append(image)
             masks.append(mask)
 
-        return (
-            np.expand_dims(np.concatenate(images, axis=0), -1),
-            np.expand_dims(np.concatenate(masks, axis=0), -1),
-        )
+        images = np.expand_dims(np.concatenate(images, axis=0), -1)
+        images = self.input_tile_normalizer(images)
+        masks = np.expand_dims(np.concatenate(masks, axis=0), -1)
+        return images, masks

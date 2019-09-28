@@ -11,10 +11,10 @@ from tensorflow.keras import (
 
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
-IMG_CHANNELS = 3
+IMG_CHANNELS = 1
 
 inputs = layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
-normalized_inputs = layers.Lambda(lambda x: x / 255)(inputs)
+normalized_inputs = inputs
 
 
 def encoder(previous_layer, filters, dropout_rate):
