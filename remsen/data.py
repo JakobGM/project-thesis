@@ -421,11 +421,18 @@ class Dataset:
         """
         images = []
         masks = []
-        range_function = range if index.stop - index.stop < 50 else irange
+        amount = index.stop - index.start
+        range_function = range if amount < 50 else irange
         for cadastre_index in range_function(index.start, index.stop):
-            image, mask = self.tiles_cache(cadastre_index=cadastre_index)
-            images.append(image)
-            masks.append(mask)
+            try:
+                tiles = self.tiles_cache(cadastre_index=cadastre_index)
+            except Exception:
+                continue
+            for image_tile, mask_tile in zip(*tiles):
+                if mask_tile.sum() < 64:
+                    continue
+                images.append([image_tile])
+                masks.append([mask_tile])
 
         images = np.expand_dims(np.concatenate(images, axis=0), -1)
         images = self.input_tile_normalizer(images)
