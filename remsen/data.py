@@ -8,6 +8,8 @@ import fiona
 from ipypb import irange
 
 from matplotlib import pyplot as plt
+from matplotlib import colors
+from matplotlib.patches import Patch
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -304,14 +306,25 @@ class Dataset:
         )
         axes[0][0].title.set_text("Original LiDAR data")
         axes[0][1].title.set_text("Prediction probabilities")
-        axes[0][2].title.set_text("Predicted mask, cut-off = 0.5")
+        axes[0][2].title.set_text("TP / TN / FP / FN, cut-off = 0.5")
+
+        disable_ticks = {
+            "axis": "both",
+            "which": "both",
+            "bottom": False,
+            "labelbottom": False,
+            "width": 0.0,
+        }
+        # print(dir(axes[0][1]))
+        axes[0][1].tick_params(**disable_ticks)
+        axes[0][2].tick_params(**disable_ticks)
+
         vmin = lidar_tiles.min()
         vmax = lidar_tiles.max()
 
-        for (lidar_tile, building_tile), (lidar_ax, prediction_ax, mask_ax) \
+        for (lidar_tile, building_tile), (lidar_ax, prediction_ax, metric_ax) \
                 in zip(zip(lidar_tiles, building_tiles), axes):
             lidar_ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
-            lidar_ax.imshow(building_tile, alpha=0.1, cmap="binary")
 
             lidar_tile = np.expand_dims(lidar_tile, 0)
             lidar_tile = np.expand_dims(lidar_tile, -1)
@@ -319,9 +332,44 @@ class Dataset:
 
             predicted_building_tile = model.predict(normalized_lidar_tile)
             predicted_building_tile = np.squeeze(predicted_building_tile)
-            prediction_ax.imshow(predicted_building_tile, cmap="seismic")
+            prediction_ax.imshow(
+                predicted_building_tile,
+                cmap="seismic",
+                vmin=0,
+                vmax=1,
+            )
 
-            mask_ax.imshow((predicted_building_tile > 0.5).astype("uint8"), cmap="binary")
+            predicted_mask = (predicted_building_tile > 0.5).astype("uint8")
+            TP = np.logical_and(predicted_mask == 1, building_tile == 1)
+            TN = np.logical_and(predicted_mask == 0, building_tile == 0)
+            FP = np.logical_and(predicted_mask == 1, building_tile == 0)
+            FN = np.logical_and(predicted_mask == 0, building_tile == 1)
+            confusion_matrix = TP + 2 * TN + 3 * FP + 4 * FN
+
+            cmap = colors.ListedColormap(
+                ['#001F3F', '#DDDDDD', '#FF4136', '#2ECC40']
+            )
+            bounds = [0, 1.5, 2.5, 3.5, 5]
+            norm = colors.BoundaryNorm(bounds, cmap.N)
+            metric_ax.imshow(confusion_matrix, cmap=cmap, norm=norm)
+
+            # divider = make_axes_locatable(metric_ax)
+            # colorbar_ax = divider.append_axes("right", size="5%", pad=0.05)
+            legend_elements = [
+                Patch(facecolor='#001F3F', edgecolor="white", label='TP'),
+                Patch(facecolor='#DDDDDD', edgecolor="white", label='TN'),
+                Patch(facecolor='#FF4136', edgecolor="white", label='FP'),
+                Patch(facecolor='#2ECC40', edgecolor="white", label='FN'),
+            ]
+            metric_ax.legend(
+                handles=legend_elements,
+                loc="lower center",
+                ncol=4,
+                bbox_to_anchor=(0.5, -0.075),
+                frameon=False,
+                handlelength=1.3,
+                handleheight=1.5,
+            )
 
         plt.tight_layout()
         plt.show()
