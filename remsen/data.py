@@ -279,6 +279,7 @@ class Dataset:
     def input_tile_normalizer(self, tiles: np.ndarray) -> np.ndarray:
         assert tiles.ndim == 4
         tiles[tiles > 1e5] = 0
+        tiles[tiles < -1e5] = 0
         min_vals = np.min(
             tiles.reshape(tiles.shape[0], 256 * 256),
             axis=1,
@@ -347,7 +348,7 @@ class Dataset:
             confusion_matrix = TP + 2 * TN + 3 * FP + 4 * FN
 
             cmap = colors.ListedColormap(
-                ['#001F3F', '#DDDDDD', '#FF4136', '#2ECC40']
+                ['#001F3F', '#DDDDDD', '#2ECC40', '#FF4136']
             )
             bounds = [0, 1.5, 2.5, 3.5, 5]
             norm = colors.BoundaryNorm(bounds, cmap.N)
@@ -358,8 +359,8 @@ class Dataset:
             legend_elements = [
                 Patch(facecolor='#001F3F', edgecolor="white", label='TP'),
                 Patch(facecolor='#DDDDDD', edgecolor="white", label='TN'),
-                Patch(facecolor='#FF4136', edgecolor="white", label='FP'),
-                Patch(facecolor='#2ECC40', edgecolor="white", label='FN'),
+                Patch(facecolor='#2ECC40', edgecolor="white", label='FP'),
+                Patch(facecolor='#FF4136', edgecolor="white", label='FN'),
             ]
             metric_ax.legend(
                 handles=legend_elements,
