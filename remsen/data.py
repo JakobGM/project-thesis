@@ -336,6 +336,7 @@ class Dataset:
                 protocol=pickle.HIGHEST_PROTOCOL,
                 fix_imports=False,
             ))
+            self._cache_index = cache_index
 
         # H5PY cache file
         # cache_index_path.unlink()
@@ -387,10 +388,13 @@ class Dataset:
         cadastre_index,
         with_tile_dimensions: bool = False,
     ) -> np.ndarray:
-        cache_index = pickle.loads(
-            self.cache_index_path.read_bytes(),
-            fix_imports=False,
-        )
+        if not hasattr(self, "_cache_index"):
+            self._cache_index = pickle.loads(
+                self.cache_index_path.read_bytes(),
+                fix_imports=False,
+            )
+        cache_index = self._cache_index
+
         with np.load(
             cache_index[cadastre_index]["cache_path"],
             "r",
