@@ -276,14 +276,19 @@ class Dataset:
 
     def input_tile_normalizer(self, tiles: np.ndarray) -> np.ndarray:
         assert tiles.ndim == 4
-        normalized_tiles = tiles.copy()
-        for tile_number, original_tile in enumerate(tiles):
-            normalized_tiles[tile_number, :, :, 0] -= original_tile.min()
-            scaler = normalized_tiles[tile_number].max()
-            if scaler != 0:
-                normalized_tiles[tile_number, :, :, 0] /= scaler
+        tiles[tiles > 1e5] = 0
+        min_vals = np.min(
+            tiles.reshape(tiles.shape[0], 256 * 256),
+            axis=1,
+        ).reshape(tiles.shape[0], 1, 1, 1)
+        np.subtract(tiles, min_vals, out=tiles)
 
-        return normalized_tiles
+        max_vals = np.max(
+            tiles.reshape(tiles.shape[0], 256 * 256),
+            axis=1,
+        ).reshape(tiles.shape[0], 1, 1, 1)
+        np.divide(tiles, max_vals, out=tiles)
+        return tiles
 
     def plot_prediction(self, model, cadastre_index):
         lidar_tiles, building_tiles, tile_dimensions = self.tiles_cache(
