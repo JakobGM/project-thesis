@@ -8,6 +8,8 @@ import fiona
 from ipypb import irange
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import numpy as np
 
@@ -233,7 +235,12 @@ class Dataset:
             return lidar_tiles, building_tiles, tile_dimensions
         return lidar_tiles, building_tiles
 
-    def plot_tiles(self, cadastre_index: int, show: bool = True):
+    def plot_tiles(
+        self,
+        cadastre_index: int,
+        show: bool = True,
+        with_legend: bool = True,
+    ):
         lidar_tiles, building_tiles, tile_dimensions = self.tiles_cache(
             cadastre_index=cadastre_index, with_tile_dimensions=True,
         )
@@ -248,10 +255,20 @@ class Dataset:
         vmax = lidar_tiles.max()
         for (lidar_tile, building_tile), ax \
                 in zip(zip(lidar_tiles, building_tiles), axes.flatten()):
-            ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
+            lidar_image = ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
             ax.imshow(building_tile, alpha=0.1, cmap="binary")
 
-        plt.tight_layout()
+        if with_legend and len(axes.flatten()) == 1:
+            divider = make_axes_locatable(axes[0][0])
+            colorbar_ax = divider.append_axes("right", size="5%", pad=0.05)
+            fig.colorbar(
+                lidar_image,
+                cax=colorbar_ax,
+                format=FormatStrFormatter('%d m'),
+            )
+        else:
+            plt.tight_layout()
+
         if show:
             fig.show()
         else:
