@@ -23,7 +23,11 @@ EXPOSE 8888
 COPY ./.docker/jupyter/jupyter-entrypoint.sh /jupyter-entrypoint.sh
 
 # Install vim keybindings for jupyter lab
-RUN apt-get update && apt-get install -y nodejs npm
+# nodejs npm -> required by jupyterlab_vim extension
+# pandoc texlive-xetex -> required for nbconvert PDF export
+RUN apt-get update && apt-get install -y \
+        nodejs npm \
+        pandoc texlive-xetex
 RUN jupyter labextension install jupyterlab_vim
 
 # Add volume mount point for source code
