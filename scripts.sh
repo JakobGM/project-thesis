@@ -1,6 +1,6 @@
 function project::run {
   # This function requires you to build the tensorflow image first:
-  # $ sudo docker build . -t tensorflow                                                                                                                                                             [INSERT]
+  # $ sudo docker build . -t tensorflow
   sudo docker run \
     --user $(id -u):$(id -g) \
     --runtime=nvidia \
