@@ -311,7 +311,15 @@ class Dataset:
             return fig, axes
 
     def input_tile_normalizer(self, tiles: np.ndarray) -> np.ndarray:
-        assert tiles.ndim == 4
+        if tiles.ndim == 2:
+            # A single tile with squeezed channels is given
+            tiles = tiles[np.newaxis, :, :, np.newaxis]
+        elif tiles.ndim == 3:
+            # A single tile with 1 channel is given
+            tiles = tiles[np.newaxis, :, :]
+        else:
+            assert tiles.ndim == 4
+
         tiles[tiles > 1e5] = 0
         tiles[tiles < -1e5] = 0
         min_vals = np.min(
@@ -416,7 +424,7 @@ class Dataset:
                     if building_array.sum() < 64:
                         continue
                     yield (
-                        self.input_tile_normalizer(np.expand_dims(lidar_array, -1)),
+                        np.squeeze(self.input_tile_normalizer(lidar_array), 0),
                         np.expand_dims(building_array, -1),
                     )
 
