@@ -417,9 +417,9 @@ class Dataset:
         plt.tight_layout()
         plt.show()
 
-    def tf_dataset(self):
+    def tf_dataset(self, start=0, stop=1_000_000):
         def _generator():
-            for index in range(0, 1_000_000):
+            for index in range(start, stop):
                 for lidar_array, building_array in zip(*self.tiles_cache(index)):
                     if building_array.sum() < 64:
                         continue
