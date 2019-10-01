@@ -2,7 +2,7 @@
 import pickle
 from multiprocessing import Process, SimpleQueue
 from pathlib import Path
-from typing import Dict, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 import fiona
 
@@ -183,7 +183,15 @@ class Dataset:
         self,
         cadastre_index,
         with_tile_dimensions: bool = False,
+        max_num_tiles: Optional[int] = None,
     ) -> np.ndarray:
+        """
+        Return LiDAR and building tiles for given cadastre.
+
+        :param cadastre_index: Positive integer identifying the cadastre.
+        :param with_tile_dimensions: Return the original dimension of the tiles.
+        :max_num_tiles: Skip tile generation if tiles exceed this number.
+        """
         # (0.25m, 0.25m) pixels
         # (256px, 256px) tiles -> (64m, 64m) tiles
         cadastre = self.cadastre(index=cadastre_index)
@@ -196,8 +204,17 @@ class Dataset:
         mid_x = min_x + 0.5 * width
         mid_y = min_y + 0.5 * height
 
-        new_width = 64 if width <= 64 else ((width // 64) + 1) * 64
-        new_height = 64 if height <= 64 else ((height // 64) + 1) * 64
+        width_tiles = 1 if width <= 64 else width // 64 + 1
+        height_tiles = 1 if height <= 64 else height // 64 + 1
+        num_tiles = width_tiles * height_tiles
+        if max_num_tiles and num_tiles > max_num_tiles:
+            raise RuntimeError(
+                f"Cadastre index {cadastre_index} produced {num_tiles} tiles. "
+                f"This is greater than max_num_tiles={max_num_tiles}, raising!"
+            )
+
+        new_width = 64 * width_tiles
+        new_height = 64 * height_tiles
 
         new_width -= 0.2
         new_height -= 0.2
@@ -426,8 +443,6 @@ class Dataset:
             ))
             self._cache_index = cache_index
 
-        # H5PY cache file
-        # cache_index_path.unlink()
         if self.cache_index_path.exists():
             print("Importing cache index")
             cache_index = pickle.loads(
@@ -447,7 +462,9 @@ class Dataset:
         ):
             try:
                 image_tiles, mask_tiles, (height, width) = self.tiles(
-                    cadastre_index=cadastre_index, with_tile_dimensions=True
+                    cadastre_index=cadastre_index,
+                    with_tile_dimensions=True,
+                    max_num_tiles=100,
                 )
                 cache_path = self.tile_cache_path / f"{cadastre_index:07d}.npz"
                 np.savez_compressed(
