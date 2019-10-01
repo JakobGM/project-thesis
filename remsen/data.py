@@ -71,7 +71,7 @@ class Dataset:
 
     def cadastre(self, index: int) -> Polygon:
         """Fetch cadastre from dataset."""
-        with fiona.open(self.cadastre_path, layer="Teig") as src:
+        with fiona.open(self.cadastre_path, "r", layer="Teig") as src:
             srid = int(src.crs["init"].split(":")[1])
             assert srid == 25832
             item = src[index + 1]
