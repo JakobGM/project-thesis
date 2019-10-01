@@ -1,12 +1,14 @@
 """Module responsible for fetching, pre-processing, and preparing data."""
 import pickle
-from multiprocessing import Process, SimpleQueue
+import time
+import warnings
+from multiprocessing import Pool, SimpleQueue
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
 import fiona
 
-from ipypb import irange
+from ipypb import irange, track
 
 from matplotlib import pyplot as plt
 from matplotlib import colors
@@ -39,7 +41,7 @@ def fiona_polygon(fiona_item: Dict) -> Polygon:
     if not geometry.is_valid:
         geometry = geometry.buffer(0.0)
     assert geometry.is_valid
-    assert geometry.geom_type == "Polygon"
+    assert geometry.geom_type in ("Polygon", "MultiPolygon")
     return geometry
 
 
@@ -65,7 +67,6 @@ class Dataset:
 
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.cache_index_path = cache_dir / "cache_index.pkl"
         self.tile_cache_path = cache_dir / "tiles"
         self.tile_cache_path.mkdir(parents=True, exist_ok=True)
 
@@ -113,22 +114,7 @@ class Dataset:
             cadastre = self.cadastre(index=cadastre)
 
         buildings = self.buildings()
-
-        # The following is a dirty hack for preventing intersection time-out
-        # See cadastre index 18.466 for why this is necessary
-        queue = SimpleQueue()
-        process = Process(
-            target=lambda c, b, q: q.put(c.intersection(b)),
-            args=(cadastre, buildings, queue),
-        )
-        process.start()
-        process.join(10)
-        if not queue.empty():
-            intersecting_buildings = queue.get()
-        else:
-            raise RuntimeError(
-                "Building intersection took more than 10 seconds. Aborting!",
-            )
+        intersecting_buildings = cadastre.intersection(buildings)
 
         if isinstance(intersecting_buildings, GeometryCollection):
             intersecting_buildings = MultiPolygon([
@@ -437,94 +423,66 @@ class Dataset:
             args=None,
         )
 
-    def build_tile_cache(self, number_of_cadastre: int):
-        """
-        Construct tile cache by preprocessing cadastral data.
+    def _save_tile(self, cadastre_index):
+        """Save processed cadastre to cache directory."""
+        cache_path = self.tile_cache_path / f"{cadastre_index:07d}.npz"
+        if cache_path.exists():
+            return
 
-        cadastral_offsets[cadastral_index] = (first_tile_index, last_tile_index)
-        """
-        def save_cache_index(cache_index):
-            self.cache_index_path.write_bytes(pickle.dumps(
-                cache_index,
-                protocol=pickle.HIGHEST_PROTOCOL,
-                fix_imports=False,
-            ))
-            self._cache_index = cache_index
-
-        if self.cache_index_path.exists():
-            print("Importing cache index")
-            cache_index = pickle.loads(
-                self.cache_index_path.read_bytes(),
-                fix_imports=False,
-            )
-        else:
-            print("Creating new cache index")
-            cache_index = {}
-            save_cache_index(cache_index)
-
-        cadastre_index_start = max(cache_index.keys() or [-1]) + 1
-        print(cadastre_index_start)
-
-        for cadastre_index in irange(
-            cadastre_index_start, cadastre_index_start + number_of_cadastre
-        ):
-            try:
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", "Cannot provide views")
                 image_tiles, mask_tiles, (height, width) = self.tiles(
                     cadastre_index=cadastre_index,
                     with_tile_dimensions=True,
                     max_num_tiles=100,
                 )
-                cache_path = self.tile_cache_path / f"{cadastre_index:07d}.npz"
-                np.savez_compressed(
-                    file=cache_path,
-                    lidar=image_tiles,
-                    buildings=mask_tiles,
-                )
-                cache_index[cadastre_index] = {
-                    "height": height,
-                    "width": width,
-                    "cache_path": cache_path,
-                }
-                if cadastre_index % 100 == 0:
-                    save_cache_index(cache_index)
-            except Exception as exc:
-                print(exc)
-                print(
-                    "Encountered exception for cadastre_index: "
-                    + str(cadastre_index)
-                )
-                continue
+            np.savez_compressed(
+                file=cache_path,
+                lidar=image_tiles,
+                buildings=mask_tiles,
+                dimensions=np.array([height, width]),
+            )
+        except fiona.errors.DriverError:
+            print("Fiona race condition encountered. Sleeping for 1 second...")
+            time.sleep(1)
+            return self._save_tile(cadastre_index)
+        except RuntimeError as exc:
+            print(exc)
+            return
 
-        save_cache_index(cache_index)
+    def build_tile_cache(self):
+        """
+        Construct tile cache by preprocessing cadastral data.
+        """
+
+        cadastre_indeces = range(0, 47_853)
+        pool = Pool(processes=None)
+        pool_tasks = pool.imap(
+            func=self._save_tile,
+            iterable=cadastre_indeces,
+            chunksize=1,
+        )
+        for result in pool_tasks:
+            pass
 
     def tiles_cache(
         self,
         cadastre_index,
         with_tile_dimensions: bool = False,
     ) -> np.ndarray:
-        if not hasattr(self, "_cache_index"):
-            self._cache_index = pickle.loads(
-                self.cache_index_path.read_bytes(),
-                fix_imports=False,
-            )
-        cache_index = self._cache_index
 
-        with np.load(
-            cache_index[cadastre_index]["cache_path"],
-            "r",
-        ) as cache_file:
+        tile_path = self.tile_cache_path / f"{cadastre_index:07d}.npz"
+        if not tile_path.exists():
+            raise KeyError
+
+        with np.load(tile_path, "r") as cache_file:
             lidar_tiles = cache_file["lidar"]
             building_tiles = cache_file["buildings"]
+            dimensions = tuple(cache_file["dimensions"])
 
         if with_tile_dimensions:
-            return (
-                lidar_tiles,
-                building_tiles,
-                (
-                    cache_index[cadastre_index]["height"],
-                    cache_index[cadastre_index]["width"],
-                ),
-            )
+            return lidar_tiles, building_tiles, dimensions
         return lidar_tiles, building_tiles
 
     def __len__(self) -> int:
