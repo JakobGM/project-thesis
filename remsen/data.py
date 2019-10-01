@@ -37,7 +37,7 @@ def fiona_polygon(fiona_item: Dict) -> Polygon:
     """Convert fiona item to Shapely polygon."""
     geometry = shape(fiona_item["geometry"])
     if not geometry.is_valid:
-        geometry = geometry.bufer(0.0)
+        geometry = geometry.buffer(0.0)
     assert geometry.is_valid
     assert geometry.geom_type == "Polygon"
     return geometry
