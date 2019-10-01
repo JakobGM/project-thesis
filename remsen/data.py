@@ -1,5 +1,6 @@
 """Module responsible for fetching, pre-processing, and preparing data."""
 import pickle
+from multiprocessing import Process, SimpleQueue
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
@@ -112,7 +113,23 @@ class Dataset:
             cadastre = self.cadastre(index=cadastre)
 
         buildings = self.buildings()
-        intersecting_buildings = cadastre.intersection(buildings)
+
+        # The following is a dirty hack for preventing intersection time-out
+        # See cadastre index 18.466 for why this is necessary
+        queue = SimpleQueue()
+        process = Process(
+            target=lambda c, b, q: q.put(c.intersection(b)),
+            args=(cadastre, buildings, queue),
+        )
+        process.start()
+        process.join(10)
+        if not queue.empty():
+            intersecting_buildings = queue.get()
+        else:
+            raise RuntimeError(
+                "Building intersection took more than 10 seconds. Aborting!",
+            )
+
         if isinstance(intersecting_buildings, GeometryCollection):
             intersecting_buildings = MultiPolygon([
                 feature
@@ -451,6 +468,7 @@ class Dataset:
                     "Encountered exception for cadastre_index: "
                     + str(cadastre_index)
                 )
+                continue
 
         save_cache_index(cache_index)
 
