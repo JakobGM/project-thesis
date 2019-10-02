@@ -516,13 +516,14 @@ class Dataset:
         augment: bool = True,
         validation_split: float = 0.05,
         dataset_size: int = 47_853,
+        minimum_building_area: float = 4,
     ):
         # TODO: Allow either of the two augmentation methods
         def _generator(start, stop):
             for index in range(start, stop):
                 try:
                     for lidar_array, building_array in zip(*self.tiles_cache(index)):
-                        if building_array.sum() < 64:
+                        if building_array.sum() < (minimum_building_area * 16):
                             continue
                         yield (
                             np.squeeze(self.input_tile_normalizer(lidar_array), 0),
