@@ -413,8 +413,7 @@ class Dataset:
             norm = colors.BoundaryNorm(bounds, cmap.N)
             metric_ax.imshow(confusion_matrix, cmap=cmap, norm=norm)
 
-            # divider = make_axes_locatable(metric_ax)
-            # colorbar_ax = divider.append_axes("right", size="5%", pad=0.05)
+            # Add TP/TN/FP/FN legend to plot
             legend_elements = [
                 Patch(facecolor='#001F3F', edgecolor="white", label='TP'),
                 Patch(facecolor='#DDDDDD', edgecolor="white", label='TN'),
@@ -429,6 +428,26 @@ class Dataset:
                 frameon=False,
                 handlelength=1.3,
                 handleheight=1.5,
+            )
+
+            # Add metrics to plot
+            building_tile = np.expand_dims(building_tile, 0)
+            building_tile = np.expand_dims(building_tile, -1)
+            evaluation = model.evaluate(
+                x=normalized_lidar_tile,
+                y=building_tile,
+                verbose=0,
+            )
+            metrics = {
+                name: value
+                for name, value
+                in zip(model.metrics_names, evaluation)
+            }
+            loss = metrics["loss"]
+            mean_iou = metrics["mean_io_u"]
+            prediction_ax.set_xlabel(
+                f"Loss = {loss:.4f},   Mean IoU = {mean_iou:0.4f}",
+                size=13,
             )
 
         plt.tight_layout()
