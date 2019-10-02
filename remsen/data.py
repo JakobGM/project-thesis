@@ -4,11 +4,11 @@ import time
 import warnings
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import Collection, Dict, Mapping, Optional, Tuple, Union
 
 import fiona
 
-from ipypb import irange
+from ipypb import irange, track
 
 from matplotlib import pyplot as plt
 from matplotlib import colors
@@ -452,6 +452,43 @@ class Dataset:
 
         plt.tight_layout()
         plt.show()
+
+    def plot_worst(
+        self,
+        model: tf.keras.Model,
+        cadastre_indeces: Collection[int] = range(0, 10),
+        metric: Tuple[Mapping, str] = (min, "mean_io_u"),
+        number: int = 5,
+    ):
+        """Plot the worst predictions according to a given metric."""
+        cadastre_metrics = {}
+        optimizer, metric = metric
+
+        for cadastre_index in track(cadastre_indeces):
+            try:
+                x, y = self[cadastre_index:cadastre_index + 1]
+            except ValueError:
+                continue
+
+            if x.shape[0] > 1:
+                continue
+
+            evaluation = model.evaluate(x=x, y=y, verbose=0)
+            metrics = {
+                name: value
+                for name, value
+                in zip(model.metrics_names, evaluation)
+            }
+            cadastre_metrics[cadastre_index] = metrics
+
+        number = min(number, len(cadastre_metrics))
+        for _ in range(number):
+            worst_cadastre = optimizer(
+                cadastre_metrics.keys(),
+                key=lambda key: cadastre_metrics[key][metric],
+            )
+            self.plot_prediction(model=model, cadastre_index=worst_cadastre)
+            del cadastre_metrics[worst_cadastre]
 
     def tf_dataset(self, start=0, stop=1_000_000):
         def _generator():
