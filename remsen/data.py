@@ -35,6 +35,8 @@ from skimage.util import view_as_blocks
 
 import tensorflow as tf
 
+from remsen import augmentation
+
 
 def fiona_polygon(fiona_item: Dict) -> Polygon:
     """Convert fiona item to Shapely polygon."""
@@ -507,8 +509,16 @@ class Dataset:
             self.plot_prediction(model=model, cadastre_index=worst_cadastre)
             del cadastre_metrics[worst_cadastre]
 
-    def tf_dataset(self, start=0, stop=1_000_000):
-        def _generator():
+    def tf_dataset(
+        self,
+        batch_size: int = 16,
+        prefetch: int = 1000,
+        augment: bool = True,
+        validation_split: float = 0.05,
+        dataset_size: int = 47_853,
+    ):
+        # TODO: Allow either of the two augmentation methods
+        def _generator(start, stop):
             for index in range(start, stop):
                 try:
                     for lidar_array, building_array in zip(*self.tiles_cache(index)):
@@ -524,14 +534,46 @@ class Dataset:
                     # TODO: log exception here
                     continue
 
-        return tf.data.Dataset.from_generator(
+        # TODO: Extract 47_853
+        validation_size = int(dataset_size * validation_split)
+        train_size = int(dataset_size * (1 - validation_split))
+        validation_start_index = 47_853 - validation_size
+        if validation_start_index < train_size:
+            validation_start_index = train_size
+
+        train = tf.data.Dataset.from_generator(
             generator=_generator,
             output_types=(tf.float32, tf.uint8),
             output_shapes=(
                 tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
             ),
-            args=None,
+            args=(0, train_size),
         )
+        validation = tf.data.Dataset.from_generator(
+            generator=_generator,
+            output_types=(tf.float32, tf.uint8),
+            output_shapes=(
+                tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
+            ),
+            args=(validation_start_index, 47_853),
+        )
+
+        # Data augmentation
+        if augment:
+            train.map(
+                map_func=augmentation.flip_and_rotate,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE,
+            )
+
+        # Prefetching
+        train = train.prefetch(buffer_size=prefetch)
+        validation = validation.prefetch(buffer_size=prefetch)
+
+        # Batching
+        train = train.batch(batch_size=batch_size, drop_remainder=False)
+        validation = validation.batch(batch_size=batch_size, drop_remainder=False)
+
+        return train, validation
 
     def _save_tile(self, cadastre_index):
         """Save processed cadastre to cache directory."""
