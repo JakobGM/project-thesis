@@ -510,13 +510,19 @@ class Dataset:
     def tf_dataset(self, start=0, stop=1_000_000):
         def _generator():
             for index in range(start, stop):
-                for lidar_array, building_array in zip(*self.tiles_cache(index)):
-                    if building_array.sum() < 64:
-                        continue
-                    yield (
-                        np.squeeze(self.input_tile_normalizer(lidar_array), 0),
-                        np.expand_dims(building_array, -1),
-                    )
+                try:
+                    for lidar_array, building_array in zip(*self.tiles_cache(index)):
+                        if building_array.sum() < 64:
+                            continue
+                        yield (
+                            np.squeeze(self.input_tile_normalizer(lidar_array), 0),
+                            np.expand_dims(building_array, -1),
+                        )
+                except KeyError:
+                    continue
+                except Exception:
+                    # TODO: log exception here
+                    continue
 
         return tf.data.Dataset.from_generator(
             generator=_generator,
