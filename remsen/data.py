@@ -65,6 +65,9 @@ class Dataset:
 
         assert lidar_path.exists()
         self.lidar_path = lidar_path
+        with rasterio.open(lidar_path, "r") as lidar_file:
+            self.lidar_nodata_value = lidar_file.nodata
+        assert self.lidar_nodata_value < 0
 
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -322,13 +325,27 @@ class Dataset:
         else:
             assert tiles.ndim == 4
 
-        tiles[tiles > 1e5] = 0
-        tiles[tiles < -1e5] = 0
-        min_vals = np.min(
-            tiles.reshape(tiles.shape[0], 256 * 256),
+        # Subtract minimum value of each tile independetly, ignoring nodata
+        # Mask nodata values
+        masked_tiles = np.ma.asarray(tiles)
+        masked_tiles.mask = tiles == self.lidar_nodata_value
+
+        # Calculate minimum of each tile, excluding nodataa
+        min_vals = np.ma.min(
+            masked_tiles.reshape(tiles.shape[0], 256 * 256),
             axis=1,
-        ).reshape(tiles.shape[0], 1, 1, 1)
-        np.subtract(tiles, min_vals, out=tiles)
+        ).reshape(masked_tiles.shape[0], 1, 1, 1)
+
+        # Subtract tile minimum for each tile, leaving nodata values alone
+        np.subtract(
+            masked_tiles,
+            min_vals,
+            out=tiles,
+            where=np.logical_not(masked_tiles.mask),
+        )
+
+        # Set nodata values equal to zero
+        tiles[masked_tiles.mask] = 0
 
         max_vals = np.max(
             tiles.reshape(tiles.shape[0], 256 * 256),
