@@ -2,17 +2,18 @@
 import pickle
 import time
 import warnings
-from multiprocessing import Pool, SimpleQueue
+from multiprocessing import Pool
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
 import fiona
 
-from ipypb import irange, track
+from ipypb import irange
 
 from matplotlib import pyplot as plt
 from matplotlib import colors
 from matplotlib.patches import Patch
+import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -273,6 +274,21 @@ class Dataset:
             sharey=True,
             squeeze=False,
         )
+        cadastre_text = axes[0][-1].annotate(
+            f'Cadastre {cadastre_index}',
+            xy=(0.98, 0.98),
+            xycoords='axes fraction',
+            size=20,
+            ha='right',
+            va='top',
+            color="white",
+            weight="bold",
+            alpha=0.5,
+        )
+        cadastre_text.set_path_effects(
+            [PathEffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
+        )
+
         vmin = lidar_tiles.min()
         vmax = lidar_tiles.max()
         for (lidar_tile, building_tile), ax \
@@ -336,6 +352,21 @@ class Dataset:
         axes[0][0].title.set_text("Original LiDAR data")
         axes[0][1].title.set_text("Prediction probabilities")
         axes[0][2].title.set_text("TP / TN / FP / FN, cut-off = 0.5")
+
+        cadastre_text = axes[0][0].annotate(
+            f'Cadastre\n{cadastre_index}',
+            xy=(0.98, 0.98),
+            xycoords='axes fraction',
+            size=14,
+            ha='right',
+            va='top',
+            color="white",
+            weight="bold",
+            alpha=0.8,
+        )
+        cadastre_text.set_path_effects(
+            [PathEffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
+        )
 
         disable_ticks = {
             "axis": "both",
