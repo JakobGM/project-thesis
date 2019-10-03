@@ -33,6 +33,8 @@ from shapely.geometry import (
 
 from skimage.util import view_as_blocks
 
+from sklearn.model_selection import train_test_split
+
 import tensorflow as tf
 
 from remsen import augmentation
@@ -514,13 +516,17 @@ class Dataset:
         batch_size: int = 16,
         prefetch: int = 1000,
         augment: bool = True,
-        validation_split: float = 0.05,
-        dataset_size: int = 47_853,
+        shuffle: bool = True,
+        train_split: float = 0.70,
+        validation_split: float = 0.15,
+        test_split: float = 0.15,
         minimum_building_area: float = 4,
     ):
+        assert train_split + validation_split + test_split == 1.0
+
         # TODO: Allow either of the two augmentation methods
-        def _generator(start, stop):
-            for index in range(start, stop):
+        def _generator(cadastre_indeces):
+            for index in cadastre_indeces:
                 try:
                     for lidar_array, building_array in zip(*self.tiles_cache(index)):
                         if building_array.sum() < (minimum_building_area * 16):
@@ -535,12 +541,24 @@ class Dataset:
                     # TODO: log exception here
                     continue
 
-        # TODO: Extract 47_853
-        validation_size = int(dataset_size * validation_split)
-        train_size = int(dataset_size * (1 - validation_split))
-        validation_start_index = 47_853 - validation_size
-        if validation_start_index < train_size:
-            validation_start_index = train_size
+        # Split all data into train, validation, and test subsets
+        cadastre_tile_files = self.tile_cache_path.iterdir()
+        cadaster_indeces = list(map(
+            lambda p: int(p.name.split(".")[0]),
+            cadastre_tile_files,
+        ))
+        train_indeces, remaining = train_test_split(
+            cadaster_indeces,
+            train_size=train_split,
+            shuffle=True,
+            random_state=42,
+        )
+        val_indeces, test_indeces = train_test_split(
+            remaining,
+            train_size=validation_split / (validation_split + test_split),
+            shuffle=False,
+            random_state=43,
+        )
 
         train = tf.data.Dataset.from_generator(
             generator=_generator,
@@ -548,7 +566,7 @@ class Dataset:
             output_shapes=(
                 tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
             ),
-            args=(0, train_size),
+            args=(train_indeces,),
         )
         validation = tf.data.Dataset.from_generator(
             generator=_generator,
@@ -556,10 +574,18 @@ class Dataset:
             output_shapes=(
                 tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
             ),
-            args=(validation_start_index, 47_853),
+            args=(val_indeces,),
+        )
+        test = tf.data.Dataset.from_generator(
+            generator=_generator,
+            output_types=(tf.float32, tf.uint8),
+            output_shapes=(
+                tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
+            ),
+            args=(test_indeces,),
         )
 
-        # Data augmentation
+        # Train data augmentation
         if augment:
             train.map(
                 map_func=augmentation.flip_and_rotate,
@@ -569,12 +595,18 @@ class Dataset:
         # Prefetching
         train = train.prefetch(buffer_size=prefetch)
         validation = validation.prefetch(buffer_size=prefetch)
+        test = test.prefetch(buffer_size=prefetch)
+
+        # Train data shuffling
+        if shuffle:
+            train = train.shuffle(buffer_size=512)
 
         # Batching
         train = train.batch(batch_size=batch_size, drop_remainder=False)
         validation = validation.batch(batch_size=batch_size, drop_remainder=False)
+        test = test.batch(batch_size=batch_size, drop_remainder=False)
 
-        return train, validation
+        return train, validation, test
 
     def _save_tile(self, cadastre_index):
         """Save processed cadastre to cache directory."""

@@ -11,12 +11,16 @@ def get_callbacks(
 ):
     cache_path = Path(".cache/models")
     model_cache_path = cache_path / model_name
-    if delete_existing and model_cache_path.exists():
+    if not delete_existing:
+        assert not model_cache_path.exists()
+    elif delete_existing and model_cache_path.exists():
         shutil.rmtree(str(model_cache_path))
+
     model_cache_path.mkdir(parents=True, exist_ok=True)
 
     save_best_val_loss = ModelCheckpoint(
         monitor="val_loss",
+        mode="min",
         filepath=str(model_cache_path / "val_loss.ckpt"),
         save_weights_only=True,
         save_best_only=True,
@@ -24,6 +28,7 @@ def get_callbacks(
     )
     save_best_val_iou = ModelCheckpoint(
         monitor="val_mean_io_u",
+        mode="max",
         filepath=str(model_cache_path / "val_mean_io_u.ckpt"),
         save_weights_only=True,
         save_best_only=True,
