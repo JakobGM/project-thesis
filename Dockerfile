@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:2.0.0rc0-gpu-py3 AS tensorflow
+FROM tensorflow/tensorflow:2.0.0-gpu-py3 AS tensorflow
 
 LABEL maintainer="jakobgm@gmail.com"
 LABEL description="Tensorflow v2 GPU-enabled image with jupyterlab"
