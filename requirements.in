@@ -11,3 +11,6 @@ fiona
 
 # For image handling
 scikit-image
+
+# For train/val/test splitting
+sklearn
