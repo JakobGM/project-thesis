@@ -94,7 +94,3 @@ model.compile(
     loss="binary_crossentropy",
     metrics=[metrics.MeanIoU(num_classes=2)],
 )
-# model.summary()
-
-early_stopper = callbacks.EarlyStopping(patience=15, verbose=1)
-checkpointer = callbacks.ModelCheckpoint("model_unet_checkpoint.h5", verbose=1, save_best_only=True)
