@@ -560,6 +560,11 @@ class Dataset:
             random_state=43,
         )
 
+        # Persist cadastre splits to self
+        self.train_cadastre = train_indeces
+        self.validation_cadastre = val_indeces
+        self.test_cadastre = test_indeces
+
         train = tf.data.Dataset.from_generator(
             generator=_generator,
             output_types=(tf.float32, tf.uint8),
