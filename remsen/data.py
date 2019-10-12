@@ -38,7 +38,7 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 
-from remsen import augmentation
+from remsen import augmentation, raster
 
 
 def fiona_polygon(fiona_item: Dict) -> Polygon:
@@ -70,7 +70,9 @@ class Dataset:
 
         assert lidar_path.exists()
         self.lidar_path = lidar_path
-        self.lidar_nodata_value = raster.lidar_nodata_value(path=self.lidar_path)
+        self.lidar_nodata_value = raster.lidar_nodata_value(
+            raster_path=self.lidar_path,
+        )
         assert self.lidar_nodata_value < 0
 
         self.cache_dir = cache_dir

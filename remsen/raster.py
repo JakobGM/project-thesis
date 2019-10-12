@@ -4,18 +4,31 @@ import rasterio
 from rasterio.enums import ColorInterp
 
 
-def lidar_nodata_value(path: Path) -> float:
+def lidar_nodata_value(raster_path: Path) -> float:
     """
     Return nodata value of lidar band in raster file.
 
     Supports files that contain RGB bands as well.
     """
-    with rasterio.open(path, "r") as lidar_file:
+    with rasterio.open(raster_path, "r") as lidar_file:
+        lidar_index = lidar_band_index(raster_path=raster_path)
         nodata_values = lidar_file.nodatavals
-        if len(nodata_values) == 1:
-            return nodata_values[0]
+        return nodata_values[lidar_index]
 
+
+def lidar_band_index(raster_path: Path) -> int:
+    """
+    Return lidar band index of given raster file.
+
+    NB! The lidar band index is zero-indexed, while rasterio operates
+    with one-indexed bands, requiring you to add one to the index
+    if used in conjunction with the rasterio API.
+    """
+    with rasterio.open(raster_path, "r") as lidar_file:
         color_interpretations = lidar_file.colorinterp
+        if len(color_interpretations) == 1:
+            return 0
+
         assert set(color_interpretations) == {
             ColorInterp.red,
             ColorInterp.green,
@@ -23,4 +36,4 @@ def lidar_nodata_value(path: Path) -> float:
             ColorInterp.undefined,
         }
         lidar_index = color_interpretations.index(ColorInterp.undefined)
-        return nodata_values[lidar_index]
+        return lidar_index
