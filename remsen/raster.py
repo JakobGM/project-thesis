@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 
@@ -9,6 +9,8 @@ from rasterio.io import MemoryFile
 from rasterio.mask import mask as rasterio_mask
 
 from shapely.geometry import GeometryCollection, MultiPolygon, Polygon
+
+from skimage.util import view_as_blocks
 
 
 def lidar_nodata_value(raster_path: Path) -> float:
@@ -50,7 +52,7 @@ def crop_and_mask(
     crop: Polygon,
     mask: MultiPolygon,
     raster_path: Path,
-) -> Tuple[MemoryFile, MemoryFile]:
+) -> Dict:
     """
     Crop and mask a given raster path.
 
@@ -181,3 +183,110 @@ def crop_and_mask(
     result["mask_file"] = mask_file
     result["mask_array"] = mask_data
     return result
+
+def tiles(
+    bounds: Tuple[float, float, float, float],
+    raster_path: Path,
+    mask: MultiPolygon,
+    max_num_tiles: Optional[int] = None,
+) -> Dict:
+    """Return 256 x 256 tiles covering the given bounds."""
+    min_x, min_y, max_x, max_y = bounds
+
+    width = max_x - min_x
+    height = max_y - min_y
+    assert width > 0 and height > 0
+
+    mid_x = min_x + 0.5 * width
+    mid_y = min_y + 0.5 * height
+
+    width_tiles = 1 if width <= 64 else width // 64 + 1
+    height_tiles = 1 if height <= 64 else height // 64 + 1
+    num_tiles = width_tiles * height_tiles
+    if max_num_tiles and num_tiles > max_num_tiles:
+        raise RuntimeError(
+            "Produced {num_tiles} > max_num_tiles={max_num_tiles}",
+        )
+
+    new_width = 64 * width_tiles
+    new_height = 64 * height_tiles
+
+    new_width -= 0.2
+    new_height -= 0.2
+
+    bounding_box = Polygon.from_bounds(
+        xmin=mid_x - 0.5 * new_width,
+        xmax=mid_x + 0.5 * new_width,
+        ymin=mid_y - 0.5 * new_height,
+        ymax=mid_y + 0.5 * new_height,
+    )
+
+    original_result = crop_and_mask(
+        crop=bounding_box,
+        mask=mask,
+        raster_path=raster_path,
+    )
+    lidar_array = original_result["lidar_array"]
+    mask_array = original_result["mask_array"]
+    if "rgb_array" in original_result:
+        with_rgb = True
+        rgb_array = original_result["rgb_array"]
+    else:
+        # Discard rgb_array before returning, but this rgb_array placeholder
+        # will reduce a lot of branching in the following code.
+        with_rgb = False
+        rgb_array = np.zeros((3, *lidar_array.shape[1:]), dtype="uint8")
+
+    # Convert (CHANNELS, HEIGHT, WIDTH) -> (HEIGHT, WIDTH, CHANNELS),
+    # which is the standard for everything besides rasterio.
+    lidar_array = np.moveaxis(lidar_array, source=0, destination=2)
+    mask_array = np.moveaxis(mask_array, source=0, destination=2)
+    rgb_array = np.moveaxis(rgb_array, source=0, destination=2)
+
+    # Trim last index if we have a small mismatch of the 256 multiplicity
+    if lidar_array.shape[0] % 256 != 0:
+        lidar_array = lidar_array[:-1, :, :]
+        mask_array = mask_array[:-1, :, :]
+        rgb_array = rgb_array[:-1, :, :]
+    if lidar_array.shape[1] % 256 != 0:
+        lidar_array = lidar_array[:, :-1, :]
+        mask_array = mask_array[:, :-1, :]
+        rgb_array = rgb_array[:, :-1, :]
+
+    try:
+        for array in (lidar_array, mask_array, rgb_array):
+            assert array.shape[0] % 256 == 0
+            assert array.shape[1] % 256 == 0
+    except AssertionError:
+        lidar_shape = lidar_array.shape
+        mask_shape = mask_array.shape
+        raise RuntimeError(
+            f"LiDAR and/or mask could not be reshaped to a"
+            "multiple of (256, 256). The resulting shape is: "
+            f"lidar_shape={lidar_shape}, mask_shape={mask_shape}."
+        )
+
+    # Extract tiles from arrays
+    lidar_tiles = view_as_blocks(lidar_array, (256, 256, 1))
+    mask_tiles = view_as_blocks(mask_array, (256, 256, 1))
+    rgb_tiles = view_as_blocks(rgb_array, (256, 256, 3))
+
+    tile_dimensions = lidar_tiles.shape[:2]
+    number_of_tiles = tile_dimensions[0] * tile_dimensions[1]
+
+    # Convert to standard shape (BATCH_SIZE, HEIGHT, WIDTH, CHANNELS)
+    lidar_tiles = lidar_tiles.reshape(number_of_tiles, 256, 256, 1)
+    mask_tiles = mask_tiles.reshape(number_of_tiles, 256, 256, 1)
+    rgb_tiles = rgb_tiles.reshape(number_of_tiles, 256, 256, 3)
+
+    result = {
+        "lidar_tiles": lidar_tiles,
+        "mask_tiles": mask_tiles,
+        "tile_dimensions": tile_dimensions,
+        "number_of_tiles": number_of_tiles,
+    }
+    if with_rgb:
+        result["rgb_tiles"] = rgb_tiles
+
+    original_result.update(result)
+    return original_result
