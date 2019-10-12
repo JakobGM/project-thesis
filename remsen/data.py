@@ -115,66 +115,6 @@ class Dataset:
         """Fetch specific building from dataset."""
         return self.buildings()[index]
 
-    def construct_observation(
-        self,
-        cadastre: Union[int, Polygon],
-    ) -> Tuple[MemoryFile, MemoryFile]:
-        """Construct observation for a given cadastre."""
-        if isinstance(cadastre, int):
-            cadastre = self.cadastre(index=cadastre)
-
-        buildings = self.buildings()
-        intersecting_buildings = cadastre.intersection(buildings)
-
-        if isinstance(intersecting_buildings, GeometryCollection):
-            intersecting_buildings = MultiPolygon([
-                feature
-                for feature
-                in cadastre.intersection(buildings)
-                if not isinstance(feature, Point)
-            ])
-
-        with rasterio.open(self.lidar_path) as src:
-            assert str(src.crs["proj"]) == "utm" and int(src.crs["zone"]) == 32
-            cropped_data, affine_transformation = mask(
-                src, shapes=[cadastre], all_touched=True, crop=True, filled=False
-            )
-
-            metadata = src.meta.copy()
-            metadata.update(
-                {
-                    "height": cropped_data.shape[1],
-                    "width": cropped_data.shape[2],
-                    "transform": affine_transformation,
-                    "driver": "GTiff",
-                }
-            )
-
-            cropped_lidar_file = MemoryFile()
-            with rasterio.open(cropped_lidar_file, "w", **metadata) as file:
-                file.write(cropped_data)
-                if intersecting_buildings:
-                    building_data, _ = mask(
-                        file,
-                        shapes=[intersecting_buildings],
-                        all_touched=True,
-                        crop=False,
-                    )
-                    building_data[building_data > src.nodata] = 1
-                    building_data[building_data != 1] = 0
-                    building_data = building_data.astype("uint8", copy=False)
-                else:
-                    building_data = np.zeros(cropped_data.shape, dtype="uint8")
-
-            metadata = metadata.copy()
-            metadata.update({"dtype": "uint8", "nodata": int(2 ** 8 - 1)})
-
-            building_file = MemoryFile()
-            with rasterio.open(building_file, "w", **metadata) as file:
-                file.write(building_data)
-
-            return cropped_lidar_file, building_file
-
     def tiles(
         self,
         cadastre_index,
@@ -222,8 +162,10 @@ class Dataset:
             ymax=mid_y + 0.5 * new_height,
         )
 
-        cropped_lidar_file, building_file = self.construct_observation(
-            cadastre=bounding_box,
+        cropped_lidar_file, building_file = raster.crop_and_mask(
+            crop=bounding_box,
+            mask=self.buildings(),
+            raster_path=self.lidar_path,
         )
 
         with cropped_lidar_file.open() as lidar_handle:
