@@ -118,7 +118,6 @@ class Dataset:
     def tiles(
         self,
         cadastre_index,
-        with_tile_dimensions: bool = False,
         max_num_tiles: Optional[int] = None,
     ) -> np.ndarray:
         """
@@ -128,8 +127,7 @@ class Dataset:
         256 x 256, each tile represenents a 64m x 64m area.
 
         :param cadastre_index: Positive integer identifying the cadastre.
-        :param with_tile_dimensions: Return the original dimension of the tiles.
-        :max_num_tiles: Skip tile generation if tiles exceed this number.
+        :param max_num_tiles: Skip tile generation if tiles exceed this number.
         """
         cadastre = self.cadastre(index=cadastre_index)
         min_x, min_y, max_x, max_y = cadastre.bounds
@@ -163,16 +161,16 @@ class Dataset:
             ymax=mid_y + 0.5 * new_height,
         )
 
-        result = raster.crop_and_mask(
+        original_result = raster.crop_and_mask(
             crop=bounding_box,
             mask=self.buildings(),
             raster_path=self.lidar_path,
         )
-        lidar_array = result["lidar_array"]
-        building_array = result["mask_array"]
-        if "rgb_array" in result:
+        lidar_array = original_result["lidar_array"]
+        building_array = original_result["mask_array"]
+        if "rgb_array" in original_result:
             with_rgb = True
-            rgb_array = result["rgb_array"]
+            rgb_array = original_result["rgb_array"]
         else:
             # Discard rgb_array before returning, but this rgb_array placeholder
             # will reduce a lot of branching in the following code.
@@ -229,17 +227,25 @@ class Dataset:
         }
         if with_rgb:
             result["rgb_tiles"] = rgb_tiles
-        return result
 
-    def plot_lidar_tiles(
+        original_result.update(result)
+        return original_result
+
+    def plot_tiles(
         self,
         cadastre_index: int,
         show: bool = True,
         with_legend: bool = True,
+        rgb: bool = False,
     ):
-        result = self.tiles(
-            cadastre_index=cadastre_index, with_tile_dimensions=True,
-        )
+        result = self.tiles(cadastre_index=cadastre_index)
+        building_tiles = result["building_tiles"]
+        tile_dimensions = result["tile_dimensions"]
+        if rgb:
+            background_tiles = result["rgb_tiles"]
+        else:
+            background_tiles = result["lidar_tiles"]
+
         fig, axes = plt.subplots(
             *tile_dimensions,
             figsize=(15, 15),
@@ -262,30 +268,28 @@ class Dataset:
             [patheffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
         )
 
-        lidar_tiles = result["lidar_tiles"]
-        building_tiles = result["building_tiles"]
-        tile_dimensions = result["tile_dimensions"]
+        if not rgb:
+            vmin, vmax = background_tiles.min(), background_tiles.max()
+        else:
+            vmin, vmax = None, None
 
-        lidar_tiles = result["lidar_tiles"]
-        building_tiles = result["building_tiles"]
-        tile_dimensions = result["tile_dimensions"]
-
-        vmin = lidar_tiles.min()
-        vmax = lidar_tiles.max()
         for (lidar_tile, building_tile), ax \
-                in zip(zip(lidar_tiles, building_tiles), axes.flatten()):
+                in zip(zip(background_tiles, building_tiles), axes.flatten()):
             lidar_image = ax.imshow(
                 np.squeeze(lidar_tile),
                 vmin=vmin,
                 vmax=vmax,
             )
-            ax.imshow(
-                np.squeeze(building_tile),
-                alpha=0.1,
-                cmap="binary",
-            )
 
-        if with_legend and len(axes.flatten()) == 1:
+            rgba_building = np.zeros(shape=(256, 256, 4))
+
+            # Set building area to be semi-transparent red
+            rgba_building[:, :, 0] = building_tile[:, :, 0]
+            is_building = (building_tile == 1).reshape(256, 256)
+            rgba_building[:, :, 3][is_building] = 0.25 if rgb else 0.2
+            ax.imshow(rgba_building, cmap="binary")
+
+        if with_legend and len(axes.flatten()) == 1 and not rgb:
             divider = make_axes_locatable(axes[0][0])
             colorbar_ax = divider.append_axes("right", size="5%", pad=0.05)
             fig.colorbar(
