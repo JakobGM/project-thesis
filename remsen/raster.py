@@ -71,6 +71,8 @@ def crop_and_mask(
 
     with rasterio.open(raster_path) as src:
         assert str(src.crs["proj"]) == "utm" and int(src.crs["zone"]) == 32
+        original_metadata = src.meta.copy()
+
         bands = src.count
         if bands == 1:
             # Raster file only contains one band; interpreting as LiDAR data
@@ -128,54 +130,54 @@ def crop_and_mask(
         else:
             raise NotImplementedError(f"Unsupported number of bands = {bands}")
 
-        lidar_metadata = src.meta.copy()
-        lidar_metadata.update(
-            {
-                "count": 1,
-                "height": cropped_lidar_data.shape[1],
-                "width": cropped_lidar_data.shape[2],
-                "transform": affine_transformation,
-                "driver": "GTiff",
-                "dtype": cropped_lidar_data.dtype,
-            }
-        )
-        cropped_lidar_file = MemoryFile()
-        with rasterio.open(cropped_lidar_file, "w", **lidar_metadata) as file:
-            file.write(cropped_lidar_data)
-            if mask:
-                mask_data, _ = rasterio_mask(
-                    file,
-                    shapes=[mask],
-                    all_touched=True,
-                    crop=False,
-                )
-                mask_data[mask_data > file.nodata] = 1
-                mask_data[mask_data != 1] = 0
-                mask_data = mask_data.astype("uint8", copy=False)
-            else:
-                mask_data = np.zeros(
-                    cropped_lidar_data.shape,
-                    dtype="uint8",
-                )
+    lidar_metadata = original_metadata.copy()
+    lidar_metadata.update(
+        {
+            "count": 1,
+            "height": cropped_lidar_data.shape[1],
+            "width": cropped_lidar_data.shape[2],
+            "transform": affine_transformation,
+            "driver": "GTiff",
+            "dtype": cropped_lidar_data.dtype,
+        }
+    )
+    cropped_lidar_file = MemoryFile()
+    with rasterio.open(cropped_lidar_file, "w", **lidar_metadata) as file:
+        file.write(cropped_lidar_data)
+        if mask:
+            mask_data, _ = rasterio_mask(
+                file,
+                shapes=[mask],
+                all_touched=True,
+                crop=False,
+            )
+            mask_data[mask_data > file.nodata] = 1
+            mask_data[mask_data != 1] = 0
+            mask_data = mask_data.astype("uint8", copy=False)
+        else:
+            mask_data = np.zeros(
+                cropped_lidar_data.shape,
+                dtype="uint8",
+            )
 
-        mask_metadata = lidar_metadata.copy()
-        mask_metadata.update({"dtype": "uint8", "nodata": int(2 ** 8 - 1)})
-        mask_file = MemoryFile()
-        with rasterio.open(mask_file, "w", **mask_metadata) as file:
-            file.write(mask_data)
+    mask_metadata = lidar_metadata.copy()
+    mask_metadata.update({"dtype": "uint8", "nodata": int(2 ** 8 - 1)})
+    mask_file = MemoryFile()
+    with rasterio.open(mask_file, "w", **mask_metadata) as file:
+        file.write(mask_data)
 
-        if with_rgb:
-            rgb_metadata = lidar_metadata.copy()
-            rgb_metadata.update({
-                "dtype": cropped_aerial_data.dtype,
-                "count": 3,
-            })
-            rgb_file = MemoryFile()
-            with rasterio.open(rgb_file, "w", **rgb_metadata) as file:
-                file.write(cropped_aerial_data)
-            result["rgb_file"] = rgb_file
+    if with_rgb:
+        rgb_metadata = lidar_metadata.copy()
+        rgb_metadata.update({
+            "dtype": cropped_aerial_data.dtype,
+            "count": 3,
+        })
+        rgb_file = MemoryFile()
+        with rasterio.open(rgb_file, "w", **rgb_metadata) as file:
+            file.write(cropped_aerial_data)
+        result["rgb_file"] = rgb_file
 
-        result["lidar_file"] = cropped_lidar_file
-        result["mask_file"] = mask_file
-        result["mask_array"] = mask_data
-        return result
+    result["lidar_file"] = cropped_lidar_file
+    result["mask_file"] = mask_file
+    result["mask_array"] = mask_data
+    return result

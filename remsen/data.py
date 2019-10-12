@@ -224,6 +224,7 @@ class Dataset:
             "building_tiles": building_tiles,
             "tile_dimensions": tile_dimensions,
             "number_of_tiles": number_of_tiles,
+            "cadastre_index": cadastre_index,
         }
         if with_rgb:
             result["rgb_tiles"] = rgb_tiles
