@@ -67,6 +67,8 @@ def crop_and_mask(
             if not isinstance(feature, Point)
         ])
 
+    result = {"shapely_mask": mask, "shapely_crop": crop}
+
     with rasterio.open(raster_path) as src:
         assert str(src.crs["proj"]) == "utm" and int(src.crs["zone"]) == 32
         bands = src.count
@@ -79,6 +81,7 @@ def crop_and_mask(
                 crop=True,
                 filled=False,
             )
+            result["lidar_array"] = cropped_lidar_data
         elif bands == 4:
             # Raster file contains four bands; interpreting as ZRGB data
             raster_bands = {1, 2, 3, 4}
@@ -118,11 +121,13 @@ def crop_and_mask(
             assert (
                 affine_transformation == affine_aerial_transformation
             )
+            result["lidar_array"] = cropped_lidar_data
+            result["rgb_array"] = cropped_aerial_data
         else:
             raise NotImplementedError(f"Unsupported number of bands = {bands}")
 
-        metadata = src.meta.copy()
-        metadata.update(
+        lidar_metadata = src.meta.copy()
+        lidar_metadata.update(
             {
                 "count": 1,
                 "height": cropped_lidar_data.shape[1],
@@ -132,9 +137,8 @@ def crop_and_mask(
                 "dtype": cropped_lidar_data.dtype,
             }
         )
-
         cropped_lidar_file = MemoryFile()
-        with rasterio.open(cropped_lidar_file, "w", **metadata) as file:
+        with rasterio.open(cropped_lidar_file, "w", **lidar_metadata) as file:
             file.write(cropped_lidar_data)
             if mask:
                 mask_data, _ = rasterio_mask(
@@ -152,11 +156,23 @@ def crop_and_mask(
                     dtype="uint8",
                 )
 
-        metadata = metadata.copy()
-        metadata.update({"dtype": "uint8", "nodata": int(2 ** 8 - 1)})
-
+        mask_metadata = lidar_metadata.copy()
+        mask_metadata.update({"dtype": "uint8", "nodata": int(2 ** 8 - 1)})
         mask_file = MemoryFile()
-        with rasterio.open(mask_file, "w", **metadata) as file:
+        with rasterio.open(mask_file, "w", **mask_metadata) as file:
             file.write(mask_data)
 
-        return cropped_lidar_file, mask_file
+        rgb_metadata = lidar_metadata.copy()
+        rgb_metadata.update({
+            "dtype": cropped_aerial_data.dtype,
+            "count": 3,
+        })
+        rgb_file = MemoryFile()
+        with rasterio.open(rgb_file, "w", **rgb_metadata) as file:
+            file.write(cropped_aerial_data)
+
+        result["lidar_file"] = cropped_lidar_file
+        result["mask_file"] = mask_file
+        result["mask_array"] = mask_data
+        result["rgb_file"] = rgb_file
+        return result

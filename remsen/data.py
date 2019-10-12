@@ -162,17 +162,13 @@ class Dataset:
             ymax=mid_y + 0.5 * new_height,
         )
 
-        cropped_lidar_file, building_file = raster.crop_and_mask(
+        result = raster.crop_and_mask(
             crop=bounding_box,
             mask=self.buildings(),
             raster_path=self.lidar_path,
         )
-
-        with cropped_lidar_file.open() as lidar_handle:
-            lidar_array = lidar_handle.read(1)
-
-        with building_file.open() as building_handle:
-            building_array = building_handle.read(1)
+        lidar_array = np.squeeze(result["lidar_array"])
+        building_array = np.squeeze(result["mask_array"])
 
         if lidar_array.shape[0] % 256 != 0:
             lidar_array = lidar_array[:-1, :]
