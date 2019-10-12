@@ -70,8 +70,7 @@ class Dataset:
 
         assert lidar_path.exists()
         self.lidar_path = lidar_path
-        with rasterio.open(lidar_path, "r") as lidar_file:
-            self.lidar_nodata_value = lidar_file.nodata
+        self.lidar_nodata_value = raster.lidar_nodata_value(path=self.lidar_path)
         assert self.lidar_nodata_value < 0
 
         self.cache_dir = cache_dir
