@@ -10,11 +10,12 @@ import fiona
 
 from ipypb import irange, track
 
-from matplotlib import pyplot as plt
 from matplotlib import colors
+from matplotlib import patheffects
+from matplotlib import pyplot as plt
 from matplotlib.patches import Patch
-import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import FormatStrFormatter
+
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import numpy as np
@@ -293,7 +294,7 @@ class Dataset:
             alpha=0.5,
         )
         cadastre_text.set_path_effects(
-            [PathEffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
+            [patheffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
         )
 
         vmin = lidar_tiles.min()
