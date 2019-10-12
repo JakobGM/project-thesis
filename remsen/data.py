@@ -124,12 +124,13 @@ class Dataset:
         """
         Return LiDAR and building tiles for given cadastre.
 
+        Since we have pixels of size 0.25^2 meters, and we return tiles of size
+        256 x 256, each tile represenents a 64m x 64m area.
+
         :param cadastre_index: Positive integer identifying the cadastre.
         :param with_tile_dimensions: Return the original dimension of the tiles.
         :max_num_tiles: Skip tile generation if tiles exceed this number.
         """
-        # (0.25m, 0.25m) pixels
-        # (256px, 256px) tiles -> (64m, 64m) tiles
         cadastre = self.cadastre(index=cadastre_index)
         min_x, min_y, max_x, max_y = cadastre.bounds
 
@@ -167,51 +168,76 @@ class Dataset:
             mask=self.buildings(),
             raster_path=self.lidar_path,
         )
-        lidar_array = np.squeeze(result["lidar_array"])
-        building_array = np.squeeze(result["mask_array"])
+        lidar_array = result["lidar_array"]
+        building_array = result["mask_array"]
+        if "rgb_array" in result:
+            with_rgb = True
+            rgb_array = result["rgb_array"]
+        else:
+            # Discard rgb_array before returning, but this rgb_array placeholder
+            # will reduce a lot of branching in the following code.
+            with_rgb = False
+            rgb_array = np.zeros((3, *lidar_array.shape[1:]), dtype="uint8")
 
+        # Convert (CHANNELS, HEIGHT, WIDTH) -> (HEIGHT, WIDTH, CHANNELS),
+        # which is the standard for everything besides rasterio.
+        lidar_array = np.moveaxis(lidar_array, source=0, destination=2)
+        building_array = np.moveaxis(building_array, source=0, destination=2)
+        rgb_array = np.moveaxis(rgb_array, source=0, destination=2)
+
+        # Trim last index if we have a small mismatch of the 256 multiplicity
         if lidar_array.shape[0] % 256 != 0:
-            lidar_array = lidar_array[:-1, :]
-            building_array = building_array[:-1, :]
+            lidar_array = lidar_array[:-1, :, :]
+            building_array = building_array[:-1, :, :]
+            rgb_array = rgb_array[:-1, :, :]
         if lidar_array.shape[1] % 256 != 0:
-            lidar_array = lidar_array[:, :-1]
-            building_array = building_array[:, :-1]
-
-        lidar_shape = lidar_array.shape
-        building_shape = building_array.shape
+            lidar_array = lidar_array[:, :-1, :]
+            building_array = building_array[:, :-1, :]
+            rgb_array = rgb_array[:, :-1, :]
 
         try:
-            assert lidar_shape[0] % 256 == 0
-            assert lidar_shape[1] % 256 == 0
-            assert building_shape[0] % 256 == 0
-            assert building_shape[1] % 256 == 0
+            for array in (lidar_array, building_array, rgb_array):
+                assert array.shape[0] % 256 == 0
+                assert array.shape[1] % 256 == 0
         except AssertionError:
+            lidar_shape = lidar_array.shape
+            building_shape = building_array.shape
             raise RuntimeError(
                 f"Cadastre index {cadastre_index} could not be reshaped to a"
                 "multiple of (256, 256). The resulting shape is: "
                 f"lidar_shape={lidar_shape}, building_shape={building_shape}."
             )
 
-        lidar_tiles = view_as_blocks(lidar_array, (256, 256))
-        building_tiles = view_as_blocks(building_array, (256, 256))
+        # Extract tiles from arrays
+        lidar_tiles = view_as_blocks(lidar_array, (256, 256, 1))
+        building_tiles = view_as_blocks(building_array, (256, 256, 1))
+        rgb_tiles = view_as_blocks(rgb_array, (256, 256, 3))
 
         tile_dimensions = lidar_tiles.shape[:2]
         number_of_tiles = tile_dimensions[0] * tile_dimensions[1]
 
-        lidar_tiles = lidar_tiles.reshape(number_of_tiles, 256, 256)
-        building_tiles = building_tiles.reshape(number_of_tiles, 256, 256)
+        # Convert to standard shape (BATCH_SIZE, HEIGHT, WIDTH, CHANNELS)
+        lidar_tiles = lidar_tiles.reshape(number_of_tiles, 256, 256, 1)
+        building_tiles = building_tiles.reshape(number_of_tiles, 256, 256, 1)
+        rgb_tiles = rgb_tiles.reshape(number_of_tiles, 256, 256, 3)
 
-        if with_tile_dimensions:
-            return lidar_tiles, building_tiles, tile_dimensions
-        return lidar_tiles, building_tiles
+        result = {
+            "lidar_tiles": lidar_tiles,
+            "building_tiles": building_tiles,
+            "tile_dimensions": tile_dimensions,
+            "number_of_tiles": number_of_tiles,
+        }
+        if with_rgb:
+            result["rgb_tiles"] = rgb_tiles
+        return result
 
-    def plot_tiles(
+    def plot_lidar_tiles(
         self,
         cadastre_index: int,
         show: bool = True,
         with_legend: bool = True,
     ):
-        lidar_tiles, building_tiles, tile_dimensions = self.tiles_cache(
+        result = self.tiles(
             cadastre_index=cadastre_index, with_tile_dimensions=True,
         )
         fig, axes = plt.subplots(
@@ -236,12 +262,28 @@ class Dataset:
             [patheffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
         )
 
+        lidar_tiles = result["lidar_tiles"]
+        building_tiles = result["building_tiles"]
+        tile_dimensions = result["tile_dimensions"]
+
+        lidar_tiles = result["lidar_tiles"]
+        building_tiles = result["building_tiles"]
+        tile_dimensions = result["tile_dimensions"]
+
         vmin = lidar_tiles.min()
         vmax = lidar_tiles.max()
         for (lidar_tile, building_tile), ax \
                 in zip(zip(lidar_tiles, building_tiles), axes.flatten()):
-            lidar_image = ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
-            ax.imshow(building_tile, alpha=0.1, cmap="binary")
+            lidar_image = ax.imshow(
+                np.squeeze(lidar_tile),
+                vmin=vmin,
+                vmax=vmax,
+            )
+            ax.imshow(
+                np.squeeze(building_tile),
+                alpha=0.1,
+                cmap="binary",
+            )
 
         if with_legend and len(axes.flatten()) == 1:
             divider = make_axes_locatable(axes[0][0])

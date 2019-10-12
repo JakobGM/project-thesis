@@ -74,6 +74,7 @@ def crop_and_mask(
         bands = src.count
         if bands == 1:
             # Raster file only contains one band; interpreting as LiDAR data
+            with_rgb = False
             cropped_lidar_data, affine_transformation = rasterio_mask(
                 dataset=src,
                 shapes=[crop],
@@ -84,6 +85,7 @@ def crop_and_mask(
             result["lidar_array"] = cropped_lidar_data
         elif bands == 4:
             # Raster file contains four bands; interpreting as ZRGB data
+            with_rgb = True
             raster_bands = {1, 2, 3, 4}
             lidar_band = 1 + lidar_band_index(
                 raster_path=raster_path,
@@ -162,17 +164,18 @@ def crop_and_mask(
         with rasterio.open(mask_file, "w", **mask_metadata) as file:
             file.write(mask_data)
 
-        rgb_metadata = lidar_metadata.copy()
-        rgb_metadata.update({
-            "dtype": cropped_aerial_data.dtype,
-            "count": 3,
-        })
-        rgb_file = MemoryFile()
-        with rasterio.open(rgb_file, "w", **rgb_metadata) as file:
-            file.write(cropped_aerial_data)
+        if with_rgb:
+            rgb_metadata = lidar_metadata.copy()
+            rgb_metadata.update({
+                "dtype": cropped_aerial_data.dtype,
+                "count": 3,
+            })
+            rgb_file = MemoryFile()
+            with rasterio.open(rgb_file, "w", **rgb_metadata) as file:
+                file.write(cropped_aerial_data)
+            result["rgb_file"] = rgb_file
 
         result["lidar_file"] = cropped_lidar_file
         result["mask_file"] = mask_file
         result["mask_array"] = mask_data
-        result["rgb_file"] = rgb_file
         return result
