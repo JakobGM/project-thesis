@@ -2,6 +2,12 @@
 # For representing arbitrary polygon vertices without metadata
 shapely
 
+# For geographic data types in pandas data frames
+geopandas
+
+# For plotting GeoDataFrame
+descartes
+
 ## --- Data managers ---
 # Raster image library
 rasterio

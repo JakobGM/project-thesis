@@ -4,7 +4,7 @@ import time
 import warnings
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Collection, Dict, Mapping, Optional, Tuple
+from typing import Collection, Mapping, Optional, Tuple
 
 import fiona
 
@@ -23,24 +23,13 @@ import numpy as np
 from shapely.geometry import (
     MultiPolygon,
     Polygon,
-    shape,
 )
 
 from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 
-from remsen import augmentation, raster
-
-
-def fiona_polygon(fiona_item: Dict) -> Polygon:
-    """Convert fiona item to Shapely polygon."""
-    geometry = shape(fiona_item["geometry"])
-    if not geometry.is_valid:
-        geometry = geometry.buffer(0.0)
-    assert geometry.is_valid
-    assert geometry.geom_type in ("Polygon", "MultiPolygon")
-    return geometry
+from remsen import augmentation, raster, vector
 
 
 class Dataset:
@@ -74,11 +63,11 @@ class Dataset:
 
     def cadastre(self, index: int) -> Polygon:
         """Fetch cadastre from dataset."""
-        with fiona.open(self.cadastre_path, "r", layer="Teig") as src:
-            srid = int(src.crs["init"].split(":")[1])
-            assert srid == 25832
-            item = src[index + 1]
-            return fiona_polygon(item)
+        return vector.get_polygon(
+            path=self.cadastre_path,
+            layer="Teig",
+            index=index,
+        )
 
     def buildings(self) -> MultiPolygon:
         """Fetch all buildings from dataset."""
@@ -95,7 +84,9 @@ class Dataset:
             with fiona.open(self.buildings_path, "r", layer="Bygning") as src:
                 srid = int(src.crs["init"].split(":")[1])
                 assert srid == 25832
-                buildings = MultiPolygon([fiona_polygon(item) for item in src])
+                buildings = MultiPolygon(
+                    [vector.fiona_polygon(item) for item in src],
+                )
                 self._buildings = buildings.buffer(0.0)
 
             buildings_cache.write_bytes(
@@ -272,7 +263,7 @@ class Dataset:
             alpha=0.8,
         )
         cadastre_text.set_path_effects(
-            [PathEffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
+            [patheffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
         )
 
         disable_ticks = {
