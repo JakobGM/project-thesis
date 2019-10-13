@@ -157,10 +157,27 @@ class Cache:
         self.mask_name = mask_name
 
         self.mask_dir = self.directory / "mask" / mask_name
+        assert self.mask_dir.exists()
         self.rgb_dir = self.directory / "rgb" / rgb_name
+        assert self.rgb_dir.exists()
         self.lidar_dir = self.directory / "lidar" / lidar_name
+        assert self.lidar_dir.exists()
         self.lidar_metadata = json.loads(
             (self.lidar_dir / "metadata.json").read_text(),
+        )
+
+        lidar_indeces = {p.name for p in self.lidar_dir.glob("*/")}
+        assert lidar_indeces
+        rgb_indeces = {p.name for p in self.rgb_dir.glob("*/")}
+        assert rgb_indeces
+        mask_indeces = {p.name for p in self.mask_dir.glob("*/")}
+        assert mask_indeces
+        common_cadastre_indeces = lidar_indeces.intersection(
+            rgb_indeces,
+            mask_indeces,
+        )
+        self.cadastre_indeces = sorted(
+            [int(index) for index in common_cadastre_indeces],
         )
 
     def cadastre(self, index: int) -> Polygon:
