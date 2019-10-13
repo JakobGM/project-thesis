@@ -8,7 +8,12 @@ from rasterio.enums import ColorInterp
 from rasterio.io import MemoryFile
 from rasterio.mask import mask as rasterio_mask
 
-from shapely.geometry import GeometryCollection, MultiPolygon, Polygon
+from shapely.geometry import (
+    GeometryCollection,
+    MultiPolygon,
+    Point,
+    Polygon,
+)
 
 from skimage.util import view_as_blocks
 
@@ -46,6 +51,12 @@ def lidar_band_index(raster_path: Path) -> int:
         }
         lidar_index = color_interpretations.index(ColorInterp.undefined)
         return lidar_index
+
+
+def bands(raster_path: Path) -> int:
+    """Return number of bands in given raster file."""
+    with rasterio.open(raster_path, "r") as raster_file:
+        return raster_file.count
 
 
 def crop_and_mask(
@@ -184,6 +195,7 @@ def crop_and_mask(
     result["mask_array"] = mask_data
     return result
 
+
 def tiles(
     bounds: Tuple[float, float, float, float],
     raster_path: Path,
@@ -205,7 +217,7 @@ def tiles(
     num_tiles = width_tiles * height_tiles
     if max_num_tiles and num_tiles > max_num_tiles:
         raise RuntimeError(
-            "Produced {num_tiles} > max_num_tiles={max_num_tiles}",
+            f"Produced {num_tiles} > max_num_tiles={max_num_tiles}",
         )
 
     new_width = 64 * width_tiles
