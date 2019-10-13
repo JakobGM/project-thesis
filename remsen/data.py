@@ -1,9 +1,6 @@
 """Module responsible for fetching, pre-processing, and preparing data."""
-import pickle
 import time
 import warnings
-from multiprocessing import Pool
-from pathlib import Path
 from typing import Collection, Mapping, Optional, Tuple
 
 import fiona
@@ -29,7 +26,7 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 
-from remsen import augmentation, raster, vector
+from remsen import augmentation, cache
 
 
 class Dataset:
@@ -37,90 +34,39 @@ class Dataset:
 
     def __init__(
         self,
-        buildings_path: Path = Path("data/building.gpkg"),
-        cadastre_path: Path = Path("data/cadastre.gpkg"),
-        lidar_path: Path = Path("data/lidar.vrt"),
-        cache_dir: Path = Path(".cache/"),
+        cache: cache.Cache,
+        lidar_dataset: str = "trondheim_lidar_2017",
+        rgb_dataset: str = "trondheim_rgb_2017",
+        mask_dataset: str = "trondheim_bygning",
     ) -> None:
-        """Censtruct dataset."""
-        assert buildings_path.exists()
-        self.buildings_path = buildings_path
-
-        assert cadastre_path.exists()
-        self.cadastre_path = cadastre_path
-
-        assert lidar_path.exists()
-        self.lidar_path = lidar_path
-        self.lidar_nodata_value = raster.lidar_nodata_value(
-            raster_path=self.lidar_path,
+        """Construct dataset."""
+        self.cache = cache
+        self.cache.change_dataset(
+            lidar_name=lidar_dataset,
+            rgb_name=rgb_dataset,
+            mask_name=mask_dataset,
         )
-        assert self.lidar_nodata_value < 0
 
-        self.cache_dir = cache_dir
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.tile_cache_path = cache_dir / "tiles"
-        self.tile_cache_path.mkdir(parents=True, exist_ok=True)
+        self.lidar_nodata_value = cache.lidar_metadata["nodata_value"]
+        assert self.lidar_nodata_value < 0
 
     def cadastre(self, index: int) -> Polygon:
         """Fetch cadastre from dataset."""
-        return vector.get_polygon(
-            path=self.cadastre_path,
-            layer="Teig",
-            index=index,
-        )
+        return self.cache.cadastre(index=index)
 
     def buildings(self) -> MultiPolygon:
         """Fetch all buildings from dataset."""
-        buildings_cache = self.cache_dir / "fixed_buildings.pkl"
         if hasattr(self, "_buildings"):
             # In-memory cache
             return self._buildings
-        elif buildings_cache.exists():
-            # On-disk cache
-            self._buildings = pickle.loads(buildings_cache.read_bytes())
-            return self._buildings
         else:
-            # Populate both caches with buffer-fixed buildings
-            with fiona.open(self.buildings_path, "r", layer="Bygning") as src:
-                srid = int(src.crs["init"].split(":")[1])
-                assert srid == 25832
-                buildings = MultiPolygon(
-                    [vector.fiona_polygon(item) for item in src],
-                )
-                self._buildings = buildings.buffer(0.0)
-
-            buildings_cache.write_bytes(
-                pickle.dumps(self._buildings, protocol=pickle.HIGHEST_PROTOCOL),
-            )
+            # On-disk cache
+            self._buildings = self.cache.mask_geometry()
             return self._buildings
 
     def building(self, index: int) -> Polygon:
         """Fetch specific building from dataset."""
         return self.buildings()[index]
-
-    def tiles(
-        self,
-        cadastre_index,
-        max_num_tiles: Optional[int] = None,
-    ) -> np.ndarray:
-        """
-        Return LiDAR and building tiles for given cadastre.
-
-        Since we have pixels of size 0.25^2 meters, and we return tiles of size
-        256 x 256, each tile represenents a 64m x 64m area.
-
-        :param cadastre_index: Positive integer identifying the cadastre.
-        :param max_num_tiles: Skip tile generation if tiles exceed this number.
-        """
-        cadastre = self.cadastre(index=cadastre_index)
-        result = raster.tiles(
-            bounds=cadastre.bounds,
-            raster_path=self.lidar_path,
-            mask=self.buildings(),
-            max_num_tiles=max_num_tiles,
-        )
-        result["cadastre_index"] = cadastre_index
-        return result
 
     def plot_tiles(
         self,
@@ -129,13 +75,20 @@ class Dataset:
         with_legend: bool = True,
         rgb: bool = False,
     ):
-        result = self.tiles(cadastre_index=cadastre_index)
-        building_tiles = result["mask_tiles"]
-        tile_dimensions = result["tile_dimensions"]
+        building_tiles = self.cache.mask_tiles(cadastre_index=cadastre_index)
+        tile_dimensions = self.cache.tile_dimensions(
+            cadastre_index=cadastre_index,
+        )
         if rgb:
-            background_tiles = result["rgb_tiles"]
+            background_tiles = self.cache.rgb_tiles(
+                cadastre_index=cadastre_index,
+            )
         else:
-            background_tiles = result["lidar_tiles"]
+            background_tiles = self.cache.lidar_tiles(
+                cadastre_index=cadastre_index,
+            )
+
+        background_tiles = np.array(background_tiles)
 
         fig, axes = plt.subplots(
             *tile_dimensions,
@@ -518,39 +471,31 @@ class Dataset:
             print(exc)
             return
 
-    def build_tile_cache(self):
-        """
-        Construct tile cache by preprocessing cadastral data.
-        """
-
-        cadastre_indeces = range(0, 47_853)
-        pool = Pool(processes=None)
-        pool_tasks = pool.imap(
-            func=self._save_tile,
-            iterable=cadastre_indeces,
-            chunksize=1,
-        )
-        for result in pool_tasks:
-            pass
-
-    def tiles_cache(
+    def tiles(
         self,
         cadastre_index,
+        *,
         with_tile_dimensions: bool = False,
+        max_num_tiles: Optional[int] = None,
     ) -> np.ndarray:
+        """
+        Return LiDAR and building tiles for given cadastre.
 
-        tile_path = self.tile_cache_path / f"{cadastre_index:07d}.npz"
-        if not tile_path.exists():
-            raise KeyError
+        :param cadastre_index: Positive integer identifying the cadastre.
+        :param max_num_tiles: Skip tile generation if tiles exceed this number.
+        """
+        lidar_tiles = self.cache.lidar_tiles(cadastre_index=cadastre_index)
+        if max_num_tiles and len(lidar_tiles) > max_num_tiles:
+            return
 
-        with np.load(tile_path, "r") as cache_file:
-            lidar_tiles = cache_file["lidar"]
-            building_tiles = cache_file["buildings"]
-            dimensions = tuple(cache_file["dimensions"])
-
+        building_tiles = self.cache.mask_tiles(cadastre_index=cadastre_index)
         if with_tile_dimensions:
+            dimensions = self.cache.tile_dimensions(
+                cadastre_index=cadastre_index,
+            )
             return lidar_tiles, building_tiles, dimensions
-        return lidar_tiles, building_tiles
+        else:
+            return lidar_tiles, building_tiles
 
     def __len__(self) -> int:
         return len(self.buildings())

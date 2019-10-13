@@ -1,10 +1,15 @@
 """Module responsible for all kind of caches used by remsen."""
 import hashlib
+import json
+import pickle
 import subprocess
 import tempfile
+import warnings
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Optional
+
+import fiona
 
 import geopandas
 
@@ -12,7 +17,7 @@ from ipypb import track
 
 import numpy as np
 
-from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry import MultiPolygon, Polygon, mapping, shape
 
 from remsen import raster, vector
 
@@ -47,7 +52,8 @@ def _save_tile(kwargs):
     rgb_dir - Directory to save RGB tiles.
     mask_dir - Directory to save mask tiles.
     """
-    assert len(kwargs) == 7
+    assert len(kwargs) == 8
+    cadastre_index = kwargs["cadastre_index"]
     cadastre = kwargs["cadastre"]
     raster_path = kwargs["raster_path"]
     mask = kwargs["mask"]
@@ -58,15 +64,17 @@ def _save_tile(kwargs):
 
     bounds = cadastre.bounds
     try:
-        result = raster.tiles(
-            bounds=bounds,
-            raster_path=raster_path,
-            mask=mask,
-            max_num_tiles=max_num_tiles,
-        )
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", "Cannot provide views")
+            result = raster.tiles(
+                bounds=bounds,
+                raster_path=raster_path,
+                mask=mask,
+                max_num_tiles=max_num_tiles,
+            )
     except RuntimeError as exc:
         if "> max_num_tiles=" in str(exc):
-            return
+            return cadastre_index, None
         else:
             raise exc
 
@@ -74,7 +82,7 @@ def _save_tile(kwargs):
         lidar_dir.mkdir(parents=True, exist_ok=True)
         lidar_tiles = result["lidar_tiles"]
         for tile_index, lidar_tile in enumerate(lidar_tiles):
-            save_to = lidar_dir / f"{tile_index}.npy"
+            save_to = lidar_dir / f"{tile_index:04d}.npy"
             if not save_to.exists():
                 np.save(save_to, lidar_tile)
 
@@ -82,7 +90,7 @@ def _save_tile(kwargs):
         rgb_dir.mkdir(parents=True, exist_ok=True)
         rgb_tiles = result["rgb_tiles"]
         for tile_index, rgb_tile in enumerate(rgb_tiles):
-            save_to = rgb_dir / f"{tile_index}.npy"
+            save_to = rgb_dir / f"{tile_index:04d}.npy"
             if not save_to.exists():
                 np.save(save_to, rgb_tile)
 
@@ -90,14 +98,14 @@ def _save_tile(kwargs):
         mask_dir.mkdir(parents=True, exist_ok=True)
         mask_tiles = result["mask_tiles"]
         for tile_index, mask_tile in enumerate(mask_tiles):
-            save_to = mask_dir / f"{tile_index}.npy"
+            save_to = mask_dir / f"{tile_index:04d}.npy"
             if not save_to.exists():
                 np.save(save_to, mask_tile)
 
-    return result["tile_dimensions"]
+    return cadastre_index, result["tile_dimensions"]
 
 
-class CadastreCache:
+class Cache:
     """Cache for given cadastre set."""
 
     def __init__(
@@ -114,14 +122,11 @@ class CadastreCache:
         self.directory = parent_dir / "cadastre" / self.name
         self.layer_name = layer_name
         self.cadastre_path = cadastre_path
-        if self.directory.exists():
-            import shutil
-            shutil.rmtree(str(self.directory))
         if not self.directory.exists():
             self.first_time_setup()
 
     @classmethod
-    def from_name(cls, name: str) -> "CadastreCache":
+    def from_name(cls, name: str) -> "Cache":
         pass
 
     def first_time_setup(self):
@@ -140,6 +145,24 @@ class CadastreCache:
             layer="Teig",
         )
 
+    def change_dataset(
+        self,
+        lidar_name: str,
+        rgb_name: str,
+        mask_name: str,
+    ) -> None:
+        """Change which datasets that are used for other method calls."""
+        self.lidar_name = lidar_name
+        self.rgb_name = rgb_name
+        self.mask_name = mask_name
+
+        self.mask_dir = self.directory / "mask" / mask_name
+        self.rgb_dir = self.directory / "rgb" / rgb_name
+        self.lidar_dir = self.directory / "lidar" / lidar_name
+        self.lidar_metadata = json.loads(
+            (self.lidar_dir / "metadata.json").read_text(),
+        )
+
     def cadastre(self, index: int) -> Polygon:
         """Fetch cadastre from dataset."""
         return vector.get_polygon(
@@ -148,10 +171,94 @@ class CadastreCache:
             index=index,
         )
 
+    def cache_mask(
+        self,
+        ogr_path: Path,
+        layer_name: str,
+        mask_name: str,
+    ) -> None:
+        """Cache given mask to disk."""
+        mask_directory = self.directory / "mask" / mask_name
+        mask_cache = mask_directory / "mask.shp"
+        if mask_cache.exists():
+            return self.mask_geometry(mask_name=mask_name)
+        else:
+            mask_directory.mkdir(parents=True, exist_ok=True)
+
+        # Populate both caches with buffer-fixed buildings
+        with fiona.open(ogr_path, "r", layer=layer_name) as src:
+            srid = int(src.crs["init"].split(":")[1])
+            assert srid == 25832
+
+            with fiona.open(mask_cache, "w", **src.meta) as dest:
+                for feature in track(src):
+                    geometry = shape(feature["geometry"])
+                    if not geometry.is_valid:
+                        clean = geometry.buffer(0.0)
+                        assert clean.is_valid
+                        assert clean.geom_type == "Polygon"
+                        geometry = clean
+                    feature["geometry"] = mapping(geometry)
+                    dest.write(feature)
+
+        mask_pickle = mask_directory / "mask.pkl"
+        with fiona.open(ogr_path, "r", layer=layer_name) as src:
+            mask = MultiPolygon(
+                [vector.fiona_polygon(feature) for feature in track(src)]
+            )
+            print("Buffering multipolygon pickle... ", end="")
+            mask = mask.buffer(0.0)
+            print("Done!")
+
+        print("Writing pickle file... ", end="")
+        mask_pickle.write_bytes(
+            pickle.dumps(mask, protocol=pickle.HIGHEST_PROTOCOL),
+        )
+        print("Done!")
+        return mask
+
+    def mask_geometry(self, mask_name: Optional[str] = None) -> MultiPolygon:
+        mask_name = mask_name or self.mask_name
+        mask_directory = self.directory / "mask" / mask_name
+        mask_pickle = mask_directory / "mask.pkl"
+        assert mask_pickle.exists()
+        return pickle.loads(mask_pickle.read_bytes())
+
+    def lidar_tiles(self, cadastre_index: int):
+        lidar_tile_directory = self.lidar_dir / str(cadastre_index)
+        assert lidar_tile_directory.exists()
+        lidar_tile_paths = sorted(lidar_tile_directory.glob("*.npy"))
+        lidar_tiles = []
+        for lidar_tile_path in lidar_tile_paths:
+            lidar_tiles.append(np.load(lidar_tile_path))
+        return lidar_tiles
+
+    def mask_tiles(self, cadastre_index: int):
+        mask_tile_directory = self.mask_dir / str(cadastre_index)
+        assert mask_tile_directory.exists()
+        mask_tile_paths = sorted(mask_tile_directory.glob("*.npy"))
+        mask_tiles = []
+        for mask_tile_path in mask_tile_paths:
+            mask_tiles.append(np.load(mask_tile_path))
+        return mask_tiles
+
+    def rgb_tiles(self, cadastre_index: int):
+        rgb_tile_directory = self.rgb_dir / str(cadastre_index)
+        assert rgb_tile_directory.exists()
+        rgb_tile_paths = sorted(rgb_tile_directory.glob("*.npy"))
+        rgb_tiles = []
+        for rgb_tile_path in rgb_tile_paths:
+            rgb_tiles.append(np.load(rgb_tile_path))
+        return rgb_tiles
+
+    def tile_dimensions(self, cadastre_index: int):
+        dimension_file = self.directory / "tile_dimensions.json"
+        tile_dimensions = json.loads(dimension_file.read_text())
+        return tile_dimensions[str(cadastre_index)]
+
     def build_tile_cache(
         self,
         raster_path: Path,
-        mask: MultiPolygon,
         mask_name: str,
         lidar_name: Optional[str] = None,
         rgb_name: Optional[str] = None,
@@ -170,6 +277,7 @@ class CadastreCache:
         :param rgb_name: Canonical name identifying the RGB data being used.
         :param max_num_tiles: Skip saving tiles if tiles exceed this number.
         """
+        mask = self.mask_geometry(mask_name=mask_name)
         bands = raster.bands(raster_path=raster_path)
         if bands == 1:
             assert lidar_name
@@ -184,6 +292,14 @@ class CadastreCache:
         rgb_super_dir = self.directory / "rgb" / (rgb_name or "")
         mask_super_dir = self.directory / "mask" / mask_name
 
+        lidar_metadata = {
+            "nodata_value": raster.lidar_nodata_value(raster_path=raster_path),
+        }
+        lidar_metadata_path = lidar_super_dir / "metadata.json"
+        lidar_metadata_path.parent.mkdir(parents=True, exist_ok=True)
+        lidar_metadata_path.touch()
+        lidar_metadata_path.write_text(json.dumps(lidar_metadata))
+
         def _kwargs():
             for cadastre_index in range(len(self)):
                 cadastre = self.cadastre(index=cadastre_index)
@@ -191,6 +307,7 @@ class CadastreCache:
                 rgb_dir = rgb_super_dir / str(cadastre_index)
                 mask_dir = mask_super_dir / str(cadastre_index)
                 yield {
+                    "cadastre_index": cadastre_index,
                     "cadastre": cadastre,
                     "raster_path": raster_path,
                     "mask": mask,
@@ -200,10 +317,20 @@ class CadastreCache:
                     "mask_dir": mask_dir,
                 }
 
+        dimension_file = self.directory / "tile_dimensions.json"
+        if dimension_file.exists():
+            tile_dimensions = json.loads(dimension_file.read_text())
+        else:
+            tile_dimensions = {}
+
         pool = Pool(processes=None)
         pool_tasks = pool.imap(func=_save_tile, iterable=_kwargs(), chunksize=1)
-        for _ in track(pool_tasks, total=len(self)):
-            pass
+        for cadastre_index, dimensions in pool_tasks:
+            print(f"{cadastre_index:06d}", end="\r")
+            if dimensions:
+                tile_dimensions[cadastre_index] = dimensions
+
+        dimension_file.write_text(json.dumps(tile_dimensions))
 
     def __len__(self) -> int:
         """Return number of cadastre in source data."""
