@@ -74,19 +74,25 @@ def _save_tile(kwargs):
         lidar_dir.mkdir(parents=True, exist_ok=True)
         lidar_tiles = result["lidar_tiles"]
         for tile_index, lidar_tile in enumerate(lidar_tiles):
-            np.save(lidar_dir / f"{tile_index}.npy", lidar_tile)
+            save_to = lidar_dir / f"{tile_index}.npy"
+            if not save_to.exists():
+                np.save(save_to, lidar_tile)
 
     if "rgb_tiles" in result:
         rgb_dir.mkdir(parents=True, exist_ok=True)
         rgb_tiles = result["rgb_tiles"]
         for tile_index, rgb_tile in enumerate(rgb_tiles):
-            np.save(rgb_dir / f"{tile_index}.npy", rgb_tile)
+            save_to = rgb_dir / f"{tile_index}.npy"
+            if not save_to.exists():
+                np.save(save_to, rgb_tile)
 
     if "mask_tiles" in result:
         mask_dir.mkdir(parents=True, exist_ok=True)
         mask_tiles = result["mask_tiles"]
         for tile_index, mask_tile in enumerate(mask_tiles):
-            np.save(mask_dir / f"{tile_index}.npy", mask_tile)
+            save_to = mask_dir / f"{tile_index}.npy"
+            if not save_to.exists():
+                np.save(save_to, mask_tile)
 
     return result["tile_dimensions"]
 
