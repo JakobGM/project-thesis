@@ -1,4 +1,3 @@
-import shutil
 from pathlib import Path
 
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -7,14 +6,9 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 def get_callbacks(
     model_name: str,
     early_stopping: bool = False,
-    delete_existing: bool = True,
 ):
     cache_path = Path(".cache/models")
     model_cache_path = cache_path / model_name
-    if not delete_existing:
-        assert not model_cache_path.exists()
-    elif delete_existing and model_cache_path.exists():
-        shutil.rmtree(str(model_cache_path))
 
     model_cache_path.mkdir(parents=True, exist_ok=True)
 
