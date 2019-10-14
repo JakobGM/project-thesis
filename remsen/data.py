@@ -150,14 +150,16 @@ class Dataset:
             return fig, axes
 
     def input_tile_normalizer(self, tiles: np.ndarray) -> np.ndarray:
-        if tiles.ndim == 2:
+        # TODO: Recast to same dimension
+        original_ndim = tiles.ndim
+        if original_ndim == 2:
             # A single tile with squeezed channels is given
             tiles = tiles[np.newaxis, :, :, np.newaxis]
-        elif tiles.ndim == 3:
+        elif original_ndim == 3:
             # A single tile with 1 channel is given
             tiles = tiles[np.newaxis, :, :]
         else:
-            assert tiles.ndim == 4
+            assert original_ndim == 4
 
         # Subtract minimum value of each tile independetly, ignoring nodata
         # Mask nodata values
@@ -189,7 +191,7 @@ class Dataset:
         return tiles
 
     def plot_prediction(self, model, cadastre_index):
-        lidar_tiles, building_tiles, tile_dimensions = self.tiles_cache(
+        lidar_tiles, building_tiles, tile_dimensions = self.tiles(
             cadastre_index=cadastre_index, with_tile_dimensions=True,
         )
         fig, axes = plt.subplots(
@@ -235,6 +237,7 @@ class Dataset:
 
         for (lidar_tile, building_tile), (lidar_ax, prediction_ax, metric_ax) \
                 in zip(zip(lidar_tiles, building_tiles), axes):
+            lidar_tile = np.squeeze(lidar_tile)
             lidar_ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
 
             lidar_tile = np.expand_dims(lidar_tile, 0)
@@ -251,6 +254,7 @@ class Dataset:
             )
 
             predicted_mask = (predicted_building_tile > 0.5).astype("uint8")
+            building_tile = np.squeeze(building_tile)
             TP = np.logical_and(predicted_mask == 1, building_tile == 1)
             TN = np.logical_and(predicted_mask == 0, building_tile == 0)
             FP = np.logical_and(predicted_mask == 1, building_tile == 0)
@@ -350,6 +354,7 @@ class Dataset:
         train_split: float = 0.70,
         validation_split: float = 0.15,
         test_split: float = 0.15,
+        epochs: int = 1,
         minimum_building_area: float = 4,
         rgb: bool = False,
         lidar: bool = True,
@@ -365,26 +370,26 @@ class Dataset:
             raise ValueError("Either rgb or lidar must be True.")
 
         # TODO: Allow either of the two augmentation methods
-        def _generator(cadastre_indeces):
-            for index in cadastre_indeces:
-                try:
-                    for lidar_array, building_array in zip(*self.tiles_cache(index)):
+        def _generator(cadastre_indeces, epochs: int = 1):
+            for _ in range(epochs):
+                batch = []
+                for index in cadastre_indeces:
+                    for lidar_array, building_array in zip(*self.tiles(index)):
                         if building_array.sum() < (minimum_building_area * 16):
                             continue
-                        yield (
-                            np.squeeze(self.input_tile_normalizer(lidar_array), 0),
-                            np.expand_dims(building_array, -1),
-                        )
-                except KeyError:
-                    continue
-                except Exception:
-                    # TODO: log exception here
-                    continue
+                        batch.append((lidar_array, building_array))
+                        if len(batch) == batch_size:
+                            for lidar_array, building_array in batch:
+                                # TODO: Vectorize this operation
+                                lidar_array = self.input_tile_normalizer(lidar_array)
+                                lidar_array.shape = (256, 256, 1)
+                                yield lidar_array, building_array
+                            batch = []
 
         # Split all data into train, validation, and test subsets
-        cadaster_indeces = self.cache.cadastre_indeces
+        cadastre_indeces = self.cache.cadastre_indeces
         train_indeces, remaining = train_test_split(
-            cadaster_indeces,
+            cadastre_indeces,
             train_size=train_split,
             shuffle=True,
             random_state=42,
@@ -408,7 +413,7 @@ class Dataset:
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
             ),
-            args=(train_indeces,),
+            args=(train_indeces, epochs),
         )
         validation = tf.data.Dataset.from_generator(
             generator=_generator,
@@ -417,7 +422,7 @@ class Dataset:
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
             ),
-            args=(val_indeces,),
+            args=(val_indeces, epochs),
         )
         test = tf.data.Dataset.from_generator(
             generator=_generator,
@@ -429,13 +434,6 @@ class Dataset:
             args=(test_indeces,),
         )
 
-        # Train data augmentation
-        if augment:
-            train.map(
-                map_func=augmentation.flip_and_rotate,
-                num_parallel_calls=tf.data.experimental.AUTOTUNE,
-            )
-
         # Prefetching
         train = train.prefetch(buffer_size=prefetch)
         validation = validation.prefetch(buffer_size=prefetch)
@@ -446,39 +444,39 @@ class Dataset:
             train = train.shuffle(buffer_size=512)
 
         # Batching
-        train = train.batch(batch_size=batch_size, drop_remainder=False)
-        validation = validation.batch(batch_size=batch_size, drop_remainder=False)
-        test = test.batch(batch_size=batch_size, drop_remainder=False)
+        train = train.batch(batch_size=batch_size)
+        validation = validation.batch(batch_size=batch_size)
+        test = test.batch(batch_size=batch_size)
 
-        return train, validation, test
-
-    def _save_tile(self, cadastre_index):
-        """Save processed cadastre to cache directory."""
-        cache_path = self.tile_cache_path / f"{cadastre_index:07d}.npz"
-        if cache_path.exists():
-            return
-
-        try:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", "Cannot provide views")
-                image_tiles, mask_tiles, (height, width) = self.tiles(
-                    cadastre_index=cadastre_index,
-                    with_tile_dimensions=True,
-                    max_num_tiles=100,
-                )
-            np.savez_compressed(
-                file=cache_path,
-                lidar=image_tiles,
-                buildings=mask_tiles,
-                dimensions=np.array([height, width]),
+        # Train data augmentation
+        if augment:
+            train.map(
+                map_func=augmentation.flip_and_rotate,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE,
             )
-        except fiona.errors.DriverError:
-            print("Fiona race condition encountered. Sleeping for 1 second...")
-            time.sleep(1)
-            return self._save_tile(cadastre_index)
-        except RuntimeError as exc:
-            print(exc)
-            return
+
+        # TODO: Implement this with Cache.dataframe query
+        num_train_tiles = 0
+        for tile in _generator(train_indeces, epochs=1):
+            num_train_tiles += 1
+        num_val_tiles = 0
+        for tile in _generator(val_indeces, epochs=1):
+            num_val_tiles += 1
+
+        assert num_train_tiles % batch_size == 0
+        assert num_val_tiles % batch_size == 0
+        steps_per_epoch = int(num_train_tiles // batch_size)
+        validation_steps = int(num_val_tiles // batch_size)
+
+        train_kwargs = {
+            "x": train,
+            "validation_data": validation,
+            "epochs": epochs,
+            "steps_per_epoch": steps_per_epoch,
+            "validation_steps": validation_steps,
+        }
+
+        return train_kwargs, test
 
     def tiles(
         self,
@@ -486,7 +484,7 @@ class Dataset:
         *,
         with_tile_dimensions: bool = False,
         max_num_tiles: Optional[int] = None,
-    ) -> np.ndarray:
+    ):
         """
         Return LiDAR and building tiles for given cadastre.
 
@@ -495,9 +493,15 @@ class Dataset:
         """
         lidar_tiles = self.cache.lidar_tiles(cadastre_index=cadastre_index)
         if max_num_tiles and len(lidar_tiles) > max_num_tiles:
-            return
+            if with_tile_dimensions:
+                return [], [], None
+            else:
+                return [], []
 
         building_tiles = self.cache.mask_tiles(cadastre_index=cadastre_index)
+        lidar_tiles = np.array(lidar_tiles)
+        building_tiles = np.array(building_tiles)
+
         if with_tile_dimensions:
             dimensions = self.cache.tile_dimensions(
                 cadastre_index=cadastre_index,
@@ -521,17 +525,19 @@ class Dataset:
         amount = index.stop - index.start
         range_function = range if amount < 50 else irange
         for cadastre_index in range_function(index.start, index.stop):
-            try:
-                tiles = self.tiles_cache(cadastre_index=cadastre_index)
-            except Exception:
+            image_tiles, mask_tiles = self.tiles(
+                cadastre_index=cadastre_index,
+                with_tile_dimensions=False,
+            )
+            if image_tiles is None:
                 continue
-            for image_tile, mask_tile in zip(*tiles):
+            for image_tile, mask_tile in zip(image_tiles, mask_tiles):
                 if mask_tile.sum() < 64:
                     continue
-                images.append([image_tile])
-                masks.append([mask_tile])
+                images.append(image_tile)
+                masks.append(mask_tile)
 
-        images = np.expand_dims(np.concatenate(images, axis=0), -1)
+        images = np.array(images)
+        masks = np.array(masks)
         images = self.input_tile_normalizer(images)
-        masks = np.expand_dims(np.concatenate(masks, axis=0), -1)
         return images, masks

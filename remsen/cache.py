@@ -7,7 +7,7 @@ import tempfile
 import warnings
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional, Union
 
 import fiona
 
@@ -180,6 +180,18 @@ class Cache:
             [int(index) for index in common_cadastre_indeces],
         )
 
+    def number_of_tiles(
+        self,
+        cadastre_indeces: Iterable[Union[int, str]],
+    ) -> int:
+        """Return number of tiles for the given cadastre indeces."""
+        num_tiles = 0
+        for cadastre_index in cadastre_indeces:
+            num_tiles += len(list(
+                (self.lidar_dir / str(cadastre_index)).glob("*.npy"),
+            ))
+        return num_tiles
+
     def cadastre(self, index: int) -> Polygon:
         """Fetch cadastre from dataset."""
         return vector.get_polygon(
@@ -323,6 +335,9 @@ class Cache:
                 lidar_dir = lidar_super_dir / str(cadastre_index)
                 rgb_dir = rgb_super_dir / str(cadastre_index)
                 mask_dir = mask_super_dir / str(cadastre_index)
+                if lidar_dir.exists() and rgb_dir.exists() and mask_dir.exists():
+                    continue
+
                 yield {
                     "cadastre_index": cadastre_index,
                     "cadastre": cadastre,
