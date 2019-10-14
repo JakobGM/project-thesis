@@ -202,7 +202,12 @@ def tiles(
     mask: MultiPolygon,
     max_num_tiles: Optional[int] = None,
 ) -> Dict:
-    """Return 256 x 256 tiles covering the given bounds."""
+    """
+    Return 256 x 256 tiles covering the given bounds.
+
+    Since we have pixels of size 0.25^2 meters, and we return tiles of size
+    256 x 256, each tile represenents a 64m x 64m area.
+    """
     min_x, min_y, max_x, max_y = bounds
 
     width = max_x - min_x
