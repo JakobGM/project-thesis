@@ -357,12 +357,13 @@ class Cache:
 
         pool = Pool(processes=None)
         pool_tasks = pool.imap(func=_save_tile, iterable=_kwargs(), chunksize=1)
-        for cadastre_index, dimensions in pool_tasks:
-            print(f"{cadastre_index:06d}", end="\r")
-            if dimensions:
-                tile_dimensions[cadastre_index] = dimensions
-
-        dimension_file.write_text(json.dumps(tile_dimensions))
+        try:
+            for cadastre_index, dimensions in pool_tasks:
+                print(f"{cadastre_index:06d}", end="\r")
+                if dimensions:
+                    tile_dimensions[cadastre_index] = dimensions
+        finally:
+            dimension_file.write_text(json.dumps(tile_dimensions))
 
     def __len__(self) -> int:
         """Return number of cadastre in source data."""
