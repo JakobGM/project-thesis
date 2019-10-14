@@ -351,8 +351,18 @@ class Dataset:
         validation_split: float = 0.15,
         test_split: float = 0.15,
         minimum_building_area: float = 4,
+        rgb: bool = False,
+        lidar: bool = True,
     ):
         assert train_split + validation_split + test_split == 1.0
+        if rgb and lidar:
+            num_channels = 4
+        elif rgb:
+            num_channels = 3
+        elif lidar:
+            num_channels = 1
+        else:
+            raise ValueError("Either rgb or lidar must be True.")
 
         # TODO: Allow either of the two augmentation methods
         def _generator(cadastre_indeces):
@@ -372,11 +382,7 @@ class Dataset:
                     continue
 
         # Split all data into train, validation, and test subsets
-        cadastre_tile_files = self.tile_cache_path.iterdir()
-        cadaster_indeces = list(map(
-            lambda p: int(p.name.split(".")[0]),
-            cadastre_tile_files,
-        ))
+        cadaster_indeces = self.cache.cadastre_indeces
         train_indeces, remaining = train_test_split(
             cadaster_indeces,
             train_size=train_split,
@@ -399,7 +405,8 @@ class Dataset:
             generator=_generator,
             output_types=(tf.float32, tf.uint8),
             output_shapes=(
-                tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
+                tf.TensorShape([256, 256, num_channels]),
+                tf.TensorShape([256, 256, 1]),
             ),
             args=(train_indeces,),
         )
@@ -407,7 +414,8 @@ class Dataset:
             generator=_generator,
             output_types=(tf.float32, tf.uint8),
             output_shapes=(
-                tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
+                tf.TensorShape([256, 256, num_channels]),
+                tf.TensorShape([256, 256, 1]),
             ),
             args=(val_indeces,),
         )
@@ -415,7 +423,8 @@ class Dataset:
             generator=_generator,
             output_types=(tf.float32, tf.uint8),
             output_shapes=(
-                tf.TensorShape([256, 256, 1]), tf.TensorShape([256, 256, 1]),
+                tf.TensorShape([256, 256, num_channels]),
+                tf.TensorShape([256, 256, 1]),
             ),
             args=(test_indeces,),
         )
