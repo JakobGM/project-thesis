@@ -1,5 +1,6 @@
 """Implementation of U-Net in Tensorflow v2."""
 # Silence verbose logging in Tensorflow
+import remsen
 from tensorflow.keras import (
     Model,
     activations,
@@ -92,5 +93,5 @@ model = Model(inputs=[inputs], outputs=[outputs])
 model.compile(
     optimizer="adam",
     loss="binary_crossentropy",
-    metrics=[metrics.MeanIoU(num_classes=2)],
+    metrics=[remsen.metrics.iou],
 )
