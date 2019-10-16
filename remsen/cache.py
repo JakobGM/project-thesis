@@ -102,7 +102,13 @@ def _save_tile(kwargs):
             if not save_to.exists():
                 np.save(save_to, mask_tile)
 
-    return cadastre_index, result["tile_dimensions"]
+    metadata = {
+        "tile_height": result["tile_dimensions"][0],
+        "tile_width": result["tile_dimensions"][1],
+        "number_of_tiles": result["number_of_tiles"],
+        "area": mapping(result["shapely_crop"]),
+    }
+    return cadastre_index, metadata
 
 
 class Cache:
@@ -270,13 +276,16 @@ class Cache:
             pickle.dumps(mask, protocol=pickle.HIGHEST_PROTOCOL),
         )
         print("Done!")
-        return mask
 
     def mask_geometry(self, mask_name: Optional[str] = None) -> MultiPolygon:
         mask_name = mask_name or self.mask_name
         mask_directory = self.directory / "mask" / mask_name
         mask_pickle = mask_directory / "mask.pkl"
-        assert mask_pickle.exists()
+        if not mask_pickle.exists():
+            raise ValueError(
+                f"Mask with name {mask_name} does not exist. "
+                "Generate it by using the .cache_mask() method first."
+            )
         return pickle.loads(mask_pickle.read_bytes())
 
     def lidar_tiles(self, cadastre_index: int):
@@ -307,9 +316,10 @@ class Cache:
         return rgb_tiles
 
     def tile_dimensions(self, cadastre_index: int):
-        dimension_file = self.directory / "tile_dimensions.json"
-        tile_dimensions = json.loads(dimension_file.read_text())
-        return tile_dimensions[str(cadastre_index)]
+        tile_metadata_file = self.directory / "tile_metadata.json"
+        tile_metadata = json.loads(tile_metadata_file.read_text())
+        metadata = tile_metadata[str(cadastre_index)]
+        return metadata["tile_height"], metadata["tile_width"]
 
     def build_tile_cache(
         self,
@@ -375,21 +385,23 @@ class Cache:
                     "mask_dir": mask_dir,
                 }
 
-        dimension_file = self.directory / "tile_dimensions.json"
-        if dimension_file.exists():
-            tile_dimensions = json.loads(dimension_file.read_text())
+        metadata_file = self.directory / "tile_metadata.json"
+        if metadata_file.exists():
+            tile_metadata = json.loads(metadata_file.read_text())
         else:
-            tile_dimensions = {}
+            tile_metadata = {}
 
         pool = Pool(processes=None)
         pool_tasks = pool.imap(func=_save_tile, iterable=_kwargs(), chunksize=1)
+        total_cadastre = len(self)
         try:
-            for cadastre_index, dimensions in pool_tasks:
-                print(f"{cadastre_index:06d}", end="\r")
-                if dimensions:
-                    tile_dimensions[cadastre_index] = dimensions
+            for cadastre_index, metadata in pool_tasks:
+                print(f"{cadastre_index:06d} / {total_cadastre}", end="\r")
+                if metadata:
+                    tile_metadata[cadastre_index] = metadata
+                    metadata_file.write_text(json.dumps(tile_metadata))
         finally:
-            dimension_file.write_text(json.dumps(tile_dimensions))
+            metadata_file.write_text(json.dumps(tile_metadata))
 
     def __len__(self) -> int:
         """Return number of cadastre in source data."""
