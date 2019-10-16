@@ -392,7 +392,11 @@ class Cache:
             tile_metadata = {}
 
         pool = Pool(processes=None)
-        pool_tasks = pool.imap(func=_save_tile, iterable=_kwargs(), chunksize=1)
+        pool_tasks = pool.imap_unordered(
+            func=_save_tile,
+            iterable=_kwargs(),
+            chunksize=1,
+        )
         total_cadastre = len(self)
         try:
             for cadastre_index, metadata in pool_tasks:

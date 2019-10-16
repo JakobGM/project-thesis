@@ -77,7 +77,7 @@ def crop_and_mask(
             feature
             for feature
             in mask
-            if not isinstance(feature, Point)
+            if not isinstance(feature, (Point, LineString))
         ])
 
     result = {"shapely_mask": mask, "shapely_crop": crop}
