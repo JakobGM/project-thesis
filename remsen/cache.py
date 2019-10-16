@@ -63,6 +63,9 @@ def _save_tile(kwargs):
     mask_dir = kwargs["mask_dir"]
 
     bounds = cadastre.bounds
+    if len(bounds) != 4:
+        return cadastre_index, None
+
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", "Cannot provide views")
