@@ -1,9 +1,5 @@
 """Module responsible for fetching, pre-processing, and preparing data."""
-import time
-import warnings
 from typing import Collection, Mapping, Optional, Tuple
-
-import fiona
 
 from ipypb import irange, track
 
