@@ -321,7 +321,7 @@ class Dataset:
             except ValueError:
                 continue
 
-            if x.shape[0] > 1:
+            if x is None or x.shape[0] > 1:
                 continue
 
             evaluation = model.evaluate(x=x, y=y, verbose=0)
@@ -532,6 +532,9 @@ class Dataset:
                     continue
                 images.append(image_tile)
                 masks.append(mask_tile)
+
+        if not images:
+            return None, None
 
         images = np.array(images)
         masks = np.array(masks)
