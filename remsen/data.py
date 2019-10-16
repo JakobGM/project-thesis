@@ -34,20 +34,20 @@ class Dataset:
 
     def __init__(
         self,
-        cache: cache.Cache,
+        cadastre_dataset: str = "trondheim_cadastre_2019",
         lidar_dataset: str = "trondheim_lidar_2017",
         rgb_dataset: str = "trondheim_rgb_2017",
-        mask_dataset: str = "trondheim_bygning",
+        mask_dataset: str = "trondheim_buildings_2019",
     ) -> None:
         """Construct dataset."""
-        self.cache = cache
+        self.cache = cache.Cache.from_name(cadastre_dataset)
         self.cache.change_dataset(
             lidar_name=lidar_dataset,
             rgb_name=rgb_dataset,
             mask_name=mask_dataset,
         )
 
-        self.lidar_nodata_value = cache.lidar_metadata["nodata_value"]
+        self.lidar_nodata_value = self.cache.lidar_metadata["nodata_value"]
         assert self.lidar_nodata_value < 0
 
     def cadastre(self, index: int) -> Polygon:
@@ -299,9 +299,9 @@ class Dataset:
                 in zip(model.metrics_names, evaluation)
             }
             loss = metrics["loss"]
-            mean_iou = metrics["mean_io_u"]
+            iou = metrics["iou"]
             prediction_ax.set_xlabel(
-                f"Loss = {loss:.4f},   Mean IoU = {mean_iou:0.4f}",
+                f"Loss = {loss:.4f},   IoU = {iou:0.4f}",
                 size=13,
             )
 
@@ -312,7 +312,7 @@ class Dataset:
         self,
         model: tf.keras.Model,
         cadastre_indeces: Collection[int] = range(0, 10),
-        metric: Tuple[Mapping, str] = (min, "mean_io_u"),
+        metric: Tuple[Mapping, str] = (min, "iou"),
         number: int = 5,
     ):
         """Plot the worst predictions according to a given metric."""
