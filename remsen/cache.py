@@ -126,11 +126,37 @@ class Cache:
             self.first_time_setup()
 
     @classmethod
-    def from_name(cls, name: str) -> "Cache":
-        pass
+    def from_name(
+        cls,
+        name: str,
+        cache_dir: Optional[Path] = None,
+    ) -> "Cache":
+        """Retrieve existing cache from name only."""
+        cache_dir = cache_dir or DEFAULT_CACHE_DIR
+        directory = cache_dir / "cadastre" / name
+        metadata_path = directory / "metadata.json"
+        metadata = json.loads(metadata_path.read_text())
+        layer_name = metadata["layer_name"]
+        cadastre_path = Path(metadata["cadastre_path"])
+        return cls(
+            cadastre_path=cadastre_path,
+            name=name,
+            layer_name=layer_name,
+            cache_dir=cache_dir,
+        )
 
     def first_time_setup(self):
+        """Initialize the cadastre cache for the first time."""
         self.directory.mkdir(parents=True)
+
+        # Save pertinent cadastre cache metadata
+        metadata_path = self.directory / "metadata.json"
+        metadata = {
+            "cadastre_path": str(self.cadastre_path.resolve().absolute()),
+            "layer_name": self.layer_name,
+        }
+        metadata_path.write_text(json.dumps(metadata))
+
         temp_directory = tempfile.TemporaryDirectory()
         command = (
             "ogr2ogr "
