@@ -9,6 +9,7 @@ function project::run {
     --tty \
     --rm \
     -p 8888:8888 \
+    -p 6006:6006 \
     --volume $PWD:/code \
     tensorflow $1
 }
