@@ -399,8 +399,10 @@ class Dataset:
                     for tiles in all_tiles:
                         batch.append(tiles)
                         if len(batch) == batch_size:
-                            for observation in batch:
-                                yield observation
+                            for x, y in batch:
+                                x = tf.convert_to_tensor(x, dtype=tf.float32)
+                                y = tf.convert_to_tensor(y, dtype=tf.bool)
+                                yield x, y
                             batch = []
 
         # Split all data into train, validation, and test subsets
@@ -423,9 +425,20 @@ class Dataset:
         self.validation_cadastre = val_indeces
         self.test_cadastre = test_indeces
 
+        # TODO: Implement this with Cache.dataframe query
+        print("Calculating number of training tiles...")
+        num_train_tiles = 0
+        for _ in _generator(train_indeces, epochs=1):
+            num_train_tiles += 1
+
+        print("Calculating number of validation tiles...")
+        num_val_tiles = 0
+        for _ in _generator(val_indeces, epochs=1):
+            num_val_tiles += 1
+
         train = tf.data.Dataset.from_generator(
             generator=_generator,
-            output_types=(tf.float32, tf.uint8),
+            output_types=(tf.float32, tf.bool),
             output_shapes=(
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
@@ -434,7 +447,7 @@ class Dataset:
         )
         validation = tf.data.Dataset.from_generator(
             generator=_generator,
-            output_types=(tf.float32, tf.uint8),
+            output_types=(tf.float32, tf.bool),
             output_shapes=(
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
@@ -443,7 +456,7 @@ class Dataset:
         )
         test = tf.data.Dataset.from_generator(
             generator=_generator,
-            output_types=(tf.float32, tf.uint8),
+            output_types=(tf.float32, tf.bool),
             output_shapes=(
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
@@ -452,13 +465,16 @@ class Dataset:
         )
 
         # Prefetching
-        train = train.prefetch(buffer_size=prefetch)
-        validation = validation.prefetch(buffer_size=prefetch)
-        test = test.prefetch(buffer_size=prefetch)
+        train_prefetch = min(prefetch, epochs * num_train_tiles)
+        val_prefetch = min(prefetch, epochs * num_val_tiles)
+        train = train.prefetch(
+            buffer_size=train_prefetch,
+        )
+        validation = validation.prefetch(buffer_size=val_prefetch)
 
         # Train data shuffling
         if shuffle:
-            train = train.shuffle(buffer_size=512)
+            train = train.shuffle(buffer_size=min(512, train_prefetch))
 
         # Batching
         train = train.batch(batch_size=batch_size)
@@ -471,17 +487,6 @@ class Dataset:
                 map_func=augmentation.flip_and_rotate,
                 num_parallel_calls=tf.data.experimental.AUTOTUNE,
             )
-
-        # TODO: Implement this with Cache.dataframe query
-        print("Calculating number of training tiles...")
-        num_train_tiles = 0
-        for _ in _generator(train_indeces, epochs=1):
-            num_train_tiles += 1
-
-        print("Calculating number of validation tiles...")
-        num_val_tiles = 0
-        for _ in _generator(val_indeces, epochs=1):
-            num_val_tiles += 1
 
         assert num_train_tiles % batch_size == 0
         assert num_val_tiles % batch_size == 0
