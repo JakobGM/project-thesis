@@ -1,20 +1,24 @@
 """Implementation of U-Net in Tensorflow v2."""
 # Silence verbose logging in Tensorflow
-import remsen
+import tensorflow as tf
 from tensorflow.keras import (
     Model,
     activations,
-    callbacks,
     initializers,
     layers,
-    metrics,
 )
+
+from remsen.metrics import iou
 
 IMG_HEIGHT = 256
 IMG_WIDTH = 256
 IMG_CHANNELS = 1
 
-inputs = layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+inputs = layers.Input(
+    shape=(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS),
+    name="input",
+    dtype=tf.float32,
+)
 normalized_inputs = inputs
 
 
@@ -93,5 +97,5 @@ model = Model(inputs=[inputs], outputs=[outputs])
 model.compile(
     optimizer="adam",
     loss="binary_crossentropy",
-    metrics=[remsen.metrics.iou],
+    metrics=[iou],
 )
