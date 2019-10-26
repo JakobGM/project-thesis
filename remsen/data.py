@@ -1,5 +1,5 @@
 """Module responsible for fetching, pre-processing, and preparing data."""
-from typing import Collection, Mapping, Optional, Tuple
+from typing import Collection, Dict, Mapping, Optional, Tuple
 
 from ipypb import irange, track
 
@@ -186,21 +186,44 @@ class Dataset:
         np.divide(tiles, max_vals, out=tiles)
         return tiles
 
-    def plot_prediction(self, model, cadastre_index):
-        lidar_tiles, building_tiles, tile_dimensions = self.tiles(
-            cadastre_index=cadastre_index, with_tile_dimensions=True,
+    def plot_prediction(self, model, cadastre_index, tile_index: int = 0):
+        with_rgb = model.input.shape[-1] == 4
+        tiles = self.tiles(
+            cadastre_index=cadastre_index,
+            with_tile_dimensions=False,
+            with_rgb=with_rgb,
         )
+        lidar_tile = tiles["lidar"][tile_index]
+        building_tile = tiles["mask"][tile_index]
+        input_tile = self.input_tile_normalizer(lidar_tile.copy())[0]
+
+        if with_rgb:
+            rgb_tile = tiles["rgb"][tile_index]
+            input_tile = np.concatenate(
+                [input_tile, rgb_tile / 255],
+                axis=2,
+            )
+        input_tile = np.expand_dims(input_tile, 0)
+
+        # (2, 2) plot if with RGB, otherwise (1, 3)
         fig, axes = plt.subplots(
-            nrows=tile_dimensions[0] * tile_dimensions[1],
-            ncols=3,
+            nrows=2 if with_rgb else 1,
+            ncols=2 if with_rgb else 3,
             figsize=(15, 15),
             sharex=True,
             sharey=True,
             squeeze=False,
         )
-        axes[0][0].title.set_text("Original LiDAR data")
-        axes[0][1].title.set_text("Prediction probabilities")
-        axes[0][2].title.set_text("TP / TN / FP / FN, cut-off = 0.5")
+        if with_rgb:
+            lidar_ax, rgb_ax, prediction_ax, metric_ax = axes.flatten()
+            rgb_ax.title.set_text("RGB data")
+            rgb_ax.imshow(rgb_tile)
+        else:
+            lidar_ax, prediction_ax, metric_ax = axes.flatten()
+
+        lidar_ax.title.set_text("LiDAR data")
+        prediction_ax.title.set_text("Prediction probabilities")
+        metric_ax.title.set_text("TP / TN / FP / FN, cut-off = 0.5")
 
         cadastre_text = axes[0][0].annotate(
             f'Cadastre\n{cadastre_index}',
@@ -217,89 +240,75 @@ class Dataset:
             [patheffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
         )
 
-        disable_ticks = {
-            "axis": "both",
-            "which": "both",
-            "bottom": False,
-            "labelbottom": False,
-            "width": 0.0,
+        for axis in axes.flatten():
+            axis.tick_params(labelbottom=False, labelleft=False, width=0.0)
+
+        lidar_tile = np.squeeze(lidar_tile)
+        lidar_ax.imshow(lidar_tile)
+
+        lidar_tile = np.expand_dims(lidar_tile, 0)
+        lidar_tile = np.expand_dims(lidar_tile, -1)
+
+        predicted_building_tile = model.predict(input_tile)
+        predicted_building_tile = np.squeeze(predicted_building_tile)
+        prediction_ax.imshow(
+            predicted_building_tile,
+            cmap="seismic",
+            vmin=0,
+            vmax=1,
+        )
+
+        predicted_mask = (predicted_building_tile > 0.5).astype("uint8")
+        building_tile = np.squeeze(building_tile)
+        tp = np.logical_and(predicted_mask == 1, building_tile == 1)
+        tn = np.logical_and(predicted_mask == 0, building_tile == 0)
+        fp = np.logical_and(predicted_mask == 1, building_tile == 0)
+        fn = np.logical_and(predicted_mask == 0, building_tile == 1)
+        confusion_matrix = tp + 2 * tn + 3 * fp + 4 * fn
+
+        cmap = colors.ListedColormap(
+            ['#001F3F', '#DDDDDD', '#2ECC40', '#FF4136']
+        )
+        bounds = [0, 1.5, 2.5, 3.5, 5]
+        norm = colors.BoundaryNorm(bounds, cmap.N)
+        metric_ax.imshow(confusion_matrix, cmap=cmap, norm=norm)
+
+        # Add TP/TN/FP/FN legend to plot
+        legend_elements = [
+            Patch(facecolor='#001F3F', edgecolor="white", label='TP'),
+            Patch(facecolor='#DDDDDD', edgecolor="white", label='TN'),
+            Patch(facecolor='#2ECC40', edgecolor="white", label='FP'),
+            Patch(facecolor='#FF4136', edgecolor="white", label='FN'),
+        ]
+        metric_ax.legend(
+            handles=legend_elements,
+            loc="lower center",
+            ncol=4,
+            bbox_to_anchor=(0.5, -0.075),
+            frameon=False,
+            handlelength=1.3,
+            handleheight=1.5,
+        )
+
+        # Add metrics to plot
+        building_tile = np.expand_dims(building_tile, 0)
+        building_tile = np.expand_dims(building_tile, -1)
+        evaluation = model.evaluate(
+            x=input_tile,
+            y=building_tile,
+            verbose=0,
+        )
+        metrics = {
+            name: value
+            for name, value
+            in zip(model.metrics_names, evaluation)
         }
-        # print(dir(axes[0][1]))
-        axes[0][1].tick_params(**disable_ticks)
-        axes[0][2].tick_params(**disable_ticks)
-
-        vmin = lidar_tiles.min()
-        vmax = lidar_tiles.max()
-
-        for (lidar_tile, building_tile), (lidar_ax, prediction_ax, metric_ax) \
-                in zip(zip(lidar_tiles, building_tiles), axes):
-            lidar_tile = np.squeeze(lidar_tile)
-            lidar_ax.imshow(lidar_tile, vmin=vmin, vmax=vmax)
-
-            lidar_tile = np.expand_dims(lidar_tile, 0)
-            lidar_tile = np.expand_dims(lidar_tile, -1)
-            normalized_lidar_tile = self.input_tile_normalizer(lidar_tile)
-
-            predicted_building_tile = model.predict(normalized_lidar_tile)
-            predicted_building_tile = np.squeeze(predicted_building_tile)
-            prediction_ax.imshow(
-                predicted_building_tile,
-                cmap="seismic",
-                vmin=0,
-                vmax=1,
-            )
-
-            predicted_mask = (predicted_building_tile > 0.5).astype("uint8")
-            building_tile = np.squeeze(building_tile)
-            TP = np.logical_and(predicted_mask == 1, building_tile == 1)
-            TN = np.logical_and(predicted_mask == 0, building_tile == 0)
-            FP = np.logical_and(predicted_mask == 1, building_tile == 0)
-            FN = np.logical_and(predicted_mask == 0, building_tile == 1)
-            confusion_matrix = TP + 2 * TN + 3 * FP + 4 * FN
-
-            cmap = colors.ListedColormap(
-                ['#001F3F', '#DDDDDD', '#2ECC40', '#FF4136']
-            )
-            bounds = [0, 1.5, 2.5, 3.5, 5]
-            norm = colors.BoundaryNorm(bounds, cmap.N)
-            metric_ax.imshow(confusion_matrix, cmap=cmap, norm=norm)
-
-            # Add TP/TN/FP/FN legend to plot
-            legend_elements = [
-                Patch(facecolor='#001F3F', edgecolor="white", label='TP'),
-                Patch(facecolor='#DDDDDD', edgecolor="white", label='TN'),
-                Patch(facecolor='#2ECC40', edgecolor="white", label='FP'),
-                Patch(facecolor='#FF4136', edgecolor="white", label='FN'),
-            ]
-            metric_ax.legend(
-                handles=legend_elements,
-                loc="lower center",
-                ncol=4,
-                bbox_to_anchor=(0.5, -0.075),
-                frameon=False,
-                handlelength=1.3,
-                handleheight=1.5,
-            )
-
-            # Add metrics to plot
-            building_tile = np.expand_dims(building_tile, 0)
-            building_tile = np.expand_dims(building_tile, -1)
-            evaluation = model.evaluate(
-                x=normalized_lidar_tile,
-                y=building_tile,
-                verbose=0,
-            )
-            metrics = {
-                name: value
-                for name, value
-                in zip(model.metrics_names, evaluation)
-            }
-            loss = metrics["loss"]
-            iou = metrics["iou"]
-            prediction_ax.set_xlabel(
-                f"Loss = {loss:.4f},   IoU = {iou:0.4f}",
-                size=13,
-            )
+        loss = metrics["loss"]
+        iou = metrics["iou"]
+        prediction_ax.set_xlabel(
+            f"Loss = {loss:.4f},   IoU = {iou:0.4f}",
+            size=13,
+        )
 
         plt.tight_layout()
         plt.show()
@@ -365,21 +374,33 @@ class Dataset:
         else:
             raise ValueError("Either rgb or lidar must be True.")
 
-        # TODO: Allow either of the two augmentation methods
         def _generator(cadastre_indeces, epochs: int = 1):
             for _ in range(epochs):
                 batch = []
                 for index in cadastre_indeces:
-                    for lidar_array, building_array in zip(*self.tiles(index)):
-                        if building_array.sum() < (minimum_building_area * 16):
-                            continue
-                        batch.append((lidar_array, building_array))
+                    tiles = self.tiles(index, with_rgb=rgb)
+                    lidar_arrays = tiles["lidar"]
+                    lidar_arrays = self.input_tile_normalizer(lidar_arrays)
+                    building_arrays = tiles["mask"]
+
+                    if rgb:
+                        rgb_arrays = np.array(tiles["rgb"])
+                        rgb_arrays = rgb_arrays.astype("float32")
+                        rgb_arrays /= 255
+                        lidar_arrays = np.concatenate(
+                            [lidar_arrays, rgb_arrays], axis=3
+                        )
+
+                    all_tiles = zip(lidar_arrays, building_arrays)
+                    all_tiles = filter(
+                        lambda x: x[1].sum() > (minimum_building_area * 16),
+                        all_tiles,
+                    )
+                    for tiles in all_tiles:
+                        batch.append(tiles)
                         if len(batch) == batch_size:
-                            for lidar_array, building_array in batch:
-                                # TODO: Vectorize this operation
-                                lidar_array = self.input_tile_normalizer(lidar_array)
-                                lidar_array.shape = (256, 256, 1)
-                                yield lidar_array, building_array
+                            for observation in batch:
+                                yield observation
                             batch = []
 
         # Split all data into train, validation, and test subsets
@@ -452,11 +473,14 @@ class Dataset:
             )
 
         # TODO: Implement this with Cache.dataframe query
+        print("Calculating number of training tiles...")
         num_train_tiles = 0
-        for tile in _generator(train_indeces, epochs=1):
+        for _ in _generator(train_indeces, epochs=1):
             num_train_tiles += 1
+
+        print("Calculating number of validation tiles...")
         num_val_tiles = 0
-        for tile in _generator(val_indeces, epochs=1):
+        for _ in _generator(val_indeces, epochs=1):
             num_val_tiles += 1
 
         assert num_train_tiles % batch_size == 0
@@ -480,7 +504,8 @@ class Dataset:
         *,
         with_tile_dimensions: bool = False,
         max_num_tiles: Optional[int] = None,
-    ):
+        with_rgb: bool = False,
+    ) -> Dict:
         """
         Return LiDAR and building tiles for given cadastre.
 
@@ -489,22 +514,28 @@ class Dataset:
         """
         lidar_tiles = self.cache.lidar_tiles(cadastre_index=cadastre_index)
         if max_num_tiles and len(lidar_tiles) > max_num_tiles:
-            if with_tile_dimensions:
-                return [], [], None
-            else:
-                return [], []
+            return {}
 
         building_tiles = self.cache.mask_tiles(cadastre_index=cadastre_index)
         lidar_tiles = np.array(lidar_tiles)
         building_tiles = np.array(building_tiles)
 
+        result = {
+            "lidar": lidar_tiles,
+            "mask": building_tiles,
+        }
+
+        if with_rgb:
+            rgb_tiles = self.cache.rgb_tiles(cadastre_index=cadastre_index)
+            result["rgb"] = rgb_tiles
+
         if with_tile_dimensions:
             dimensions = self.cache.tile_dimensions(
                 cadastre_index=cadastre_index,
             )
-            return lidar_tiles, building_tiles, dimensions
-        else:
-            return lidar_tiles, building_tiles
+            result["dimensions"] = dimensions
+
+        return result
 
     def __len__(self) -> int:
         return len(self.buildings())
@@ -521,10 +552,12 @@ class Dataset:
         amount = index.stop - index.start
         range_function = range if amount < 50 else irange
         for cadastre_index in range_function(index.start, index.stop):
-            image_tiles, mask_tiles = self.tiles(
+            tiles = self.tiles(
                 cadastre_index=cadastre_index,
                 with_tile_dimensions=False,
             )
+            image_tiles = tiles["lidar"]
+            mask_tiles = tiles["mask"]
             if image_tiles is None:
                 continue
             for image_tile, mask_tile in zip(image_tiles, mask_tiles):
