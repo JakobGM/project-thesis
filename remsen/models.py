@@ -1,5 +1,3 @@
-"""Implementation of U-Net in Tensorflow v2."""
-# Silence verbose logging in Tensorflow
 import tensorflow as tf
 from tensorflow.keras import (
     Model,
@@ -9,17 +7,6 @@ from tensorflow.keras import (
 )
 
 from remsen.metrics import iou
-
-IMG_HEIGHT = 256
-IMG_WIDTH = 256
-IMG_CHANNELS = 1
-
-inputs = layers.Input(
-    shape=(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS),
-    name="input",
-    dtype=tf.float32,
-)
-normalized_inputs = inputs
 
 
 def encoder(previous_layer, filters, dropout_rate):
@@ -43,13 +30,6 @@ def encoder(previous_layer, filters, dropout_rate):
     convolution_layer = layers.BatchNormalization()(convolution_layer)
     pool_layer = layers.MaxPool2D(pool_size=(2, 2))(convolution_layer)
     return convolution_layer, pool_layer
-
-
-encoder_1, pool_1 = encoder(previous_layer=normalized_inputs, filters=32, dropout_rate=0.1)
-encoder_2, pool_2 = encoder(previous_layer=pool_1, filters=64, dropout_rate=0.1)
-encoder_3, pool_3 = encoder(previous_layer=pool_2, filters=128, dropout_rate=0.2)
-encoder_4, pool_4 = encoder(previous_layer=pool_3, filters=256, dropout_rate=0.2)
-middle_layer, _ = encoder(previous_layer=pool_4, filters=512, dropout_rate=0.3)
 
 
 def decoder(*, previous_layer, encoder, dropout_rate):
@@ -80,22 +60,76 @@ def decoder(*, previous_layer, encoder, dropout_rate):
     return layers.BatchNormalization()(unconvolution_layer)
 
 
-decoder_4 = decoder(previous_layer=middle_layer, encoder=encoder_4, dropout_rate=0.2)
-decoder_3 = decoder(previous_layer=decoder_4, encoder=encoder_3, dropout_rate=0.2)
-decoder_2 = decoder(previous_layer=decoder_3, encoder=encoder_2, dropout_rate=0.1)
-decoder_1 = decoder(previous_layer=decoder_2, encoder=encoder_1, dropout_rate=0.1)
+def unet(
+    img_height: int = 256,
+    img_width: int = 256,
+    img_channels: int = 1,
+) -> Model:
+    inputs = layers.Input(
+        shape=(img_height, img_width, img_channels),
+        name="input",
+        dtype=tf.float32,
+    )
 
+    # Encoder layers
+    encoder_1, pool_1 = encoder(
+        previous_layer=inputs,
+        filters=32,
+        dropout_rate=0.1,
+    )
+    encoder_2, pool_2 = encoder(
+        previous_layer=pool_1,
+        filters=64,
+        dropout_rate=0.1,
+    )
+    encoder_3, pool_3 = encoder(
+        previous_layer=pool_2,
+        filters=128,
+        dropout_rate=0.2,
+    )
+    encoder_4, pool_4 = encoder(
+        previous_layer=pool_3,
+        filters=256,
+        dropout_rate=0.2,
+    )
+    middle_layer, _ = encoder(
+        previous_layer=pool_4,
+        filters=512,
+        dropout_rate=0.3,
+    )
 
-outputs = layers.Conv2D(
-    filters=1,
-    kernel_size=(1, 1),
-    activation=activations.sigmoid,
-)(decoder_1)
+    # Decoder layers
+    decoder_4 = decoder(
+        previous_layer=middle_layer,
+        encoder=encoder_4,
+        dropout_rate=0.2,
+    )
+    decoder_3 = decoder(
+        previous_layer=decoder_4,
+        encoder=encoder_3,
+        dropout_rate=0.2,
+    )
+    decoder_2 = decoder(
+        previous_layer=decoder_3,
+        encoder=encoder_2,
+        dropout_rate=0.1,
+    )
+    decoder_1 = decoder(
+        previous_layer=decoder_2,
+        encoder=encoder_1,
+        dropout_rate=0.1,
+    )
 
-model = Model(inputs=[inputs], outputs=[outputs])
+    outputs = layers.Conv2D(
+        filters=1,
+        kernel_size=(1, 1),
+        activation=activations.sigmoid,
+    )(decoder_1)
 
-model.compile(
-    optimizer="adam",
-    loss="binary_crossentropy",
-    metrics=[iou],
-)
+    model = Model(inputs=[inputs], outputs=[outputs])
+    model.compile(
+        optimizer="adam",
+        loss="binary_crossentropy",
+        metrics=[iou],
+    )
+    return model
