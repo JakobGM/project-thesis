@@ -3,9 +3,6 @@ import tensorflow as tf
 
 def iou(y_true: tf.Tensor, y_pred: tf.Tensor) -> float:
     """Calculate intersection over union for the given batch."""
-    # We might receive a batch
-    batch_size = y_pred.shape[0] or 1
-
     # Cast both arrays to boolean arrays according to a cut-off of 0.5
     y_pred = (y_pred > 0.5)
     y_true = (y_true > 0.5)
@@ -34,4 +31,4 @@ def iou(y_true: tf.Tensor, y_pred: tf.Tensor) -> float:
     ious = tf.where(union == 0, tf.ones_like(ious), ious)
 
     # Return the mean IoU across the batch
-    return tf.reduce_sum(ious) / batch_size
+    return tf.reduce_mean(ious)
