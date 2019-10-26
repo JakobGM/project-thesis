@@ -33,7 +33,7 @@ c.NotebookApp.local_hostnames = ["localhost", "0.0.0.0"]
 c.NotebookApp.mathjax_config = "TeX-AMS-MML_HTMLorMML-full,Safe"
 
 # The directory to use for notebooks and kernels.
-c.NotebookApp.notebook_dir = "/code/notebooks"
+c.NotebookApp.notebook_dir = "/code"
 
 # Whether to open in a browser after starting. The specific browser used is
 # platform dependent and determined by the python standard library `webbrowser`
