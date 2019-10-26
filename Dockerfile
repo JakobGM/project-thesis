@@ -19,6 +19,9 @@ RUN chmod 777 /.jupyter
 # Expose the port used by jupyter lab
 EXPOSE 8888
 
+# Expose the port used by TensorBoard
+EXPOSE 6006
+
 # Copy over jupyter lab startup script and use it as the default container command
 COPY ./.docker/jupyter/jupyter-entrypoint.sh /jupyter-entrypoint.sh
 
