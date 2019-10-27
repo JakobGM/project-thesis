@@ -10,6 +10,7 @@ from rasterio.mask import mask as rasterio_mask
 
 from shapely.geometry import (
     GeometryCollection,
+    LineString,
     MultiPolygon,
     Point,
     Polygon,

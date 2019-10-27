@@ -191,8 +191,6 @@ class Cache:
             for index, obj in track(enumerate(src), total=len(src)):
                 geometries.append(vector.fiona_polygon(obj))
                 indeces.append(index + 1)
-                if index == 5:
-                    break
 
         self._dataframe = geopandas.GeoDataFrame(
             crs=crs,
@@ -202,6 +200,7 @@ class Cache:
         self._dataframe.to_file(
             self.directory / "cadastre.gpkg",
             layer=metadata["layer_name"],
+            driver="GPKG",
         )
 
     def change_dataset(
@@ -236,7 +235,7 @@ class Cache:
             mask_indeces,
         )
         self.cadastre_indeces = sorted(
-            [int(index) for index in common_cadastre_indeces],
+            (int(index) for index in common_cadastre_indeces)
         )
 
     def number_of_tiles(
@@ -267,29 +266,13 @@ class Cache:
     ) -> None:
         """Cache given mask to disk."""
         mask_directory = self.directory / "mask" / mask_name
-        mask_cache = mask_directory / "mask.shp"
-        if mask_cache.exists():
-            return self.mask_geometry(mask_name=mask_name)
+        mask_pickle = mask_directory / "mask.pkl"
+        if mask_pickle.exists():
+            print("Already cached!")
+            return
         else:
             mask_directory.mkdir(parents=True, exist_ok=True)
 
-        # Populate both caches with buffer-fixed buildings
-        with fiona.open(ogr_path, "r", layer=layer_name) as src:
-            srid = int(src.crs["init"].split(":")[1])
-            assert srid == 25832
-
-            with fiona.open(mask_cache, "w", **src.meta) as dest:
-                for feature in track(src):
-                    geometry = shape(feature["geometry"])
-                    if not geometry.is_valid:
-                        clean = geometry.buffer(0.0)
-                        assert clean.is_valid
-                        assert clean.geom_type == "Polygon"
-                        geometry = clean
-                    feature["geometry"] = mapping(geometry)
-                    dest.write(feature)
-
-        mask_pickle = mask_directory / "mask.pkl"
         with fiona.open(ogr_path, "r", layer=layer_name) as src:
             mask = MultiPolygon(
                 [vector.fiona_polygon(feature) for feature in track(src)]
