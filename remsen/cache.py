@@ -160,10 +160,8 @@ class Cache:
         if hasattr(self, "_dataframe"):
             return self._dataframe
 
-        metadata = json.loads(self.metadata_path.read_text())
-        self._dataframe = geopandas.read_file(
-            self.directory / "cadastre.gpkg",
-            layer=metadata["layer_name"],
+        self._dataframe = geopandas.read_pickle(
+            self.directory / "cadastre.pkl",
         )
         return self._dataframe
 
@@ -197,10 +195,9 @@ class Cache:
             geometry=geopandas.GeoSeries(geometries),
         )
         self._dataframe.set_index(pd.Index(indeces), inplace=True)
-        self._dataframe.to_file(
-            self.directory / "cadastre.gpkg",
-            layer=metadata["layer_name"],
-            driver="GPKG",
+        self._dataframe.to_pickle(
+            self.directory / "cadastre.pkl",
+            protocol=-1,
         )
 
     def change_dataset(
