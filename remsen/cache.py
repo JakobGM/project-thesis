@@ -413,7 +413,6 @@ class Cache:
                 print(f"{cadastre_index:06d} / {total_cadastre}", end="\r")
                 if metadata:
                     tile_metadata[cadastre_index] = metadata
-                    metadata_file.write_text(json.dumps(tile_metadata))
         finally:
             metadata_file.write_text(json.dumps(tile_metadata))
 
