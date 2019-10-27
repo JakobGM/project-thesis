@@ -17,7 +17,7 @@ import numpy as np
 
 import pandas as pd
 
-from shapely.geometry import MultiPolygon, Polygon, mapping, shape
+from shapely.geometry import MultiPolygon, Polygon, mapping
 
 from remsen import raster, vector
 

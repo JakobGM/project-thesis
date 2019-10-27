@@ -32,13 +32,13 @@ def get_callbacks(
         monitor="val_iou",
         mode="max",
         filepath=str(model_cache_path / "val_iou.ckpt"),
-        save_weights_only=True,
+        save_weights_only=False,
         save_best_only=True,
         verbose=verbose,
     )
     save_latest = ModelCheckpoint(
         filepath=str(model_cache_path / "latest.ckpt"),
-        save_weights_only=True,
+        save_weights_only=False,
         verbose=0,
     )
     callbacks = [save_latest, save_best_val_loss, save_best_val_iou]
