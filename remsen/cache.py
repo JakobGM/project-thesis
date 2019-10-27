@@ -2,8 +2,6 @@
 import hashlib
 import json
 import pickle
-import subprocess
-import tempfile
 import warnings
 from multiprocessing import Pool
 from pathlib import Path
@@ -16,6 +14,8 @@ import geopandas
 from ipypb import track
 
 import numpy as np
+
+import pandas as pd
 
 from shapely.geometry import MultiPolygon, Polygon, mapping, shape
 
@@ -127,8 +127,9 @@ class Cache:
         """Construct cache for given cadastre set."""
         self.sha1_hash = sha1_hash(cadastre_path)
         self.name = name
-        parent_dir = cache_dir or DEFAULT_CACHE_DIR
-        self.directory = parent_dir / "cadastre" / self.name
+        self.parent_dir = cache_dir or DEFAULT_CACHE_DIR
+        self.directory = self.parent_dir / "cadastre" / self.name
+        self.metadata_path = self.directory / "metadata.json"
         self.layer_name = layer_name
         self.cadastre_path = cadastre_path
         if not self.directory.exists():
@@ -154,30 +155,53 @@ class Cache:
             cache_dir=cache_dir,
         )
 
+    @property
+    def dataframe(self) -> geopandas.GeoDataFrame:
+        if hasattr(self, "_dataframe"):
+            return self._dataframe
+
+        metadata = json.loads(self.metadata_path.read_text())
+        self._dataframe = geopandas.read_file(
+            self.directory / "cadastre.gpkg",
+            layer=metadata["layer_name"],
+        )
+        return self._dataframe
+
     def first_time_setup(self):
         """Initialize the cadastre cache for the first time."""
-        self.directory.mkdir(parents=True)
+        self.directory.mkdir(parents=True, exist_ok=True)
 
         # Save pertinent cadastre cache metadata
-        metadata_path = self.directory / "metadata.json"
         metadata = {
             "cadastre_path": str(self.cadastre_path.resolve().absolute()),
             "layer_name": self.layer_name,
         }
-        metadata_path.write_text(json.dumps(metadata))
+        self.metadata_path.write_text(json.dumps(metadata))
+        metadata = json.loads(self.metadata_path.read_text())
 
-        temp_directory = tempfile.TemporaryDirectory()
-        command = (
-            "ogr2ogr "
-            '-f "ESRI Shapefile" '
-            f"{temp_directory.name}/out.shp "
-            f"{self.cadastre_path}"
+        geometries = []
+        indeces = []
+        with fiona.open(
+            metadata["cadastre_path"],
+            layer=metadata["layer_name"],
+            mode="r",
+        ) as src:
+            # srid = int(src.crs["init"].split(":")[0])
+            crs = src.crs["init"]
+            for index, obj in track(enumerate(src), total=len(src)):
+                geometries.append(vector.fiona_polygon(obj))
+                indeces.append(index + 1)
+                if index == 5:
+                    break
+
+        self._dataframe = geopandas.GeoDataFrame(
+            crs=crs,
+            geometry=geopandas.GeoSeries(geometries),
         )
-        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
-        assert result.returncode == 0
-        self.dataframe = geopandas.read_file(
-            temp_directory.name + "/out.shp",
-            layer="Teig",
+        self._dataframe.set_index(pd.Index(indeces), inplace=True)
+        self._dataframe.to_file(
+            self.directory / "cadastre.gpkg",
+            layer=metadata["layer_name"],
         )
 
     def change_dataset(
