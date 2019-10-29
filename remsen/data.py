@@ -379,19 +379,23 @@ class Dataset:
                 batch = []
                 for index in cadastre_indeces:
                     tiles = self.tiles(index, with_rgb=rgb)
-                    lidar_arrays = tiles["lidar"]
-                    lidar_arrays = self.input_tile_normalizer(lidar_arrays)
                     building_arrays = tiles["mask"]
+
+                    input_arrays = []
+                    if lidar:
+                        lidar_arrays = tiles["lidar"]
+                        lidar_arrays = self.input_tile_normalizer(lidar_arrays)
+                        input_arrays.append(lidar_arrays)
 
                     if rgb:
                         rgb_arrays = np.array(tiles["rgb"])
                         rgb_arrays = rgb_arrays.astype("float32")
                         rgb_arrays /= 255
-                        lidar_arrays = np.concatenate(
-                            [lidar_arrays, rgb_arrays], axis=3
-                        )
+                        input_arrays.append(rgb_arrays)
 
-                    all_tiles = zip(lidar_arrays, building_arrays)
+                    input_arrays = np.concatenate(input_arrays, axis=3)
+
+                    all_tiles = zip(input_arrays, building_arrays)
                     all_tiles = filter(
                         lambda x: x[1].sum() > (minimum_building_area * 16),
                         all_tiles,
