@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from tensorflow.keras.callbacks import (
@@ -5,25 +6,30 @@ from tensorflow.keras.callbacks import (
     ModelCheckpoint,
     TensorBoard
 )
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 
 from remsen.data import Dataset
+from remsen.metrics import iou
 
 
 def get_callbacks(
-    model_name: str,
-    cache_path: Path,
+    cache_dir: Path,
     early_stopping: bool = False,
-    verbose: int = 0,
+    verbose: int = 1,
 ):
-    model_cache_path = cache_path / "models" / model_name
+    iou_path = cache_dir / "val_iou" / "{epoch}.h5"
+    iou_path.parent.mkdir(parents=True, exist_ok=True)
 
-    model_cache_path.mkdir(parents=True, exist_ok=True)
+    latest_path = cache_dir / "latest" / "{epoch}.h5"
+    latest_path.parent.mkdir(parents=True, exist_ok=True)
+
+    loss_path = cache_dir / "val_loss" / "{epoch}.h5"
+    loss_path.parent.mkdir(parents=True, exist_ok=True)
 
     save_best_val_loss = ModelCheckpoint(
         monitor="val_loss",
         mode="min",
-        filepath=str(model_cache_path / "val_loss.ckpt"),
+        filepath=str(loss_path),
         save_weights_only=True,
         save_best_only=True,
         verbose=verbose,
@@ -31,14 +37,14 @@ def get_callbacks(
     save_best_val_iou = ModelCheckpoint(
         monitor="val_iou",
         mode="max",
-        filepath=str(model_cache_path / "val_iou.ckpt"),
-        save_weights_only=False,
+        filepath=str(iou_path),
+        save_weights_only=True,
         save_best_only=True,
         verbose=verbose,
     )
     save_latest = ModelCheckpoint(
-        filepath=str(model_cache_path / "latest.ckpt"),
-        save_weights_only=False,
+        filepath=str(latest_path),
+        save_weights_only=True,
         verbose=0,
     )
     callbacks = [save_latest, save_best_val_loss, save_best_val_iou]
@@ -61,27 +67,96 @@ class Trainer:
         self.model = model
         self.dataset = dataset
         self.cache_path = dataset.cache.parent_dir
+        self.checkpoint_path = self.cache_path / "models" / name
+        self.model_path = self.checkpoint_path / "model.h5"
+        self.tensorboard_dir = self.cache_path / "tensorboard" / name
 
-    def callbacks(self):
+        if self.checkpoint_path.exists() or self.tensorboard_dir.exists():
+            self._existing_model()
+        else:
+            self.initial_epoch = 0
+            self.model_path.parent.mkdir(parents=True, exist_ok=True)
+            self.model.save(str(self.model_path))
+
+        self.callbacks = self._callbacks()
+
+    def _existing_model(self):
+        message = [
+            f"Model trainer with name {self.name} already exists!",
+            "What do you want to do?",
+            "1) Delete existing model checkpoints and TensorBoard data",
+            "2) Load latest training epoch",
+            "3) Load best validation IoU model",
+            "4) Load best validation loss model",
+        ]
+
+        answer = input(prompt="\n".join(message))
+        if answer not in "1 2 3 4".split():
+            self._existing_model()
+
+        if answer == "1":
+            answer = input(
+                prompt=(
+                    "You sure? "
+                    f"You will delete {self.checkpoint_path} "
+                    f"and {self.tensorboard_dir}... [y/N]"
+                ),
+            )
+            if answer.upper() != "Y":
+                self._existing_model()
+            shutil.rmtree(str(self.checkpoint_path), ignore_errors=True)
+            shutil.rmtree(str(self.tensorboard_dir), ignore_errors=True)
+            shutil.rmtree(str(self.model_path), ignore_errors=True)
+            self.model.save(str(self.model_path))
+            self.initial_epoch = 0
+            return
+        elif answer == "2":
+            path = self.checkpoint_path / "latest"
+        elif answer == "3":
+            path = self.checkpoint_path / "val_iou"
+        else:
+            path = self.checkpoint_path / "val_loss"
+
+        checkpoint = max(
+            path.glob("*.h5"),
+            key=lambda p: int(p.name.split(".")[0]),
+        )
+        print(self.model_path)
+        print(self.model_path.exists())
+        self.model = load_model(
+            str(self.model_path),
+            custom_objects={"iou": iou},
+        )
+        self.model.load_weights(str(checkpoint))
+        self.initial_epoch = int(checkpoint.name.split(".")[0])
+
+    def _callbacks(self):
         callbacks = get_callbacks(
-            model_name=self.name,
-            cache_path=self.cache_path,
+            cache_dir=self.checkpoint_path,
             early_stopping=True,
         )
         tensorboard_callback = TensorBoard(
-            log_dir=str(self.cache_path / "tensorboard" / self.name),
+            log_dir=str(self.tensorboard_dir),
             update_freq="epoch",
         )
         callbacks.append(tensorboard_callback)
         return callbacks
 
-    def train(self, verbose: int = 0, **kwargs):
+    def train(self, verbose: int = 1, **kwargs):
+        num_channels = self.model.input.shape[3]
+        lidar = num_channels in (1, 4)
+        rgb = num_channels in (3, 4)
+
         self.train_kwargs, self.test_dataset = self.dataset.tf_dataset(
             **kwargs,
-            rgb=self.model.input.shape[3] in (3, 4),
+            rgb=rgb,
+            lidar=lidar,
         )
-        self.model.fit(
+        self.train_kwargs["epochs"] += self.initial_epoch
+        history = self.model.fit(
             **self.train_kwargs,
-            callbacks=self.callbacks(),
+            callbacks=self.callbacks,
             verbose=verbose,
+            initial_epoch=self.initial_epoch,
         )
+        self.initial_epoch = history.epoch[-1] + 1
