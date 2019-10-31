@@ -1,4 +1,4 @@
-\begin{figure}
+\begin{figure}[H]
   \centering
   \begin{tikzpicture}[scale=0.07]
     \tikzmath{
@@ -34,19 +34,43 @@
   \label{fig:cadastral_bbox}
 \end{figure}
 
-\begin{figure}
+\begin{align*}
+  \vec{r^*} &= (w^*, h^*),
+  \\
+  \text{ where }
+  h^* &:= \ceil{\frac{h}{\SI{64}{\meter}}} \cdot \SI{64}{\meter},
+  w^* := \ceil{\frac{w}{\SI{64}{\meter}}} \cdot \SI{64}{\meter}
+\end{align*}
+
+\begin{figure}[H]
   \centering
-  \begin{tikzpicture}[scale=0.05]
+  \begin{tikzpicture}[scale=0.048]
     \tikzmath{
       \tile=64;
       \bboxwidth=2.25 * \tile;
+      \collectionwidth=3 * \tile;
       \bboxheight=1.25 * \tile;
+      \collectionheight=2 * \tile;
       \offset = 0.375 * \tile;
       \shift = 5;
     }
-    \draw (0, 0) grid[step=\tile] (3 * \tile, 2 * \tile);
+    \draw (0, 0) grid[step=\tile] (\collectionwidth, \collectionheight);
     \draw[dashed, color=cadastralcolor] (0 + \offset, 0 + \offset) rectangle (\bboxwidth + \offset, \bboxheight + \offset);
+
+    % Show tile dimensions
     \draw (-\shift, 0) edge[<->, dotted] node[above left] {$\SI{64}{\metre}~$} node[below left] {$\SI{256}{\pixel}$} (-\shift, \tile);
     \draw (0, -\shift) edge[<->, dotted] node[below, align=center] {$\SI{64}{\metre}$ \\ $\SI{256}{\pixel}$} (\tile, -\shift);
+
+    % Show dimensions of tile collection
+    \draw 
+      (\collectionwidth + \shift, 0) 
+      edge[<->, dotted]
+      node[right]{$h^*$}
+      (\collectionwidth + \shift, \collectionheight);
+    \draw 
+      (0, \collectionheight + \shift) 
+      edge[<->, dotted]
+      node[above]{$w^*$}
+      (\collectionwidth, \collectionheight + \shift);
   \end{tikzpicture}
 \end{figure}
