@@ -121,8 +121,6 @@ class Trainer:
             path.glob("*.h5"),
             key=lambda p: int(p.name.split(".")[0]),
         )
-        print(self.model_path)
-        print(self.model_path.exists())
         self.model = load_model(
             str(self.model_path),
             custom_objects={"iou": iou},
