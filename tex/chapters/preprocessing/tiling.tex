@@ -54,23 +54,33 @@
       \offset = 0.375 * \tile;
       \shift = 5;
     }
+    \draw[dotted, thick, color=cadastralcolor, fill=cadastralcolor!10] (0 + \offset, 0 + \offset) rectangle (\bboxwidth + \offset, \bboxheight + \offset);
     \draw (0, 0) grid[step=\tile] (\collectionwidth, \collectionheight);
-    \draw[dashed, color=cadastralcolor] (0 + \offset, 0 + \offset) rectangle (\bboxwidth + \offset, \bboxheight + \offset);
 
     % Show tile dimensions
-    \draw (-\shift, 0) edge[<->, dotted] node[above left] {$\SI{64}{\metre}~$} node[below left] {$\SI{256}{\pixel}$} (-\shift, \tile);
-    \draw (0, -\shift) edge[<->, dotted] node[below, align=center] {$\SI{64}{\metre}$ \\ $\SI{256}{\pixel}$} (\tile, -\shift);
+    \draw[decoration={brace}, decorate]
+      (-\shift, 0) -- node[above left] {$\SI{64}{\metre}~$} node[below left] {$\SI{256}{\pixel}$} (-\shift, \tile);
+
+    \draw[decoration={brace,mirror}, decorate]
+      (0, -\shift) -- node[below=2pt, align=center] {$\SI{64}{\metre}$ \\ $\SI{256}{\pixel}$} (\tile, -\shift);
 
     % Show dimensions of tile collection
-    \draw 
+    \draw[decoration={brace,mirror}, decorate]
       (\collectionwidth + \shift, 0) 
-      edge[<->, dotted]
-      node[right]{$h^*$}
+      --
+      node[right=2pt]{$h^*$}
       (\collectionwidth + \shift, \collectionheight);
-    \draw 
+    \draw[decoration={brace}, decorate]
       (0, \collectionheight + \shift) 
-      edge[<->, dotted]
-      node[above]{$w^*$}
+      --
+      node[above=2pt]{$w^*$}
       (\collectionwidth, \collectionheight + \shift);
+
+    % Arrows showing growth of bounding box
+    \tikzset{>=latex}
+    \draw (\bboxwidth + \offset + 1, \offset - 1) edge[->, thick, dashed] (\collectionwidth - 1, 1);
+    \draw (\bboxwidth + \offset + 1, \bboxheight + \offset + 1) edge[->, thick, dashed] (\collectionwidth - 1, \collectionheight - 1);
+    \draw (\offset - 1, \bboxheight + \offset + 1) edge[->, thick, dashed] (1, \collectionheight);
+    \draw (\offset - 1, \offset - 1) edge[->, thick, dashed] (1, 1);
   \end{tikzpicture}
 \end{figure}
