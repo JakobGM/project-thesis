@@ -33,3 +33,12 @@
 \usepackage[style=numeric,backend=biber]{biblatex}
 % Specify file containing all bibliographic metadata.
 \addbibresource{bibliography.bib}
+
+% Create figures with semantic code
+\usepackage{tikz}
+% Allow calculations within curly brackets in tikz figures
+\usetikzlibrary{calc, math}
+
+% Proper formatting of units by using \SI{value}{\unit}
+\usepackage{siunitx}
+\DeclareSIUnit\pixel{px}

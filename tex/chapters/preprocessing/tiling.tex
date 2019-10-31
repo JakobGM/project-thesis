@@ -1,0 +1,52 @@
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[scale=0.07]
+    \tikzmath{
+      \xmin=0;
+      \xmax=100;
+      \ymin=0;
+      \ymax=100;
+      \xmid=0.5 * \xmin + 0.5 * \xmax;
+      \ymid=0.5 * \ymin + 0.5 * \ymax;
+    }
+    \coordinate (lr) at (\xmax, \ymin);
+    \coordinate (ul) at (\xmin, \ymax);
+
+    \filldraw[cadastralcolor!40, draw=black] (50, \ymin) -- (62.5, 12.5) -- (25, 50) -- (\xmax, 50) -- (50, \ymax) -- (0, 50) -- cycle;
+    \draw[dashed, color=cadastralcolor] (\xmin, \ymin) rectangle (\xmax, \ymax);
+
+    \draw (ul) node[below right] {$(x_{\mathrm{min}}, y_{\mathrm{max}})$};
+    \fill[cadastralcolor] (ul) circle [radius=1];
+
+    \draw (lr) node[above left] {$(x_{\mathrm{max}}, y_{\mathrm{min}})$};
+    \fill[cadastralcolor] (lr) circle [radius=1];
+
+    \draw (\xmid, \ymax) node[above] {$w = x_{\mathrm{max}} - x_{\mathrm{min}}$};
+    \draw (\xmax, \ymid) node[above, rotate=-90] {$h = y_{\mathrm{max}} - y_{\mathrm{min}}$};
+
+    \draw (\xmid, 65) node[scale=1.5, black] {\textsf{CADASTRAL}};
+  \end{tikzpicture}
+  \caption{
+    Bounding box calculation for a given cadastral.
+    The cadastral is drawn in \textcolor{blue}{blue},
+    and the resulting bounding box is drawn with \textcolor{blue}{blue} dashed lines.
+  }
+  \label{fig:cadastral_bbox}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[scale=0.05]
+    \tikzmath{
+      \tile=64;
+      \bboxwidth=2.25 * \tile;
+      \bboxheight=1.25 * \tile;
+      \offset = 0.375 * \tile;
+      \shift = 5;
+    }
+    \draw (0, 0) grid[step=\tile] (3 * \tile, 2 * \tile);
+    \draw[dashed, color=cadastralcolor] (0 + \offset, 0 + \offset) rectangle (\bboxwidth + \offset, \bboxheight + \offset);
+    \draw (-\shift, 0) edge[<->, dotted] node[above left] {$\SI{64}{\metre}~$} node[below left] {$\SI{256}{\pixel}$} (-\shift, \tile);
+    \draw (0, -\shift) edge[<->, dotted] node[below, align=center] {$\SI{64}{\metre}$ \\ $\SI{256}{\pixel}$} (\tile, -\shift);
+  \end{tikzpicture}
+\end{figure}
