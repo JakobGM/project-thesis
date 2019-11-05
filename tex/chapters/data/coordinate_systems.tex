@@ -26,6 +26,8 @@ In order to solve this problem we define a set of coordinate system \textit{proj
 The resulting coordinate system is cartesian, and thus allows you to represent geographic points in the more common $\vec{p} = (x, y, z)$ format.
 Cartesian distance norms such as $||\vec{p}_1 - \vec{p}_2||_2$ and cartesian translations $\vec{p}_1 + \vec{\Delta}$ stay within pre-defined error tolerances as long as operations are contained to the given validity region of the given projection.
 
+One such cartesian approximation of the earth's surface is the Universal Transverse Mercator (UTM) coordinate system which divides the earth into 60 rectangular zones. The UTM zones covering Europe are shown in \figref{fig:europe-utm-zones}.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\linewidth]{europe-utm-zones.png}
@@ -33,4 +35,9 @@ Cartesian distance norms such as $||\vec{p}_1 - \vec{p}_2||_2$ and cartesian tra
     The figure shows the UTM zones required in order to cover the entirety of Europe, from \texttt{29S} to \texttt{38W}.
     This public domain image has been sourced from Wikimedia \cite{wiki:europe_utm_zones}.
   }
+  \label{fig:europe-utm-zones}
 \end{figure}
+
+For our dataset situated in Trondheim, Norway, we will therefore use UTM zone \texttt{32V}.
+Data in other coordinate systems will be transformed to this UTM zone.
+Since this is an affine coordinate system, we can easily generalize any models to other coordinate systems by applying the correct affine transformation.
