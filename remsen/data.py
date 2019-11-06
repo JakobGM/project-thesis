@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 
-from remsen import augmentation, cache
+from remsen import augmentation, cache, utils
 
 
 class Dataset:
@@ -363,6 +363,7 @@ class Dataset:
         minimum_building_area: float = 4,
         rgb: bool = False,
         lidar: bool = True,
+        split_images: Optional[int] = None,
     ):
         assert train_split + validation_split + test_split == 1.0
         if rgb and lidar:
@@ -394,6 +395,15 @@ class Dataset:
                         input_arrays.append(rgb_arrays)
 
                     input_arrays = np.concatenate(input_arrays, axis=3)
+                    if split_images:
+                        input_arrays = utils.split_images(
+                            batch=input_arrays,
+                            divisor=split_images,
+                        )
+                        building_arrays = utils.split_images(
+                            batch=building_arrays,
+                            divisor=split_images,
+                        )
 
                     all_tiles = zip(input_arrays, building_arrays)
                     all_tiles = filter(
