@@ -1,5 +1,13 @@
 import shutil
+from collections import defaultdict
 from pathlib import Path
+from typing import Optional
+
+import pandas as pd
+
+from tensorboard.backend.event_processing.event_accumulator import (
+    EventAccumulator,
+)
 
 from tensorflow.keras.callbacks import (
     EarlyStopping,
@@ -158,3 +166,39 @@ class Trainer:
             initial_epoch=self.initial_epoch,
         )
         self.initial_epoch = history.epoch[-1] + 1
+
+
+def tensorboard_dataframe(
+    name: str,
+    split: Optional[str] = None,
+) -> pd.DataFrame:
+    """Return dataframe representing data in TensorBoard log."""
+    if not split:
+        validation = tensorboard_dataframe(name=name, split="validation")
+        train = tensorboard_dataframe(name=name, split="train")
+        validation.pop("datetime")
+        validation.pop("elapsed_time")
+        return train.join(validation, on="epoch")
+
+    directory = Path(f".cache/tensorboard/{name}/{split}")
+    events = EventAccumulator(str(directory))
+    events.Reload()
+
+    assert split in ("train", "validation")
+    split_prefix = "train_" if split == "train" else "val_"
+
+    dataframe = defaultdict(list)
+    for scalar_tag in events.Tags()["scalars"]:
+        wall_times, step_numbers, values = zip(*events.Scalars(scalar_tag))
+        dataframe["datetime"] = wall_times
+        dataframe["epoch"] = step_numbers
+        dataframe[split_prefix + scalar_tag[6:]] = values
+
+    dataframe = pd.DataFrame.from_dict(dataframe)
+    dataframe["elapsed_time"] = pd.to_timedelta(
+        dataframe["datetime"] - dataframe["datetime"].min(),
+        unit="s",
+    )
+    dataframe["datetime"] = pd.to_datetime(dataframe["datetime"], unit="s")
+    dataframe.set_index(keys="epoch", inplace=True)
+    return dataframe
