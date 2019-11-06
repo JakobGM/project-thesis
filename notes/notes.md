@@ -65,3 +65,7 @@ __Without augmentation__:
 ## Writing
 
 * Organize thesis according to ETL (extract, transform, load)
+
+# Extra
+
+* Set mask value of partial overlapping pixels to proportion of overlap? Uncertainty in ground truth.
