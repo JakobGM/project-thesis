@@ -4,6 +4,7 @@ data/*
 
 # Compiled LaTeX documents in the form of PDFs
 tex/**/*.pdf
+!tex/img/**/*.pdf
 
 # Visual Studio Code settings
 .vscode/

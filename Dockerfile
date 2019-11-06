@@ -29,11 +29,13 @@ COPY ./.docker/jupyter/jupyter-entrypoint.sh /jupyter-entrypoint.sh
 # nodejs npm -> required by jupyterlab_vim extension
 # pandoc texlive-xetex -> required for nbconvert PDF export
 # gdal-bin -> gdal utility scripts such as ogr2ogr, gdaltransform, etc
+# dvipng -> Save PDF figures with matplotlib ps backend
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
         nodejs npm \
         pandoc texlive-xetex \
-        gdal-bin
+        gdal-bin \
+        dvipng
 RUN jupyter labextension install jupyterlab_vim
 
 # Add volume mount point for source code
