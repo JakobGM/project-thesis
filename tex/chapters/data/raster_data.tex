@@ -1,1 +1,43 @@
-TODO: Write about raster data.
+Raster data is simply scalar measurements imposed onto a grid with rectangular grid cells.
+
+A color image, $I$, of width $\mathrm{W}$ and height $\mathrm{H}$, for instance, will contain three color channels, \textcolor{red}{red}, \textcolor{green}{green}, and \textcolor{blue}{blue}, (RGB) and can be represented by a three-dimensional array of size $\mathrm{W} \times \mathrm{H} \times \mathrm{3}$.
+Each color channel in a given pixel is represented by an unsigned 8-bit integer, i.e. \\
+\begin{equation*}
+  I_{i, j, c} \in \{0, 1, ..., 255\},
+  \hspace{2.5em}
+  i = 0, ..., \mathrm{H} - 1,
+  ~~
+  j = 0, ..., \mathrm{W} - 1,
+  ~~
+  c = \mathrm{\textcolor{red}{R}, \textcolor{green}{G},\textcolor{blue}{B}}.
+\end{equation*}
+
+A lidar height map, $Z$, is likewise encoded as a single-channel grayscale image of size $\mathrm{W} \times \mathrm{H}$.
+Each pixel is represented by a signed 32-bit floating point value, i.e.
+\begin{equation*}
+  Z_{i, j} \in \mathbb{R},
+  \hspace{2.5em}
+  i = 0, ..., \mathrm{H} - 1,
+  ~~
+  j = 0, ..., \mathrm{W} - 1.
+\end{equation*}
+
+These two raster types must be handled differently during data normalization due to their different value domains, which we will come back to in section \ref{sec:raster-normalization}.
+
+% Keep the following section on the same page
+\begin{minipage}{\textwidth}
+  For GIS rasters we must define the spatial extent of the given image as well, specified by:
+  \begin{itemize}[noitemsep]
+    \item A coordinate system, for example UTM \texttt{32V}.
+    \item The coordinate of the center of the upper left pixel, $I_{1, 1}$; the \textit{origin} $\vec{r}_0 = [x_0, y_0]^T$.
+    \item The pixel step size, $\vec{\Delta} = [\Delta_x, \Delta_y]^T$, for example $[\SI{0.25}{\meter}, \SI{-0.25}{\meter}]^T$.
+  \end{itemize}
+\end{minipage}
+\vspace{0.5em}
+
+The pixel $I_{i, j, c}$ therefore represents a rectangle of width $\Delta_x$ and height $\Delta_y$ centered at the spatial coordinate $\vec{r}_0 + \vec{\Delta} \cdot [i, j]$, everything being interpreted in the given coordinate system.
+
+Missing data in remote sensing rasters are specified by filling in a pre-defined \texttt{nodata} placeholder value.
+For RGB data this is often set to $0$, resulting in a black pixel.
+LiDAR rasters often use $\texttt{nodata} = -2^{127} \times (2 - 2^{-23}) \approx 3.4028234664 \times 10^{38}$, the smallest normal number representable by a single-precision floating point number.
+Such \texttt{nodata} values may arise from measurement errors and regions which are outside the given covarage area of the dataset, and must be special-cased during data normalization, which we will come back to in section \ref{sec:raster-normalization}.
