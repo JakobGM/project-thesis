@@ -44,8 +44,10 @@
 \usetikzlibrary{matrix}
 
 % Proper formatting of units by using \SI{value}{\unit}
-\usepackage{siunitx}
+% We enable use of \giga\byte and other binary units
+\usepackage[binary-units=true]{siunitx}
 \DeclareSIUnit\pixel{px}
+\sisetup{range-phrase=~--~}
 
 % For some reason, this package prevents some side-by-side tikz figures from wrapping
 \usepackage[a4paper]{geometry}
@@ -65,3 +67,6 @@
 
 % Custom list formatting, such as noitemsep and label
 \usepackage{enumitem}
+
+% Nicer formatting of tables with \toprule, \midrule, and \bottomrule
+\usepackage{booktabs}
