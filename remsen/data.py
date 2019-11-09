@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 
-from remsen import augmentation, cache, utils
+from remsen import augmentation, cache, plot, utils
 
 
 class Dataset:
@@ -217,7 +217,7 @@ class Dataset:
         if with_rgb:
             lidar_ax, rgb_ax, prediction_ax, metric_ax = axes.flatten()
             rgb_ax.title.set_text("RGB data")
-            rgb_ax.imshow(rgb_tile)
+            plot.imshow_with_mask(image=rgb_tile, mask=building_tile, ax=rgb_ax)
         else:
             lidar_ax, prediction_ax, metric_ax = axes.flatten()
 
@@ -244,7 +244,7 @@ class Dataset:
             axis.tick_params(labelbottom=False, labelleft=False, width=0.0)
 
         lidar_tile = np.squeeze(lidar_tile)
-        lidar_ax.imshow(lidar_tile)
+        plot.imshow_with_mask(image=lidar_tile, mask=building_tile, ax=lidar_ax)
 
         lidar_tile = np.expand_dims(lidar_tile, 0)
         lidar_tile = np.expand_dims(lidar_tile, -1)
@@ -256,6 +256,13 @@ class Dataset:
             cmap="seismic",
             vmin=0,
             vmax=1,
+        )
+        plot.imshow_with_mask(
+            image=predicted_building_tile,
+            mask=building_tile,
+            cmap="seismic",
+            ax=prediction_ax,
+            edge_color=(0, 255, 0, 255),
         )
 
         predicted_mask = (predicted_building_tile > 0.5).astype("uint8")

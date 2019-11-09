@@ -31,4 +31,4 @@ def edge_pixels(mask: np.ndarray) -> np.ndarray:
     erode = ndimage.binary_erosion(input=mask, structure=structure)
     # XOR operation
     edges = mask ^ erode
-    return edges
+    return edges.astype(np.bool)

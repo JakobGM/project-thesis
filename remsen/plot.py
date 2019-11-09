@@ -1,10 +1,13 @@
-from typing import List
+from typing import List, Tuple
 
-from matplotlib import pyplot as plt
+from matplotlib import cm, pyplot as plt
 from matplotlib.backends.backend_pgf import FigureCanvasPgf
 from matplotlib.backend_bases import register_backend
 
+import numpy as np
+
 from remsen.training import tensorboard_dataframe
+from remsen import utils
 
 
 def configure_latex(scaler: float = 1.5):
@@ -23,6 +26,7 @@ def configure_latex(scaler: float = 1.5):
         }
     )
 
+
 def plot_training(
     names: List[str],
     splits: List[str] = ["validation"],
@@ -31,10 +35,10 @@ def plot_training(
     """Plot training sequence from TensorBoard for given model/split/metric."""
     configure_latex()
     fig, ax = plt.subplots()
-    ax.set_xlabel("$\mathrm{Epoch}$")
+    ax.set_xlabel(r"$\mathrm{Epoch}$")
 
     if metric == "iou":
-        ax.set_ylabel("$\mathrm{IoU}$")
+        ax.set_ylabel(r"$\mathrm{IoU}$")
     else:
         ax.set_ylabel(metric)
 
@@ -51,3 +55,30 @@ def plot_training(
     path = "/code/tex/img/metrics/" + filename + ".pdf"
     fig.savefig(path)
     return fig, ax
+
+
+def imshow_with_mask(
+    image: np.ndarray,
+    mask: np.ndarray,
+    ax,
+    cmap: str = None,
+    edge_color: Tuple[int, int, int, int] = (255, 0, 0, 180),
+):
+    """Plot image with overlayed mask."""
+    image = image.copy()
+    grayscale = image.shape[-1] != 3
+    if grayscale:
+        image = cm.ScalarMappable(cmap=cmap).to_rgba(image, bytes=True)
+    else:
+        image = np.concatenate(
+            [image, 255 * np.ones_like(image[:, :, 0:1])],
+            axis=2,
+        )
+
+    # Plot the original image
+    ax.imshow(image)
+
+    # Plot edge of mask with given RGBA value
+    edges = utils.edge_pixels(np.squeeze(mask))
+    image[:, :, :][edges] = edge_color
+    ax.imshow(image)
