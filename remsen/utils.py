@@ -1,3 +1,7 @@
+import numpy as np
+
+from scipy import ndimage
+
 from skimage.util import view_as_blocks
 
 
@@ -14,3 +18,17 @@ def split_images(batch, divisor):
     blocks = view_as_blocks(batch, view_shape)
     splits = blocks.reshape(new_shape)
     return splits
+
+
+def edge_pixels(mask: np.ndarray) -> np.ndarray:
+    """
+    Return edge mask from filled mask.
+
+    Source: https://stackoverflow.com/a/33745971
+    """
+    # Rank 2 structure with full connectivity
+    structure = ndimage.generate_binary_structure(rank=2, connectivity=2)
+    erode = ndimage.binary_erosion(input=mask, structure=structure)
+    # XOR operation
+    edges = mask ^ erode
+    return edges
