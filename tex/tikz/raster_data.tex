@@ -1,0 +1,42 @@
+% \usepackage{tikz-3dplot}
+% \tdplotsetmaincoords{60}{125}
+% \tdplotsetrotatedcoords{0}{0}{0}
+
+\begin{tikzpicture}[scale=3,tdplot_rotated_coords,
+                    cube/.style={very thick,black},
+                    grid/.style={very thin,gray},
+                    axis/.style={->,ultra thick},
+                    rotated axis/.style={->,purple,ultra thick}]
+
+    \tikzmath{
+      \gridspacing=0.25;
+    }
+    %draw a grid in the x-y plane
+    \foreach \x in {-0.5,0,...,2.5}
+        \foreach \y in {-0.5,0,...,2.5}
+        {
+            \draw[grid,blue,thick] (\x,-0.5,0) -- (\x,2.5,0);
+            \draw[grid,blue,thick] (-0.5,\y,0) -- (2.5,\y,0);
+        }
+
+    \foreach \x in {-0.5,0,...,2.5}
+        \foreach \y in {-0.5,0,...,2.5}
+        {
+            \draw[grid,green,thick] (\x,-0.5,\gridspacing) -- (\x,2.5,\gridspacing);
+            \draw[grid,green,thick] (-0.5,\y,\gridspacing) -- (2.5,\y,\gridspacing);
+        }
+
+    \foreach \x in {-0.5,0,...,2.5}
+        \foreach \y in {-0.5,0,...,2.5}
+        {
+            \draw[grid,red,thick] (\x,-0.5,2*\gridspacing) -- (\x,2.5,2*\gridspacing);
+            \draw[grid,red,thick] (-0.5,\y,2*\gridspacing) -- (2.5,\y,2*\gridspacing);
+        }
+
+    %draw the main coordinate frame axes
+    \draw[axis,tdplot_main_coords] (-1.5,-1.5,0) -- (-0.5,-1.5,0) node[anchor=west]{$x$};
+    \draw[axis,tdplot_main_coords] (-1.5,-1.5,0) -- (-1.5,-0.5,0) node[anchor=north west]{$y$};
+    \draw[axis,tdplot_main_coords] (-1.5,-1.5,0) -- (-1.5,-1.5,1) node[anchor=west]{$z$};
+
+    \node[circle,radius=1,above] at (-0.5, -0.5, 2*\gridspacing) {$test$};
+\end{tikzpicture}
