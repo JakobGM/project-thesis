@@ -69,3 +69,4 @@ __Without augmentation__:
 # Extra
 
 * Set mask value of partial overlapping pixels to proportion of overlap? Uncertainty in ground truth.
+* Write about cadastre being mainly used to extract data of interest and is the basis for our sample space
