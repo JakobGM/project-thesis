@@ -33,10 +33,32 @@ This requires data interpolation of the original raster data due to the rotation
 AOMBB is therefore not a viable approach during the preprocessing stage, and we will therefore use axis-aligned minimum bounding boxes instead, from now on simply referred to as \textit{bounding boxes}.
 
 Calculating bounding boxes for the cadastral plots in our data sets will yield rectangles of variable dimensions.
+Variable input sizes will cause issues for model architectures which require predefined input dimensions.
+Convolutional neural networks do handle variable input sizes, but dimensions off all images in a \textit{single} training batch must be of the same size.
+It is therefore preferable to normalize the size of each bounding box.
+
+The distributions of the bounding box widths ($h$), heights $h$, and maximal dimensions ($m = \max \{w, h\}$) are shown in \figref{fig:bbox-stats}.
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{bbox_stats}
+  \caption{
+    Distribution of bounding box widths $w$ (left), heights $h$ (middle), and largest dimension $m = \max \{w, h\}$ (right).
+    The cut-off value of $\SI{64}{\meter}$ is shown by \textcolor{red}{red} dotted vertical lines.
+    The fraction of bounding boxes with dimension $\leq \SI{64}{m}$ is annotated as well.
+    The $x$-axis has been cut off at the 90th percentile.
+    \textit{Dataset: Trondheim cadastre}.
+  }
+  \label{fig:bbox-stats}
 \end{figure}
+
+As can be seen in \figref{fig:bbox-stats}, the distributions of $h$ and $w$ are quite similar.
+A square $1:1$ aspect ratio is therefore suitable for the normalized bounding box size.
+Specifically, a $\SI{64}{\meter} \times \SI{64}{\meter}$ bounding box will be of sufficient size to contain $\approx \SI{85}{\percent}$ of all cadastre plots in a single tile.
+With a LiDAR resolution of $\SI{0.2}{\meter}$, this results in a final image resolution of $\SI{256}{\pixel} \times \SI{256}{\pixel}$.
+This is a common resolution for deep learning models, making comparison with earlier results simpler.
+
+How should the bounding boxes be normalized to to $\SI{256}{\pixel} \times \SI{256}{\pixel}$?
+A common technique is to resize the original image by use of methods such as bilinear interpolation or Lanczos resampling.
 
 \begin{align*}
   \vec{r^*} &= (w^*, h^*),
