@@ -1,6 +1,7 @@
 Given a specific geographic region, defined by the extent of the cadastral plot, we must retrieve the raster which entirely covers the region of interest.
-The simplest approach is to calculate the \textit{axis-aligned bounding box} of the plot, the minimum-area enclosing rectangle of the given plot, defined by four points, $(x_{\mathrm{min}}, y_{\mathrm{min}}, x_{\mathrm{max}}, y_{\mathrm{max}})$.
-The resulting bounding box of width $w = x_{\mathrm{max}} - x_{\mathrm{min}}$ and height $h = y_{\mathrm{max}} - y_{\mathrm{min}}$ is shown in \figref{fig:cadastral-bbox}.
+The simplest approach is to calculate the \textit{axis-aligned bounding box} of the plot, the minimum-area enclosing rectangle of the given plot.
+A bounding box is uniquely defined by its centroid $\vec{c} = [\nicefrac{1}{2}(x_{\mathrm{min}} + x_{\mathrm{max}}), \nicefrac{1}{2}(y_{\mathrm{min}} + y_{\mathrm{max}})]$, width $w = x_{\mathrm{max}} - x_{\mathrm{min}}$, and height $h = y_{\mathrm{max}} - y_{\mathrm{min}}$, and denoted by $B(\vec{c}, w, h)$.
+This is shown in \figref{fig:cadastral-bbox}.
 
 \begin{figure}[htb]
   \captionsetup[subfigure]{position=b}
@@ -59,16 +60,39 @@ This is a common resolution for deep learning models, making comparison with ear
 
 How should the bounding boxes be normalized to to $\SI{256}{\pixel} \times \SI{256}{\pixel}$?
 A common technique is to resize the original image by use of methods such as bilinear interpolation or Lanczos resampling.
+While this is tolerable for normal photographs, where each pixel has a variable real world area interpretation, it is an especially lossy transformation for remote sensing data.
+In the Trondheim 2017 LiDAR data set, for instance, each pixel represents a $\SI{0.2}{\meter} \times \SI{0.2}{\meter}$ real world area.
+If the (higly variable) extent of each bounding box is scaled to $\SI{256}{\pixel} \times \SI{256}{\pixel}$, the real world area of each pixel will differ greatly between cadastral plots.
+Resized images will also become distorted when the original aspect ratio is not $1:1$.
 
+A better method utilizes the fact that the remote sensing data covers a continuous geographic region, which allows us to expand the feature space beyond the original region of interest.
+The original bounding box is denoted as $B(\vec{c}, w, h)$.
+Now, define the following \enquote{enlarged} width and height:
+%
 \begin{align*}
-  \vec{r^*} &= (w^*, h^*),
-  \\
-  \text{ where }
   h^* &:= \ceil{\frac{h}{\SI{64}{\meter}}} \cdot \SI{64}{\meter},
+  \hspace{3em}
   w^* := \ceil{\frac{w}{\SI{64}{\meter}}} \cdot \SI{64}{\meter}
 \end{align*}
+%
+The new bounding box defined by $B(\vec{c}, w^*, h^*)$ covers the original bounding box and is divisible by \SI{256}{\pixel} in both dimensions.
+With other words, the original bounding box is grown in all directions until both the width and height becomes a multiple of \SI{64}{\meter} and \SI{256}{\pixel}.
+This is demonstrated in \figref{fig:bbox-growing}.
 
 \begin{figure}[H]
   \centering
   \input{tikz/bbox_growing.tex}
+  \caption{
+    Bounding box of width $2.25 \times \SI{64}{\meter} = \SI{144}{\meter}$ and height $1.25 \times \SI{64}{\meter} = \SI{80}{\meter}$.
+    The bounding box is grown until it is 3 tiles wide and 2 tiles tall, i.e. $\SI{192}{\meter} \times \SI{128}{\meter}$.
+  }
+  \label{fig:bbox-growing}
 \end{figure}
+
+The resulting bounding box can now be divided into $\nicefrac{w^*h^*}{64^2}$ tiled images of resolution $\SI{256}{\pixel} \times \SI{256}{\pixel}$, all of which with a real world pixel area of $\SI{0.2}{\meter} \times \SI{0.2}{\meter}$, and no spatial information has been lost.
+
+The additional area $B(\vec{c}, w, h) \setminus B(\vec{c}, w^*, h^*)$ is filled with real raster data and respective target masks, and therefore may cause expanded cadastre bounding boxes to partially overlap.
+This will result in certain cadastral plots to share features, and must therefore be carefully dealt with in order to prevent data leakage across training, validation, and test splits.
+
+Another approach is to fill in the additional area with zero values, effectively preventing all data leakage between cadastral plots.
+A disadvantage with this approach is that all models are now required to learn to ignore this additional, fake data, and this could possibly result in reduced predictive performance and/or longer training times.
