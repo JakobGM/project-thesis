@@ -3,14 +3,17 @@ from typing import List, Tuple
 from matplotlib import cm, pyplot as plt
 from matplotlib.backends.backend_pgf import FigureCanvasPgf
 from matplotlib.backend_bases import register_backend
+from matplotlib.ticker import PercentFormatter
 
 import numpy as np
+
+import pandas as pd
 
 from remsen.training import tensorboard_dataframe
 from remsen import utils
 
 
-def configure_latex(scaler: float = 1.5):
+def configure_latex(scaler: float = 1.5, width_scaler: float = 1):
     """Configure matplotlib for LaTeX figure output."""
     register_backend('pdf', FigureCanvasPgf)
     plt.rcParams.update(
@@ -20,7 +23,7 @@ def configure_latex(scaler: float = 1.5):
                 r"\usepackage[utf8x]{inputenc}",
                 r"\usepackage[T1]{fontenc}",
             ],
-            "figure.figsize": [scaler * 3.39, scaler * 2.0951352218621437],
+            "figure.figsize": [width_scaler * scaler * 3.39, scaler * 2.0951352218621437],
             "text.usetex": True,
             "backend": "ps",
         }
@@ -82,3 +85,62 @@ def imshow_with_mask(
     edges = utils.edge_pixels(np.squeeze(mask))
     image[:, :, :][edges] = edge_color
     ax.imshow(image)
+
+
+def plot_bbox_distribution() -> None:
+    configure_latex(width_scaler=1.6)
+
+    # Fetch pre-computed bbox stats from QGIS dump
+    stats = pd.read_csv("data/bbox_stats.csv")
+
+    # Calculate max(width, height) of each bbox
+    stats["max"] = stats.loc[:, ["width", "height"]].max(axis=1)
+
+    # Calculate 90 percentile axis cut-off
+    percentile = stats["max"].quantile(q=0.9)
+
+    fig, (width_ax, height_ax, max_ax) = plt.subplots(
+        1, 3,
+        sharex=True,
+        sharey=True,
+    )
+    for dimension, axis in [
+        ("width", width_ax),
+        ("height", height_ax),
+        ("max", max_ax),
+    ]:
+        # Plot distribution of dimension extent
+        axis.hist(
+            stats[dimension],
+            bins=100,
+            range=(0, percentile),
+            density=True,
+        )
+
+        # Show 64 meter cut-off
+        axis.axvline(x=64, color="r", linestyle=":")
+
+        # Plot arrow pointing to left indicating sum under curve to the left
+        axis.annotate(
+            "",
+            xy=(64, 0.03),
+            xytext=(44, 0.03),
+            arrowprops=dict(arrowstyle="<-", color="red"),
+        )
+
+        # Calculate sum under curve to left of cut-off
+        proportion = 100 * (stats[dimension] < 64).sum() / len(stats)
+
+        # Annotate sum under curve
+        axis.annotate(
+            f"${proportion:.1f}" + r"\%$",
+            xy=(47.5, 0.031),
+        )
+        axis.set_xlabel(dimension.capitalize() + f" ${dimension[0]}$ [$m$]")
+
+    # Show percentages on y-axis
+    width_ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
+
+    width_ax.set_ylabel("Fraction of bounding boxes")
+    fig.tight_layout()
+    fig.savefig("/code/tex/img/bbox_stats.pdf")
