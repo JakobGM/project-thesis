@@ -1,25 +1,38 @@
-\begin{figure}[H]
-  \centering
-  \input{tikz/cadastre_bbox.tex}
-  \caption{
-    Bounding box calculation for a given cadastral.
-    The cadastral is drawn in \textcolor{blue}{blue},
-    and the resulting bounding box is drawn with \textcolor{blue}{blue} dashed lines.
-  }
-  \label{fig:cadastral_bbox}
-\end{figure}
+Given a specific geographic region, defined by the extent of the cadastral plot, we must retrieve the raster which entirely covers the region of interest.
+The simplest approach is to calculate the \textit{axis-aligned bounding box} of the plot, the minimum-area enclosing rectangle of the given plot, defined by four points, $(x_{\mathrm{min}}, y_{\mathrm{min}}, x_{\mathrm{max}}, y_{\mathrm{max}})$.
+The resulting bounding box of width $w = x_{\mathrm{max}} - x_{\mathrm{min}}$ and height $h = y_{\mathrm{max}} - y_{\mathrm{min}}$ is shown in \figref{fig:cadastral-bbox}.
 
-\begin{figure}[H]
+\begin{figure}[htb]
+  \captionsetup[subfigure]{position=b}
   \centering
-  \input{tikz/bbox_method.tex}
-  \caption{
+  \subcaptionbox{
+    Bounding box calculation for a given cadastral.
+    The cadastral is drawn in \textcolor{orange}{orange},
+    and the resulting bounding box is drawn with \textcolor{blue}{blue} dashed lines.
+    \label{fig:cadastral-bbox}
+  }{
+    \input{tikz/cadastre_bbox.tex}
+  }
+  \hspace{2em}
+  \subcaptionbox{
     Figure showing the difference between a regular bounding box shown in
     \textcolor{blue}{blue}, and a minimum rotated rectangle shown in
     \textcolor{red}{red}.
+    Angle of rectangle rotation denoted by $\phi$.
+    \label{fig:rotated-bbox}
+  }{
+    \input{tikz/bbox_method.tex}
   }
-  \label{fig:bbox_method}
 \end{figure}
 
+The edges of the bounding box is by definition oriented parallel to the coordinate axes.
+An alternative method is to calculate the \textit{arbitrarily oriented minimum bounding box} (AOMBB), a rectangle rotated by $\phi$ degrees w.r.t. the $x$-axis, as shown in \figref{fig:rotated-bbox}.
+
+While AOMBB results in a region with less superfluous raster data, it requires warping of the original raw raster when $\phi \not\in \{ \SI{0}{\degree}, \SI{90}{\degree}, \SI{180}{\degree}, \SI{270}{\degree} \}$.
+This requires data interpolation of the original raster data due to the rotation of the coordinate system, and may introduce artifacts in the warped raster data without careful parameter tuning.
+AOMBB is therefore not a viable approach during the preprocessing stage, and we will therefore use axis-aligned minimum bounding boxes instead, from now on simply referred to as \textit{bounding boxes}.
+
+Calculating bounding boxes for the cadastral plots in our data sets will yield rectangles of variable dimensions.
 
 \begin{align*}
   \vec{r^*} &= (w^*, h^*),
