@@ -1,6 +1,9 @@
 % Add support for UTF-8 character set for those engines that do not support it natively.
 \usepackage[utf8]{inputenc}
 
+% Handle multi-glyph charecters in the output PDF correctly
+\usepackage[T1]{fontenc}
+
 % Very common math environments such as \begin{align}, and much, much more.
 % Docs: http://texdoc.net/texmf-dist/doc/latex/amsmath/amsldoc.pdf
 \usepackage{amsmath}
