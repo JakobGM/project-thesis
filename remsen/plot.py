@@ -144,3 +144,36 @@ def plot_bbox_distribution() -> None:
     width_ax.set_ylabel("Fraction of bounding boxes")
     fig.tight_layout()
     fig.savefig("/code/tex/img/bbox_stats.pdf")
+
+
+def plot_gdalinfo_histogram(path, bands=("red", "green", "blue")):
+    """Plot the result of gdalinfo -hist ${raster_file} > ${path}"""
+    lines = path.read_text().split("\n")
+    band_data = {}
+    for i, line in enumerate(lines):
+        if " buckets from " in line:
+            buckets = lines[i].split()
+            color_interp = lines[i - 3].split("=")[-1].lower()
+            band_data[color_interp] = {
+                "bin_num": int(buckets[0]),
+                "bin_min": float(buckets[3]),
+                "bin_max": float(buckets[5][:-1]),
+                "frequency": np.array(list(map(int, lines[i + 1].split())))
+            }
+
+    fig, ax = plt.subplots()
+    for band in bands:
+        data = band_data[band]
+        frequency = data["frequency"]
+        print(frequency.sum())
+        frequency = frequency / frequency.sum()
+        bin_edges = np.linspace(
+            start=data["bin_min"],
+            stop=data["bin_max"],
+            num=data["bin_num"] + 1,
+        )
+        bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+        ax.plot(bin_centers, frequency)
+        ax.set_ylim(0, 0.0085)
+
+    return fig, ax
