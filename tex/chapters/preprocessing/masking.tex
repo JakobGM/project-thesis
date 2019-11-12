@@ -3,14 +3,13 @@ We construct discretized segmentation masks from vectorized mask polygons in the
 
 \begin{itemize}
   \item Transform the mask polygons into the pixel coordinate system of the raster tile, using the affine transformation defined by the tile origin.
-  \item Crop polygons outside the pixel region $(0, 255) \times (0, 255)$.
-  \item Superimpose the cropped polygons on the discretized grid.
+  \item Superimpose the polygon on the discretized pixel grid and crop polygons outside the pixel region $(0, 255) \times (0, 255)$.
   \item Fill in the value $1$ for any pixel contained by the polygon exterior hulls, while not contained by any interior hull.
   \item Set remaining values to $0$.
 \end{itemize}
 
 A problem arises when pixels are partially contained by a polygon exterior and interior, i.e. when the pixel overlaps the polygon's boundary.
-The pixel must be rather arbitrarily considered as either contained or not contained by the polygon.
+The pixel must be rather arbitrarily considered as either contained (decision rule A) or not contained (decision rule B) by the polygon.
 Both decision rules are shown in \figref{fig:pixel-containment}.
 
 \begin{figure}[H]
@@ -21,9 +20,12 @@ Both decision rules are shown in \figref{fig:pixel-containment}.
   \caption{
     The same polygon discretized to a raster grid using two different techniques.
     In the left figure, all pixels being \textit{touched} by the interior of the polygon
-    are considered a part of the polygon, while in the left figure, only pixels
+    are considered a part of the polygon (decision rule A), while in the left figure, only pixels
     entirely \textit{contained} within the interior are considered being part
-    of the polygon.
+    of the polygon (decision rule B).
   }
   \label{fig:pixel-containment}
 \end{figure}
+
+An alternative is to average the two masks, resulting in mask values of $0.5$ where the two decision rules disagree.
+We have opted for decision rule A, and the effect of this decision will be investigated.
