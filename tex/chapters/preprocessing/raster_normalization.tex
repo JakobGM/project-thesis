@@ -1,3 +1,31 @@
 Input data normalization has been found to be of vitual importance when training neural networks, in certain cases reducing predictive errors by several orders of magnitude and training times by one order of magnitude \cite{input_normalization_1997}.
 
 \todo{Find paper investigating the effect of data normalization on CNNs.}
+
+A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
+%
+\begin{equation*}
+  I_{i,j,c} \in \{0, 1, ..., 255\}, \text{ for } c \in \{r, g, b\}.
+\end{equation*}
+%
+The RGB pixels can be normalized to the $[0, 1]$ domain by dividing by $255$ across all three image channels.
+This is in essence a lossless transformation, since the normalization function $f(x) = x/255$ is trivially invertible, and thus no information is lost by this normalization.
+
+The $z$ channel in our image input represents elevation data from the digital surface model.
+Elevation pixels are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain
+%
+\begin{equation*}
+  I_{i,j,z} \in (-3.4 \times 10^{38}, 3.4 \times 10^{38}).
+\end{equation*}
+%
+It is infeasible to normalize this domain to $[0, 1]$ like the RGB normalization, it would yield large floating point errors and vanishingly small values.
+
+The digital surface model providing elevation data in form of the $z$ channel in our raster inputs is \textit{not} bounded by any domain, at least not theoretically.
+~
+\begin{align*}
+  &\text{Theoretically:} ~ I_{i,j,z} \in (-\infty, \infty)
+  \\
+  &\text{Numerically:} ~ I_{i,j,z} \in (-3.4 \times 10^{38}, 3.4 \times 10^{38})
+  \\
+  &\text{Practically:} ~ I_{i,j,z} \in (-432.65, 8848)
+\end{align*}
