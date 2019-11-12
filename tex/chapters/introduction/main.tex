@@ -1,11 +1,11 @@
 \section*{Introduction}
 
 \textit{Remote sensing} is the process of gathering information without contact of the object of interest, most often the surface of the earth.
-One of the remote sensing technologies most familiar to the public is satelitte and aerial imagery.
-Aerial RGB photographs are easy to undarstand and interpret for a human.
+One of the remote sensing technologies most familiar to the public is satellite and aerial imagery.
+Aerial RGB photographs are easy to understand and interpret for a human.
 One of the limitations of such RGB data is that it is fundamentally two-dimensional.
 
-\textit{LiDAR technology} is able to maesure distances of object surfaces by directing a beam of light (laser) and measuring the time of arrival and wavelength of the resulting reflection.
+\textit{LiDAR technology} is able to measure distances of object surfaces by directing a beam of light (laser) and measuring the time of arrival and wavelength of the resulting reflection.
 The resulting data is therefore fundamentally three-dimensional.
 LiDAR has been applied in a wide array of fields such as meteorology \cite{lidar_meteorology_1966}, forestry analysis \cite{lidar_forestry_2000}, urban flood modelling \cite{lidar_flood_2013}, and autonomous driving systems \cite{lidar_self_driving_2018}.
 
@@ -16,12 +16,12 @@ In contrast, \textit{digital terrain models} (DTMs) represents the elevation of 
 While DTMs are often used in geographical and cartographic applications, DSMs can be used for inference regarding objects above ground, such as human-made structures.
 This report investigates one of these applications, inference of building outlines from remote sensing data, specifically LiDAR and RGB photography, by means of deep learning techniques.
 
-While the \textit{Norwegian Mapping and and Cadastre Authority} (\textit{Statens Kartverk}) has consistent, high-fidelity three-dimensional data coverage of most of the human-made structures in the entire country, this is not the case for the rest of the world, Western Europe included.
+While the \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) has consistent, high-fidelity three-dimensional data coverage of most of the human-made structures in the entire country, this is not the case for the rest of the world, Western Europe included.
 This allows us to investigate the opportunity of training deep learning models with the Norwegian data as ground truth, and hopefully are such models generalizable to data sourced from other countries.
 
 Most industrial countries provide two-dimensional vector-based data for cadastre and building outlines.
 Such two-dimensional data is sufficient for purposes where the data is bound to be projected into a two-dimensional plane in the end anyway, e.g. in cartographic applications.
-Respective mapping authorities are therefore subject to cost prohibitive incetives to not gather, store, and provide three-dimensional representation of cadastre data.
+Respective mapping authorities are therefore subject to cost prohibitive incentives to not gather, store, and provide three-dimensional representation of cadastre data.
 
 Since most such countries still gather and provide LiDAR data, the two-dimensional data can possibly be extrapolated to three dimensions.
 Three-dimensional representations of buildings can for example be used for urban planning purposes.
@@ -30,7 +30,7 @@ Another application is the use of roof surface geometries in order to estimate t
 Others countries may have little to none two-dimensional cadastral data at all.
 Only cadastral limits but no building outlines is not uncommon, for instance.
 The identification of building outlines from remote sensing data can be formulated as a \textit{semantic segmentation task}, a well understood problem, a problem domain which has had many advances the last decade.
-Such data can be used for map annotation tasks, flood risk analysis, and population density estimates, amongs others.
+Such data can be used for map annotation tasks, flood risk analysis, and population density estimates, amongst others.
 
 We will start this report by giving a gentle introduction to the world of \textit{Geographic Information Systems} (GIS); the field which concerns itself with representing geographic data in a digital format.
 The focus will be how to prepare, interpret, and visualize geographic data for machine learning purposes.

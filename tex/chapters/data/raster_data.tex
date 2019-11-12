@@ -67,4 +67,4 @@ $ gdalbuildvrt -resolution ${resolution} combined.vrt -separate ${vrt1} ${vrt2}
 %
 Where \texttt{-resolution} can be set to either \texttt{highest}, \texttt{lowest}, or \texttt{average}, depending on how you want to handle datasets with different resolutions.
 This is how we will merge the aerial photography (RGB) data with the DSM data (Z), resulting in a single consistent ZRGB dataset.
-The resulting \texttt{vrt} file will only contain the first band from each source file, and needs to be manually edited according to the VRT schema \cite{vrt_schema_2015} in order to include the green and blue bands of the original RGB dataset.
+The resulting \texttt{VRT} file will only contain the first band from each source file, and needs to be manually edited according to the VRT schema \cite{vrt_schema_2015} in order to include the green and blue bands of the original RGB dataset.

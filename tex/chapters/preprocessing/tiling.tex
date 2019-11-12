@@ -62,7 +62,7 @@ How should the bounding boxes be normalized to to $\SI{256}{\pixel} \times \SI{2
 A common technique is to resize the original image by use of methods such as bilinear interpolation or Lanczos resampling.
 While this is tolerable for normal photographs, where each pixel has a variable real world area interpretation, it is an especially lossy transformation for remote sensing data.
 In the Trondheim 2017 LiDAR data set, for instance, each pixel represents a $\SI{0.2}{\meter} \times \SI{0.2}{\meter}$ real world area.
-If the (higly variable) extent of each bounding box is scaled to $\SI{256}{\pixel} \times \SI{256}{\pixel}$, the real world area of each pixel will differ greatly between cadastral plots.
+If the (highly variable) extent of each bounding box is scaled to $\SI{256}{\pixel} \times \SI{256}{\pixel}$, the real world area of each pixel will differ greatly between cadastral plots.
 Resized images will also become distorted when the original aspect ratio is not $1:1$.
 
 A better method utilizes the fact that the remote sensing data covers a continuous geographic region, which allows us to expand the feature space beyond the original region of interest.

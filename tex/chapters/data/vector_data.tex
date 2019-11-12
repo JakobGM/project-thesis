@@ -13,7 +13,7 @@ This is illustrated in \figref{fig:polygon-representation}.
   \input{tikz/interior_hull.tex}
   \caption{
     Simple polygon with four unique vertices is shown on the left hand side.
-    A complex polygon with an an outer hull
+    A complex polygon with an outer hull
     and an interior hull is shown on the right hand side for comparison.
   }
   \label{fig:polygon-representation}
@@ -49,6 +49,6 @@ $ ogr2ogr -f "GPKG" ${output_file} ${input_file}
 
 We have here also converted the given vector data file to the \textit{GeoPackage} format.
 While geographic data providers use a wide array of file formats, most commonly GeoJSON, ESRI Shapefiles, and GML, we convert all files to the modern GeoPackage format, which supports unicode characters and has no length limit on data fields, and is therefore considered the best format for modern GIS pipelines \cite{hame_shapefile_2019}.
-\texttt{ogr2ogr} supports file conversions between most commmon vector file formats, which makes the data pipeline generalizable to data sources from different regions.
+\texttt{ogr2ogr} supports file conversions between most common vector file formats, which makes the data pipeline generalizable to data sources from different regions.
 
 We will come back to how to combine vector and raster datasets by \textit{rasterization} in section \ref{sec:masking}, where it will also become clear why the removal of redundant vertices is of importance.
