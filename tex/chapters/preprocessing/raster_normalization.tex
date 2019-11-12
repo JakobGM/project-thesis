@@ -7,7 +7,16 @@ A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a b
 \begin{equation*}
   I_{i,j,c} \in \{0, 1, ..., 255\}, \text{ for } c \in \{r, g, b\}.
 \end{equation*}
-%
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics{rgb-density}
+  \caption{
+    Peak at 64 and 191.
+  }
+  \label{fig:rgb-density}
+\end{figure}
+
 The RGB pixels can be normalized to the $[0, 1]$ domain by dividing by $255$ across all three image channels.
 This is in essence a lossless transformation, since the normalization function $f(x) = x/255$ is trivially invertible, and thus no information is lost by this normalization.
 
@@ -17,7 +26,17 @@ Elevation pixels are represented by 32-bit, single-precision floating point numb
 \begin{equation*}
   I_{i,j,z} \in (-3.4 \times 10^{38}, 3.4 \times 10^{38}).
 \end{equation*}
-%
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics{elevation-density}
+  \caption{
+    Peak at \SI{0}{\meter} with \SI{2.74}{\percent} and $\approx$ \SI{148}{\meter} with \SI{1.93}{\percent}.
+    Max \SI{550.79}{\meter}.
+  }
+  \label{fig:elevation-density}
+\end{figure}
+
 It is infeasible to normalize this domain to $[0, 1]$ like the RGB normalization, it would yield large floating point errors and vanishingly small values.
 
 The digital surface model providing elevation data in form of the $z$ channel in our raster inputs is \textit{not} bounded by any domain, at least not theoretically.

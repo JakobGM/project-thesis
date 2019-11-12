@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Tuple
 
 from matplotlib import cm, pyplot as plt
@@ -148,6 +149,8 @@ def plot_bbox_distribution() -> None:
 
 def plot_gdalinfo_histogram(path, bands=("red", "green", "blue")):
     """Plot the result of gdalinfo -hist ${raster_file} > ${path}"""
+    configure_latex()
+    rgb = len(bands) == 3
     lines = path.read_text().split("\n")
     band_data = {}
     for i, line in enumerate(lines):
@@ -162,18 +165,45 @@ def plot_gdalinfo_histogram(path, bands=("red", "green", "blue")):
             }
 
     fig, ax = plt.subplots()
-    for band in bands:
+    for band in reversed(bands):
         data = band_data[band]
         frequency = data["frequency"]
-        print(frequency.sum())
         frequency = frequency / frequency.sum()
+        # Fix binning error in gdalinfo
+        if rgb:
+            frequency[64] /= 2
+            frequency[191] /= 2
+            frequency[-3] /= 2
+        else:
+            frequency[frequency[1:].argmax() + 1] /= 2
+
         bin_edges = np.linspace(
             start=data["bin_min"],
             stop=data["bin_max"],
             num=data["bin_num"] + 1,
         )
         bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-        ax.plot(bin_centers, frequency)
-        ax.set_ylim(0, 0.0085)
+        frequency = frequency / (bin_centers[10] - bin_centers[9])
+        ax.plot(
+            bin_centers[:-1],
+            frequency[:-1],
+            color=None if not rgb else band,
+            label="Elevation" if not rgb else band.capitalize(),
+        )
+
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], title='Channel')
+
+    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=2))
+    ax.set_ylabel("Frequency")
+
+    img_path = Path("/code/tex/img")
+    if rgb:
+        ax.set_xlabel(r"Channel value")
+        fig.savefig(str(img_path / "rgb-density.pdf"))
+    else:
+        ax.set_ylim(0, 0.004)
+        ax.set_xlabel(r"Elevation [m]")
+        fig.savefig(str(img_path / "elevation-density.pdf"))
 
     return fig, ax
