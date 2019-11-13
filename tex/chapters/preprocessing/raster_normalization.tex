@@ -1,8 +1,6 @@
 Input data normalization has been found to be of vital importance when training neural networks, in certain cases reducing predictive errors by several orders of magnitude and training times by one order of magnitude \cite{input_normalization_1997}.
 How to normalize input data depends on distribution of the feature space, which will be investigated here.
 
-\todo{Find paper investigating the effect of data normalization on CNNs.}
-
 \subsubsection*{RGB rasters}
 
 A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
@@ -25,14 +23,14 @@ The distribution of each color channel over the entire coverage area of the Tron
       \label{fig:rgb-density}
     }
     \inlinetable{%
-      \scalebox{0.75}{
+      \scalebox{0.85}{
         \begin{tabular}{
           l
-          S[round-mode=places, round-precision=2]
-          S[round-mode=places, round-precision=2]
+          S[round-mode=places, round-precision=1]
+          S[round-mode=places, round-precision=1]
         }
           \toprule
-          {Image channel} & {Mean [1]} & {SD [1]} \\
+          {Channel} & {Mean [1]} & {SD [1]} \\
           \midrule
           \textcolor{red}{Red} & 101.60925940814 & 55.010463592563 \\
           \textcolor{green}{Green} & 102.67104002891 & 48.740409963323 \\
@@ -50,17 +48,16 @@ The distribution of each color channel over the entire coverage area of the Tron
   \end{floatrow}
 \end{figure}
 
-The RGB pixels can be normalized to the $[0, 1]$ domain by dividing by $255$ across all three image channels.
+The image channels can be easily normalized to the domain $[0, 1]$ by dividing by $255$ across all three image channels.
 This is in essence a lossless transformation, since the normalization function $f(x) = x/255$ is trivially invertible, and thus no information is lost by this normalization.
 
+\newpage
 \subsubsection*{LiDAR rasters}
 
-The $z$ channel in our image input represents elevation data from the digital surface model.
-Elevation pixels are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain
-%
-\begin{equation*}
-  I_{i,j,z} \in (-3.4 \times 10^{38}, 3.4 \times 10^{38}).
-\end{equation*}
+The \enquote{$z$ channel} in the raster images represent elevation data from the respective digital surface model.
+Elevation measurements are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain $I_{i,j,z} \in (\SI{-3.4e38}{\meter},~\SI{3.4e8}{\meter})$.
+In practice, the measurements are bounded by the regional extrema, $(\SI{-433}{\meter},~\SI{8848}{\meter})$ for dry land globally, and $(\SI{-9}{\meter},~\SI{569}{\meter})$ for the Trondheim region.
+The distribution of $z$ channel values for the Trondheim reigion is shown i \figref{fig:elevation-density}, and aggregate statistics are listed in \tabref{tab:elevation-statistics}.
 
 \begin{figure}[htb]
   \begin{floatrow}
@@ -69,19 +66,19 @@ Elevation pixels are represented by 32-bit, single-precision floating point numb
     }{%
       \caption{
         Distribution density for elevation data set covering Trondheim municipality (2017).
-        Outlier values $(\SI{0}{\meter}, \SI{2.74}{\percent})$ and $(\SI{148}{\meter}, \SI{1.93}{\percent})$ have been excluded.
+        Outlier values $(\SI{0}{\meter}, \SI{2.74}{\percent})$ and $(\SI{148}{\meter}, \SI{1.93}{\percent})$ have been cropped.
       }
       \label{fig:elevation-density}
     }
     \inlinetable{%
-      \scalebox{0.75}{
+      \scalebox{0.79}{
         \begin{tabular}{
           l
-          S[round-mode=places, round-precision=2]
-          S[round-mode=places, round-precision=2]
+          S[round-mode=places, round-precision=1]
+          S[round-mode=places, round-precision=1]
         }
           \toprule
-          {Image channel} & {Mean [m]} & {SD [m]} \\
+          {Channel} & {Mean [m]} & {SD [m]} \\
           \midrule
           Elevation & 155.36339532445 & 116.52777315076 \\
           \bottomrule
@@ -99,12 +96,7 @@ Elevation pixels are represented by 32-bit, single-precision floating point numb
 
 It is infeasible to normalize this domain to $[0, 1]$ like the RGB normalization, it would yield large floating point errors and vanishingly small values.
 
-The digital surface model providing elevation data in form of the $z$ channel in our raster inputs is \textit{not} bounded by any domain, at least not theoretically.
-~
-\begin{align*}
-  &\text{Theoretically:} ~ I_{i,j,z} \in (-\infty, \infty)
-  \\
-  &\text{Numerically:} ~ I_{i,j,z} \in (-3.4 \times 10^{38}, 3.4 \times 10^{38})
-  \\
-  &\text{Practically:} ~ I_{i,j,z} \in (-432.65, 8848)
-\end{align*}
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\linewidth]{elevation-spread}
+\end{figure}

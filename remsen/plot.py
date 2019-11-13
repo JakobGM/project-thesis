@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import List, Tuple
 
+from ipypb import track
+
 from matplotlib import cm, pyplot as plt
 from matplotlib.backends.backend_pgf import FigureCanvasPgf
 from matplotlib.backend_bases import register_backend
@@ -207,3 +209,75 @@ def plot_gdalinfo_histogram(path, bands=("red", "green", "blue")):
         fig.savefig(str(img_path / "elevation-density.pdf"))
 
     return fig, ax
+
+
+def plot_raster_spread(cache):
+    minima, mean, maxima = [], [], []
+    for index in track(cache.cadastre_indeces):
+        if index > 10_000:
+            break
+        tiles = cache.lidar_tiles(cadastre_index=index)
+        for tile in tiles:
+            tile = tile.flatten()
+            if tile.sum() <= 64:
+                continue
+            minima.append(tile.min())
+            mean.append(tile.mean())
+            maxima.append(tile.max())
+
+    minima = np.array(minima)
+    mean = np.array(mean)
+    maxima = np.array(maxima)
+
+    sorter = mean.argsort()
+    minima = minima[sorter]
+    mean = mean[sorter]
+    maxima = maxima[sorter]
+
+    configure_latex(width_scaler=2)
+    fig, (sorted_ax, dist_ax) = plt.subplots(1, 2)
+    x = np.arange(len(minima))
+    sorted_ax.fill_between(
+        x,
+        mean,
+        minima,
+        label="Minima",
+        color="g",
+        facecolor="none",
+        alpha=0.5,
+    )
+    sorted_ax.fill_between(
+        x,
+        mean,
+        maxima,
+        label="Maxima",
+        color="r",
+        facecolor="none",
+        alpha=0.5,
+    )
+    sorted_ax.plot(x, mean, label="Mean", color="xkcd:black", linewidth=1.5)
+
+    sorted_ax.legend(loc="upper left")
+    sorted_ax.set_xlabel("Tiles sorted by mean elevation")
+    sorted_ax.set_ylabel("Tile elevation [m]")
+
+    range = maxima - minima
+    dist_ax.hist(
+        range,
+        bins=200,
+        density=True,
+        label=(
+            r"\textbf{Mean:} " f"{range.mean():.2f}m, "
+            r"\textbf{SD:} " f"{range.std():.2f}m"
+        )
+    )
+    dist_ax.set_xlabel(r"Range ($\max - \min$) [m]")
+    dist_ax.legend()
+
+    dist_ax.set_ylabel(r"Frequency")
+    dist_ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
+
+    sorted_ax.get_xaxis().set_ticks([])
+    fig.tight_layout()
+    fig.savefig("/code/tex/img/elevation-spread.pdf")
+    return fig, sorted_ax
