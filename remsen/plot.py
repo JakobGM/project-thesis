@@ -278,6 +278,5 @@ def plot_raster_spread(cache):
     dist_ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
 
     sorted_ax.get_xaxis().set_ticks([])
-    fig.tight_layout()
     fig.savefig("/code/tex/img/elevation-spread.pdf")
     return fig, sorted_ax

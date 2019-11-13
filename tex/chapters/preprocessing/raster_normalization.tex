@@ -128,3 +128,31 @@ In order to evaluate if this will normalize the $z$ raster channel across tiles,
 While the global elevation range is $\SI{569}{\meter} - (\SI{-9}{\meter}) = \SI{578}{\meter}$, the elevation range within each respective tile is on average approximately $\SI{22}{\meter} \pm \SI{8}{\meter} (\mathrm{SD})$, that is, much less than \SI{578}{\meter}.
 Coupled with the fact that the tile elevation \textit{means} are somewhat uniformly distributed between \SI{0}{\meter} and \SI{200}{\meter}, ignoring the right tail, a global normalization will yield tile elevation values with small standard deviations and highly variable means.
 We can therefore conclude that global min-max scaling is not suitable for the elevation image channel.
+
+\todo{Write about the reasoning behind 0-1 normalization on elevation data. Translational invariance, sea level, and so on.}
+
+Any elevation normalization method must account for the fact that missing data values are replaced by a pre-defined \texttt{nodata} placeholder value, usually \SI{-3.4e38}{\meter}.
+Otherwise a large negative bias is introduced for all tiles with any missing data.
+Leaving \texttt{nodata} values unnormalized with such extreme values will heavily influence the weighted sum calculated by nodes in any neural network, and must therefore filled in with values from the normalized domain to prevent this.
+Filling in $0$ values for all \texttt{nodata} indices has been shown to work well for min-max normalization.
+
+The \enquote{\texttt{nodata}-aware} min-max normalization algorithm used for pre-processing elevation input data is:
+
+\vspace{0.5em}
+\fbox{
+  \parbox{0.96\linewidth}{
+    \vspace{0.5em}
+    \textbf{Nodata-aware min-max normalization algorithm}
+    \begin{enumerate}
+      \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): I_{i,j,z} \neq \texttt{nodata}\}$.
+      \item Calculate $\alpha = \underset{(i,j) \in \mathcal{V}}{\max} I_{i,j,z}$ and $\beta = \underset{(i,j) \in \mathcal{V}}{\min} I_{i,j,z}$.
+      \item Construct normalized raster defined by
+        \begin{equation*}
+            I_{i,j,z}^* = \begin{cases}
+              \frac{I_{i,j,z} - \beta}{\alpha - \beta}, & \text{if } (i,j) \in \mathcal{V}, \\
+              0, & \text{otherwise.}
+            \end{cases}
+        \end{equation*}
+    \end{enumerate}
+  }
+}
