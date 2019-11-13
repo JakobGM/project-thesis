@@ -1,6 +1,8 @@
 Input data normalization has been found to be of vital importance when training neural networks, in certain cases reducing predictive errors by several orders of magnitude and training times by one order of magnitude \cite{input_normalization_1997}.
 How to normalize input data depends on distribution of the feature space, which will be investigated here.
 
+\todo{Write about global vs local normalization, and normalization vs. standardization.}
+
 \subsubsection*{RGB rasters}
 
 A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
@@ -51,13 +53,12 @@ The distribution of each color channel over the entire coverage area of the Tron
 The image channels can be easily normalized to the domain $[0, 1]$ by dividing by $255$ across all three image channels.
 This is in essence a lossless transformation, since the normalization function $f(x) = x/255$ is trivially invertible, and thus no information is lost by this normalization.
 
-\newpage
 \subsubsection*{LiDAR rasters}
 
 The \enquote{$z$ channel} in the raster images represent elevation data from the respective digital surface model.
 Elevation measurements are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain $I_{i,j,z} \in (\SI{-3.4e38}{\meter},~\SI{3.4e8}{\meter})$.
 In practice, the measurements are bounded by the regional extrema, $(\SI{-433}{\meter},~\SI{8848}{\meter})$ for dry land globally, and $(\SI{-9}{\meter},~\SI{569}{\meter})$ for the Trondheim region.
-The distribution of $z$ channel values for the Trondheim reigion is shown i \figref{fig:elevation-density}, and aggregate statistics are listed in \tabref{tab:elevation-statistics}.
+The distribution of $z$ channel values for the Trondheim region is shown in \figref{fig:elevation-density}, and aggregate statistics are listed in \tabref{tab:elevation-statistics}.
 
 \begin{figure}[htb]
   \begin{floatrow}
@@ -94,9 +95,36 @@ The distribution of $z$ channel values for the Trondheim reigion is shown i \fig
   \end{floatrow}
 \end{figure}
 
-It is infeasible to normalize this domain to $[0, 1]$ like the RGB normalization, it would yield large floating point errors and vanishingly small values.
+A normalization technique analogue to the RGB min-max scaling would be
+\begin{equation*}
+  f(z)
+  =
+  \frac{
+    z - \underset{\mathrm{global}}{\min} \text{elevation}
+  }{
+    \underset{\mathrm{global}}{\max} \text{elevation} - \underset{\mathrm{global}}{\min} \text{elevation}
+  }
+  =
+  \frac{
+    z - (\SI{-9}{\meter})
+  }{
+    \SI{578}{\meter}
+  }.
+\end{equation*}
 
-\begin{figure}[htb]
+In order to evaluate if this will normalize the $z$ raster channel across tiles, we plot the \enquote{tile-by-tile} $z$ channel statistics in \figref{fig:elevation-spread}.
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{elevation-spread}
+  \caption{
+    Elevation value statistics for a tile subset of sample size $n = 10.000$.
+    The left figure shows the minimum, mean, and maximum elevation, sorted by increasing mean from left to right.
+    The right figure shows the histogram of the tile elevation \textit{ranges} (difference between maximum elevation and minimum elevation within tile).
+  }
+  \label{fig:elevation-spread}
 \end{figure}
+
+While the global elevation range is $\SI{569}{\meter} - (\SI{-9}{\meter}) = \SI{578}{\meter}$, the elevation range within each respective tile is on average approximately $\SI{22}{\meter} \pm \SI{8}{\meter} (\mathrm{SD})$, that is, much less than \SI{578}{\meter}.
+Coupled with the fact that the tile elevation \textit{means} are somewhat uniformly distributed between \SI{0}{\meter} and \SI{200}{\meter}, ignoring the right tail, a global normalization will yield tile elevation values with small standard deviations and highly variable means.
+We can therefore conclude that global min-max scaling is not suitable for the elevation image channel.
