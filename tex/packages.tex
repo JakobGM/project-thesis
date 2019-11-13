@@ -23,7 +23,9 @@
 
 % For including source code with syntax highlighting.
 % Docs: https://github.com/gpoore/minted/blob/master/source/minted.pdf
-\usepackage{minted}
+% newfloat disables loading of the float package, which is in conflict with floatrow
+% See: https://tex.stackexchange.com/questions/378563/minted-and-floatrow-incompatible
+\usepackage[newfloat]{minted}
 % Enables the use of \begin{pythoncode}
 \newminted{python}{python3=true}
 % Enables the use of \begin{shellcode}
@@ -86,3 +88,7 @@
 
 % Correctly formatted quotation marks with \enquate{text}
 \usepackage{csquotes}
+
+% Used to position tables besides figures
+\usepackage{floatrow}
+\newfloatcommand{inlinetable}{table}[][\FBwidth]

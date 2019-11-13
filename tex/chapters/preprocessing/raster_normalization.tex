@@ -1,24 +1,59 @@
 Input data normalization has been found to be of vital importance when training neural networks, in certain cases reducing predictive errors by several orders of magnitude and training times by one order of magnitude \cite{input_normalization_1997}.
+How to normalize input data depends on distribution of the feature space, which will be investigated here.
 
 \todo{Find paper investigating the effect of data normalization on CNNs.}
+
+\subsubsection*{RGB rasters}
 
 A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
 %
 \begin{equation*}
   I_{i,j,c} \in \{0, 1, ..., 255\}, \text{ for } c \in \{r, g, b\}.
 \end{equation*}
+%
+The distribution of each color channel over the entire coverage area of the Trondheim aerial photography data set is shown in \figref{fig:rgb-density}, and aggregate statistics for each channel are listed in \tabref{tab:rgb-statistics}.
 
 \begin{figure}[htb]
-  \centering
-  \includegraphics{rgb-density}
-  \caption{
-    Peak at 64 and 191.
-  }
-  \label{fig:rgb-density}
+  \begin{floatrow}
+    \ffigbox[9cm]{%
+      \includegraphics[width=\linewidth]{rgb-density}
+    }{%
+      \caption{
+        Distribution density for all three color channels in the aerial photography data set covering Trondheim municipality (2017).
+        %Peak at 64 and 191.
+      }
+      \label{fig:rgb-density}
+    }
+    \inlinetable{%
+      \scalebox{0.75}{
+        \begin{tabular}{
+          l
+          S[round-mode=places, round-precision=2]
+          S[round-mode=places, round-precision=2]
+        }
+          \toprule
+          {Image channel} & {Mean [1]} & {SD [1]} \\
+          \midrule
+          \textcolor{red}{Red} & 101.60925940814 & 55.010463592563 \\
+          \textcolor{green}{Green} & 102.67104002891 & 48.740409963323 \\
+          \textcolor{blue}{Blue} & 91.286001382234 & 37.216349915699 \\
+          \bottomrule
+        \end{tabular}
+      }
+      \vspace{5em}
+    }{%
+      \caption{
+        Aggregate statistics for each image channel distribution for the aerial photography data set covering Trondheim municipality (2017).
+      }
+      \label{tab:rgb-statistics}
+    }
+  \end{floatrow}
 \end{figure}
 
 The RGB pixels can be normalized to the $[0, 1]$ domain by dividing by $255$ across all three image channels.
 This is in essence a lossless transformation, since the normalization function $f(x) = x/255$ is trivially invertible, and thus no information is lost by this normalization.
+
+\subsubsection*{LiDAR rasters}
 
 The $z$ channel in our image input represents elevation data from the digital surface model.
 Elevation pixels are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain
@@ -28,13 +63,38 @@ Elevation pixels are represented by 32-bit, single-precision floating point numb
 \end{equation*}
 
 \begin{figure}[htb]
-  \centering
-  \includegraphics{elevation-density}
-  \caption{
-    Peak at \SI{0}{\meter} with \SI{2.74}{\percent} and $\approx$ \SI{148}{\meter} with \SI{1.93}{\percent}.
-    Max \SI{550.79}{\meter}.
-  }
-  \label{fig:elevation-density}
+  \begin{floatrow}
+    \ffigbox[9cm]{%
+      \includegraphics[width=\linewidth]{elevation-density}
+    }{%
+      \caption{
+        Distribution density for elevation data set covering Trondheim municipality (2017).
+        Outlier values $(\SI{0}{\meter}, \SI{2.74}{\percent})$ and $(\SI{148}{\meter}, \SI{1.93}{\percent})$ have been excluded.
+      }
+      \label{fig:elevation-density}
+    }
+    \inlinetable{%
+      \scalebox{0.75}{
+        \begin{tabular}{
+          l
+          S[round-mode=places, round-precision=2]
+          S[round-mode=places, round-precision=2]
+        }
+          \toprule
+          {Image channel} & {Mean [m]} & {SD [m]} \\
+          \midrule
+          Elevation & 155.36339532445 & 116.52777315076 \\
+          \bottomrule
+        \end{tabular}
+      }
+      \vspace{7em}
+    }{%
+      \caption{
+        Aggregate statistics for elevation data set covering municipality of Trondheim (2017).
+      }
+      \label{tab:elevation-statistics}
+    }
+  \end{floatrow}
 \end{figure}
 
 It is infeasible to normalize this domain to $[0, 1]$ like the RGB normalization, it would yield large floating point errors and vanishingly small values.
