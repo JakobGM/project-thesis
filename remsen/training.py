@@ -1,7 +1,7 @@
 import shutil
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import pandas as pd
 
@@ -16,8 +16,9 @@ from tensorflow.keras.callbacks import (
 )
 from tensorflow.keras.models import Model, load_model
 
-from remsen.data import Dataset
 from remsen.metrics import iou
+if TYPE_CHECKING:
+    from remsen.data import Dataset
 
 
 def get_callbacks(
@@ -70,7 +71,7 @@ def get_callbacks(
 
 
 class Trainer:
-    def __init__(self, name: str, model: Model, dataset: Dataset) -> None:
+    def __init__(self, name: str, model: Model, dataset: "Dataset") -> None:
         self.name = name
         self.model = model
         self.dataset = dataset
