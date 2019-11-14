@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from ipypb import track
 
 from matplotlib import cm, pyplot as plt
 from matplotlib.backends.backend_pgf import FigureCanvasPgf
 from matplotlib.backend_bases import register_backend
+from matplotlib.lines import Line2D
 from matplotlib.ticker import PercentFormatter
 
 import numpy as np
@@ -37,28 +38,86 @@ def plot_training(
     names: List[str],
     splits: List[str] = ["validation"],
     metric: str = "iou",
+    ylim: Optional[Tuple] = None,
+    labels: Optional[Dict] = None,
 ) -> None:
     """Plot training sequence from TensorBoard for given model/split/metric."""
-    configure_latex()
+    configure_latex(scaler=1.75)
     fig, ax = plt.subplots()
     ax.set_xlabel(r"$\mathrm{Epoch}$")
 
     if metric == "iou":
-        ax.set_ylabel(r"$\mathrm{IoU}$")
+        latex_metric = r"$\mathrm{IoU}$"
+        ax.set_ylabel(latex_metric)
     else:
-        ax.set_ylabel(metric)
+        latex_metric = r"$\mathrm{" + metric.capitalize() + "}$"
+        ax.set_ylabel(latex_metric)
 
-    for name in names:
-        for split in splits:
-            training_data = tensorboard_dataframe(name=name, split=split)
-            metric_series = training_data["val_iou"]
-            ax.plot(metric_series)
+    if not labels:
+        labels = {name: name.replace("_", " ").capitalize() for name in names}
 
-    fig.tight_layout()
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+
+    training_data = {name: tensorboard_dataframe(name=name) for name in names}
+    for i, name in enumerate(names):
+        if "train" in splits:
+            metrics = training_data[name]["train_" + metric]
+            ax.plot(
+                metrics,
+                color=colors[i],
+                linestyle="--",
+                dashes=(5, 1),
+                alpha=0.75,
+            )
+        if "validation" in splits:
+            metrics = training_data[name]["val_" + metric]
+            ax.plot(
+                metrics,
+                color=colors[i],
+                label=labels[name],
+            )
+
+            if metric == "loss":
+                best_index = metrics.idxmin()
+            else:
+                best_index = metrics.idxmax()
+
+            best_metric = metrics[best_index]
+            ax.plot(
+                best_index,
+                best_metric,
+                marker="o",
+                color=colors[i],
+                zorder=1000000,
+                markerfacecolor=colors[i],
+                markeredgecolor="xkcd:black",
+                label=f"{latex_metric}: {best_metric:.4f}",
+            )
+
+    if ylim:
+        ax.set_ylim(*ylim)
+
+    # Customize legend to show color group and linestyle group
+    ax.legend()
+    handles, labels = ax.get_legend_handles_labels()
+    handles.append(Line2D([0], [0], color="xkcd:black"))
+    handles.append(Line2D([0], [0], color="xkcd:black", linestyle="--"))
+    labels.append("Validation")
+    labels.append("Train")
+    ax.legend(
+        handles,
+        labels,
+        ncol=3,
+        loc="upper right" if metric == "loss" else "lower right",
+    )
+
+    # Save to deterministic filepath
     filename = (
         "+".join(sorted(names)) + "-" + "+".join(sorted(splits)) + "-" + metric
     )
     path = "/code/tex/img/metrics/" + filename + ".pdf"
+    fig.tight_layout()
     fig.savefig(path)
     return fig, ax
 
