@@ -2,10 +2,11 @@
 import hashlib
 import json
 import pickle
+import shelve
 import warnings
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Any, Dict, Iterable, Optional, Union
 
 import fiona
 
@@ -429,3 +430,28 @@ class Cache:
             f'path="{self.directory}"'
             ")"
         )
+
+
+class Store:
+    """Simple key-value store cache persisted to disk."""
+
+    def __init__(self, path: Union[str, Path] = "/code/.cache/store.pkl"):
+        self.path = Path(path)
+        self.shelve = shelve.DbfilenameShelf(
+            filename=str(self.path),
+            flag="c",
+            protocol=pickle.HIGHEST_PROTOCOL,
+            writeback=True,
+        )
+
+    def insert(self, *keys, value: Any) -> None:
+        assert all(isinstance(key, str) for key in keys)
+        first_key, *middle_keys, final_key = keys
+        container = self.shelve.setdefault(first_key, {})
+        for key in middle_keys:
+            container = container.setdefault(key, {})
+        container[final_key] = value
+        self.shelve.sync()
+
+    def __getitem__(self, key: str) -> Dict:
+        return self.shelve[key]
