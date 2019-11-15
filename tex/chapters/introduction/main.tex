@@ -1,23 +1,22 @@
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-\textit{Remote sensing} is the process of gathering information without contact of the object of interest, most often the surface of the earth.
-One of the remote sensing technologies most familiar to the public is satellite and aerial imagery.
-Aerial RGB photographs are easy to understand and interpret for a human.
-One of the limitations of such RGB data is that it is fundamentally two-dimensional.
+\textit{Remote sensing} is the process of gathering information about an object without physical contact.
+One of the most common remote sensing technologies is \textit{aerial photography}.
+Although aerial RGB photography is easily interpretable for humans, it is limited by being two-dimensional.
 
-\textit{LiDAR technology} is able to measure distances of object surfaces by directing a beam of light (laser) and measuring the time of arrival and wavelength of the resulting reflection.
+\textit{LiDAR technology} is able to measure distances to object surfaces by directing a beam of light (laser) and measuring the time of arrival and wavelength of the resulting reflection.
 The resulting data is therefore fundamentally three-dimensional.
 LiDAR has been applied in a wide array of fields such as meteorology \cite{lidar_meteorology_1966}, forestry analysis \cite{lidar_forestry_2000}, urban flood modelling \cite{lidar_flood_2013}, and autonomous driving systems \cite{lidar_self_driving_2018}.
 
 One of the applications of LiDAR technology is the creation of so-called \textit{digital surface models} (DSMs).
-DSMs consists of LiDAR data representing the earth surface and any potential objects upon that surface such as natural canopy and human-made constructions.
-In contrast, \textit{digital terrain models} (DTMs) represents the elevation of the bare ground, with any above-surface objects removed.
+DSMs are grayscale images representing the earth's surface and any potential objects \textit{upon} that surface such as natural canopy and human-made objects.
+In contrast, \textit{digital terrain models} (DTMs) represent the elevation of the \textit{bare} ground where all above-surface objects have been removed.
 
-While DTMs are often used in geographical and cartographic applications, DSMs can be used for inference regarding objects above ground, such as human-made structures.
-This report investigates one of these applications, inference of building outlines from remote sensing data, specifically LiDAR and RGB photography, by means of deep learning techniques.
+While DTMs are often used in geographical and cartographic applications, DSMs can be used for inference of objects above ground, such as human-made structures.
+In this paper, we will investigate one of these applications; the inference of building outlines from remote sensing data (LiDAR and aerial photography).
 
-While the \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) has consistent, high-fidelity three-dimensional data coverage of most of the human-made structures in the entire country, this is not the case for the rest of the world, Western Europe included.
+While the \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) has consistent, high-fidelity three-dimensional data on most of the human-made structures in the entire country, this is not the case for the rest of the world, industrialized countries included.
 This allows us to investigate the opportunity of training deep learning models with the Norwegian data as ground truth, and hopefully are such models generalizable to data sourced from other countries.
 
 Most industrial countries provide two-dimensional vector-based data for cadastre and building outlines.
