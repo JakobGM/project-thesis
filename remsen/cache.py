@@ -145,6 +145,14 @@ class Cache:
         """Retrieve existing cache from name only."""
         cache_dir = cache_dir or DEFAULT_CACHE_DIR
         directory = cache_dir / "cadastre" / name
+        if not directory.exists():
+            valid_names = ", ".join(
+                [repr(path.name) for path in directory.parent.glob("*/")],
+            )
+            raise ValueError(
+                f"Cache with name {repr(name)} does not exist. "
+                f"Name must be one of: {valid_names}."
+            )
         metadata_path = directory / "metadata.json"
         metadata = json.loads(metadata_path.read_text())
         layer_name = metadata["layer_name"]
