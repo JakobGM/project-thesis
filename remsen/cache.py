@@ -211,9 +211,9 @@ class Cache:
 
     def change_dataset(
         self,
-        lidar_name: str,
-        rgb_name: str,
-        mask_name: str,
+        lidar_name: str = "trondheim_lidar_2017",
+        rgb_name: str = "trondheim_rgb_2017",
+        mask_name: str = "trondheim_buildings_2019",
     ) -> None:
         """Change which datasets that are used for other method calls."""
         self.lidar_name = lidar_name
