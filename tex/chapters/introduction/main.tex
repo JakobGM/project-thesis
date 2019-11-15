@@ -12,40 +12,54 @@ LiDAR has been applied in a wide array of fields such as meteorology \cite{lidar
 One of the applications of LiDAR technology is the creation of so-called \textit{digital surface models} (DSMs).
 DSMs are grayscale images representing the earth's surface and any potential objects \textit{upon} that surface such as natural canopy and human-made objects.
 In contrast, \textit{digital terrain models} (DTMs) represent the elevation of the \textit{bare} ground where all above-surface objects have been removed.
-
 While DTMs are often used in geographical and cartographic applications, DSMs can be used for inference of objects above ground, such as human-made structures.
-In this paper, we will investigate one of these applications; the inference of building outlines from remote sensing data (LiDAR and aerial photography).
 
-While the \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) has consistent, high-fidelity three-dimensional data on most of the human-made structures in the entire country, this is not the case for the rest of the world, industrialized countries included.
-This allows us to investigate the opportunity of training deep learning models with the Norwegian data as ground truth, and hopefully are such models generalizable to data sourced from other countries.
-
-Most industrial countries provide two-dimensional vector-based data for cadastre and building outlines.
-Such two-dimensional data is sufficient for purposes where the data is bound to be projected into a two-dimensional plane in the end anyway, e.g. in cartographic applications.
-Respective mapping authorities are therefore subject to cost prohibitive incentives to not gather, store, and provide three-dimensional representation of cadastre data.
-
-Since most such countries still gather and provide LiDAR data, the two-dimensional data can possibly be extrapolated to three dimensions.
-Three-dimensional representations of buildings can for example be used for urban planning purposes.
-Another application is the use of roof surface geometries in order to estimate the potential energy production of roof-mounted solar panel installations.
-
-Others countries may have little to none two-dimensional cadastral data at all.
-Only cadastral limits but no building outlines is not uncommon, for instance.
-The identification of building outlines from remote sensing data can be formulated as a \textit{semantic segmentation task}, a well understood problem, a problem domain which has had many advances the last decade.
-Such data can be used for map annotation tasks, flood risk analysis, and population density estimates, amongst others.
+LiDAR data and aerial photography is usually provided by the respective cadastral authority in a given country.
+Cadastral authorities are also responsible for keeping records of cadastral data such as cadastral plots, roads, and buildings.
+The exact type and quality of this data varies a lot between countries, even between administrative regions.
+This raises the question: \enquote{Can high-fidelity insights be inferred from otherwise low-fidelity geographic data?}.
+\figref{fig:data-enchancement} shows an outline of the possible \enquote{data enhancements} which are of interest within this domain.
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{data-enchancement}
+  \caption{
+    Classification of geographical data quality.
+    The classifications reflect a general observed trend in data sets, and a given region may therefore not fit into exactly one of these categories.
+    Some of the data types mentioned here will be described in section \ref{sec:data}.
+  }
+  \label{fig:data-enchancement}
 \end{figure}
 
-We will start this report by giving a gentle introduction to the world of \textit{Geographic Information Systems} (GIS); the field which concerns itself with representing geographic data in a digital format.
+It is the norm, not the exception, for cadastral authorities to provide building geometries in two dimensions dimensions only, referred to as \textit{building outlines}.
+Since high-resolution LiDAR data often covers the same geographic region, it is possible that two-dimensional building geometries can be extrapolated to three dimensions by the use of LiDAR data.
+Three-dimensional representations of buildings can for example be used for urban planning purposes.
+Another application, which incidentally prompted this research question in the first place, is the use of roof surface geometries to estimate the potential energy production of roof-mounted solar panel installations.
+
+In other cases, building outlines are not available at all, and could likewise be possibly inferred from LiDAR data and/or aerial photography.
+Such data can be used for map annotations, flood risk analysis, and population density estimates, amongst others.
+The identification of building outlines from remote sensing data can be formulated as a \textit{semantic segmentation task}, a heavily researched topic which has had many advances during the last decade.
+
+In this paper, we will investigate one of these applications; the inference of building outlines from remote sensing data (LiDAR and aerial photography).
+We will develop the necessary tools for preparing geographic data for a machine learning pipeline, as well as laying down the ground work required for inferring three-dimensional roof surfaces from LiDAR data in the future, the topic of my upcoming master's thesis.
+
+
+% --- Rewrite and fit into text ---
+% This paper will investigate the application of deep learning techniques in order to infer medium-fidelity insight from low-fidelity data, fidelity here being defined as in \figref{fig:data-enchancement}.
+% The \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}), on the other hand, provides consistent, high-fidelity three-dimensional data on most of the human-made structures in the entire country, this is not the case for the rest of the world, industrialized countries included.
+% This allows us to investigate the opportunity of training deep learning models with the Norwegian data as ground truth, and hopefully are such models generalizable to data sourced from other countries.
+
+\todo{Rewrite and improve the next section when I am done.}
+
+We will start this paper by giving an overview of the problem domain, namely image segmentation.
+An introduction to the world of \textit{Geographic Information Systems} (GIS); the field which concerns itself with representing geographic data in a digital format, will follow.
 The focus will be how to prepare, interpret, and visualize geographic data for machine learning purposes.
-The next section will explain the problems we aim to solve using these types of data.
-An introduction to the problem domain will be followed up by a summary of existing work within the field, focusing on the most recent advances that have been made by researchers.
 Next, we implement a deep learning architecture for solving such problems with a dataset covering the Norwegian municipality of Trondheim.
-This will include the entire data pre-processing pipeline, model architecture, training method, experimentation, and finally evaluation of the resulting models.
+This section will describe the entire data pre-processing pipeline, model architecture, training method, experimentation, and finally evaluation of the resulting models.
 
 \begin{itemize}
   \item \todo{Rewrite all use of image channels to raster bands.}
   \item \todo{Calculate evaluation metric on \texttt{nodata} values.}
   \item \todo{Train model on global mean standard deviation scaling.}
   \item \todo{Calculate class split for \texttt{nodata} indices, possibly arguing for zero filling method.}
+  \item \todo{Explain how \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) provides us with uniquely high-quality ground truth for machine learning purposes.}
 \end{itemize}
