@@ -1,24 +1,29 @@
-For ground truths in classification problems, we have the following definitions:
+In order to describe segmentation metrics, it is useful to define the following quantities:
 
-\begin{itemize}[noitemsep]
-  \item \textbf{Condition Positive (P)} - Number of class $A$ in the data.
-  \item \textbf{Condition Negative (N)} - Number of class $A^C$ in the data.
-\end{itemize}
-
-Where $A^C$ denotes the class complement of $A$, i.e. all other classes besides class $A$.
-In our binary classification problem $A$ denotes $1$ and $A^C$ denotes $0$.
-
-Four related concepts need also be defined:
-
-\begin{itemize}[noitemsep]
-  \item \textbf{True Positive (TP)} - Class $A$ correctly predicted as $A$ (correctly identified).
-  \item \textbf{True Negative (TN)} - Class $A^C$ correctly predicted as $A^C$ (correctly rejected).
-  \item \textbf{False Positive (FP)} - $A^C$ wrongly predicted as $A$ (incorrectly identified).
-  \item \textbf{False Negative (FN)} - $A$ wrongly predicted as $A^C$ (incorrectly rejected).
-\end{itemize}
+\begin{center}
+  \fbox{
+    \parbox{0.9\linewidth}{
+      \begin{description}[font=\sffamily\bfseries, leftmargin=1cm]
+        \item[Condition Positive (P)]
+          Number of object class pixels in ground truth mask.
+        \item[Condition Negative (N)]
+          Number of non-object class pixels in ground truth mask.
+        \item[True Positive (TP)]
+          Number of pixels correctly predicted as being part of object class (correctly identified).
+        \item[True Negative (TN)]
+          Number of pixels correctly predicted as \textit{not} being part of object class (correctly rejected).
+        \item[False Positive (FP)]
+          Number of pixel incorrectly predicted as being part of object class (incorrectly identified).
+        \item[False Negative (FN)]
+          Number of pixel incorrectly predicted as \textit{not} being part of object class (incorrectly rejected).
+      \end{description}
+    }
+  }
+\end{center}
 
 False positives (FP) are often knows as \textit{type I errors} in statistics, and false negatives (FN) as \textit{Type II errors}.
-The greater the values of TP and TN, the better, and the smaller the values of FP and FN, the better. We will collectively refer to these four values as \textit{confusions}, for a lack of a better name.
+The greater the values of TP and TN, the better, and the smaller the values of FP and FN, the better.
+A visual representation of these classifications is given in \figref{fig:confusions}.
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{confusions}
@@ -32,7 +37,7 @@ The greater the values of TP and TN, the better, and the smaller the values of F
   \label{fig:confusions}
 \end{figure}
 
-A more naive metric for semantic segmentation problems is the \textit{pixel accuracy}.
+The simplest metric for semantic segmentation is the \textit{pixel accuracy} metric.
 This metric simply reports the percentage of pixels that were correctly classified.
 More formally, it can be defined as:
 
@@ -42,14 +47,10 @@ More formally, it can be defined as:
 
 The problem with pixel-wise accuracy metrics is that it does not account for class imbalances.
 Consider a problem where 95\% of all pixels are considered to be of class $0$, and the remaining 5\% of class $1$.
-If we construct a model which predicts `0.0` regardless of the feature inputs provided to the model, the model will achieve a 95\% accuracy score.
-Generally, a model which predicts always predicts `0` on a test set with class balance $\alpha / (1 - \alpha)$ will achieve a pixel-wise accuracy score of $\alpha$.
-
-This makes pixel-wise accuracy scores basically useless when you do not know the class balance of the underlying dataset and the actual predictions across the classes.
-This is why it is often replaced by other metrics which takes imbalances and model confidence into account.
-
-One of the issues with the confusion metrics, is that it is not \textit{sample size invariant}.
-With other words, it is not straight forward to compare two confusion matrices when the metrics have been calculated of two datasets of different size. The concepts of \textit{sensitivity} and \textit{specificity} helps with this comparison problem:
+If we construct a model which predicts $0$ regardless of the feature inputs provided to the model, the model will achieve a 95\% accuracy score.
+This makes pixel-wise accuracy scores difficult to interpret when you do not know the class balance of the respective dataset and the accuracy grouped by class.
+This is why it is often replaced by other metrics which takes imbalances into account.
+A pair of such metrics is \textit{sensitivity} and \textit{specificity}, formally defined as:
 
 \begin{align*}
     \textbf{sensitivity}
