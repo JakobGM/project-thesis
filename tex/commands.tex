@@ -22,3 +22,9 @@
 
 % Defined as equal to, ":="
 \newcommand{\defeq}{\vcentcolon=}
+
+% Custom version of \subsubsection, but unnumbered and included in TOC
+\newcommand{\topic}[1]{%
+  \subsubsection*{#1}
+  \addcontentsline{toc}{subsubsection}{\hspace{1em}#1}
+}
