@@ -1,3 +1,15 @@
 % --- General Configuration ---
 \setlength{\parindent}{0em} % Indentation of beginning of paragraph
 \setlength{\parskip}{0.5em} % Vertical space between paragraphs
+
+% Allow fancyhdr package to reformat headers and footers
+\pagestyle{fancy}
+
+% Disable default header and footer
+\fancyhf{}
+
+% Add subsection name to upper left header
+\fancyhead[L]{\footnotesize\rightmark}
+
+% Remove horizontal line in header
+\renewcommand{\headrulewidth}{0pt}

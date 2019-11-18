@@ -1,24 +1,29 @@
 \documentclass{article}
-\input{config.tex}
 \input{packages.tex}
+\input{config.tex}
 \input{commands.tex}
 \input{environments.tex}
 \input{colors.tex}
 
 % Metadata for front page
-\title{Specialization Project}
+\title{Building Footprint Detection Using Remote Sensing Data}
 \author{Jakob Gerhard Martinussen}
-\date{2019, Autumn}
+\date{December 20, 2019}
 
 \begin{document}
   \maketitle
+  \thispagestyle{empty}  % Remove page number on title page
+  \input{abstract.tex}  % Abstract on title page
+  \newpage
+  \pagenumbering{roman} % Use roman numerals in first sections
+  \fancyhead[R]{\footnotesize\thepage}  % Do not use page x of y, only x
   \tableofcontents
   \include{chapters/introduction/main}
   \include{chapters/segmentation/main}
   \include{chapters/data/main}
   \include{chapters/preprocessing/main}
   \include{chapters/experiments/main}
-  \printbibheading
+  \printbibheading[heading=bibintoc,title={Bibliography}]
   \printbibliography[nottype=online,heading=subbibliography,title={Literature}]
   \emergencystretch=2em % Insert line breaks correctly on long URLs in bibliography
   \printbibliography[type=online,heading=subbibliography,title={Online Resources}]

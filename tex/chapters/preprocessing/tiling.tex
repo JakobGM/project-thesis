@@ -38,7 +38,7 @@ Variable input sizes will cause issues for model architectures which require pre
 Convolutional neural networks do handle variable input sizes, but dimensions off all images in a \textit{single} training batch must be of the same size.
 It is therefore preferable to normalize the size of each bounding box.
 
-The distributions of the bounding box widths ($h$), heights $h$, and maximal dimensions ($m = \max \{w, h\}$) are shown in \figref{fig:bbox-stats}.
+The distributions of the bounding box widths ($w$), heights ($h$), and maximal dimensions ($m = \max \{w, h\}$) are shown in \figref{fig:bbox-stats}.
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{bbox_stats}
