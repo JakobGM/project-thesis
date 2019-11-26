@@ -1,0 +1,3 @@
+Training deep neural networks is complicated by the fact that changing the parametrization of one of the early layers will affect all the subsequent layers.
+Reparametrization results in a distributional change in the feature layer passed onto the next layer, a change that must be accounted for after each epoch.
+This phenomenon, referred to as \textit{internal covariate shift}, was identified in a paper \cite{batch-normalization} by \citeauthor{batch-normalization} (\citeyear{batch-normalization}) where they propose a method called \textit{batch normalization} in order to remedy this issue.
