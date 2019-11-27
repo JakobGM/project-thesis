@@ -1,3 +1,37 @@
+As the name implies, a central concept of convolutional neural networks is the so-called \textit{convolution operator}.
+Let the \textit{kernel}, $w$, be a $H_k \times W_k$ real matrix, and denote the activation of the previous layer at position $(x, y)$ as $a_{x, y}$.
+The \textit{convolution operator}, $\circledast$, is then defined as
+%
+\begin{align*}
+  w \circledast a_{x, y} = \sum_{i} \sum_{j} w_{i, j} ~ a_{x - i, y - j},
+  \hspace{3em}
+    a_{x, y} \in \mathbb{R},~
+    w \in \mathbb{R}^{H_k \times W_k},
+\end{align*}
+%
+where $(i, j)$ spans the index set of the kernel.
+The region around $a_{x,y}$ which is involved in the convolution is referred to as the \textit{receptive field}.
+We can generate a \textit{filtered image} by moving this receptive field over the entire input image.
+The step size used when moving the receptive field is referred to as the \textit{stride size} of the convolution.
+This \textit{moving convolution} is illustrated in \figref{fig:convolution}.
+
 \begin{figure}[htb]
   \input{tikz/convolution.tex}
+  \caption{
+    Visualization of a kernel convolution with a $3 \times 3$ kernel over an image of size $4 \times 4$ with additional zero-padding and stride size $1$.
+    The \textit{receptive field} is shown in \textcolor{orange}{orange}, the respective kernel weights in \textcolor{blue}{blue}, and the resulting convolution output in \textcolor{green}{green}.
+    Zero padding of the input image is shown in gray.
+  }
+  \label{fig:convolution}
 \end{figure}
+
+\todo{Finish this section. Some ideas are given below.}
+
+How should we interpret the kernel?
+The concept of a \textit{kernel} predates neural networks, and is used in image processing.
+Kernel convolution can result in reduction of dimensionality.
+The first cause for dimension reduction is that the kernel $(n \times m)$ kernel matrix, with $n, m \geq 1$ can't possibly applied to a $N \times M$ image exactly $N \cdot M$ times. The convolution can't be fit into the image that many times.
+We will therefore lose information on the edges of the image after having applied the convolution.
+The solution to this problem is to pad the image with zeros.
+There are other ways to reduce the dimensionality with convolution.
+A $4 \times 4$ kernel with stride $4 \times 4$ will reduce the resolution in both dimensions by four, for instance.
