@@ -1,3 +1,34 @@
-Training deep neural networks is complicated by the fact that changing the parametrization of one of the early layers will affect all the subsequent layers.
-Reparametrization results in a distributional change in the feature layer passed onto the next layer, a change that must be accounted for after each epoch.
+Reparametrization of earlier layers during the training of a deep neural network results in a distributional change in the feature layer passed onto the subsequent layers.
+This forces subsequent layers to adapt to the new \enquote{distributional circumstances}, slowing training convergence in the process.
 This phenomenon, referred to as \textit{internal covariate shift}, was identified in a paper \cite{batch-normalization} by \citeauthor{batch-normalization} (\citeyear{batch-normalization}) where they propose a method called \textit{batch normalization} in order to remedy this issue.
+Propose we have a layer activation $\vec{x}$ consisting of $d$ dimensions, i.e. $\vec{x} = (x^{(1)}, \ldots, x^{(d)})$.
+At first we normalize each feature dimension, $k$, independently
+
+\begin{equation*}
+  \widehat{x}^{(k)}
+  =
+  \frac{
+    x^{(k)} - \E{x^{(k)}}
+  }{
+    \sqrt{\Var{x^{(k)}} + \epsilon}
+  },
+  \tag{Statistical Normalization}
+\end{equation*}
+
+where $\E{\cdot}$ and $\Var{\cdot}$ are respectively sample means and sample variances over the current mini-batch, and $\epsilon$ is added for numerical stability.
+The result of this statistical normalization is a feature layer where every dimension has a mean of $0$ and a variance of $1$.
+The internal covariate shift has been practically eliminated as a result.
+
+This type of normalization alone may not be optimal in all cases, though, and is best explained with an example.
+Assume a set of layer activations $\vec{x}$ to be distributed symmetrically across the mean, and set the activation function of the subsequent layer to the $\relu(x) = \max(x,0)$ activation function.
+After normalization, 50\% of the values are expected to be negative, and are therefore truncated to $0$.
+This informational loss may be suboptimal for the given network layer and must be accounted for.
+For this reason, we introduce two additional trainable parameters for each feature dimension, $\gamma^{(k)}$ and $\beta^{(k)}$, and apply a second normalization step
+
+\begin{equation*}
+  y^{(k)} = \gamma^{(k)} \widehat{x}^{(k)} + \beta^{(k)}.
+  \tag{Trainable Normalization}
+\end{equation*}
+
+The intent is to learn the values for the shift, $\beta^{(k)}$, and scaler, $\gamma^{(k)}$, which restores the representative power of the given layer \textit{after} the statistical normalization.
+\todo{Decide if I need to write more about this topic, such as update equations for $\gamma$ and $\beta$}.
