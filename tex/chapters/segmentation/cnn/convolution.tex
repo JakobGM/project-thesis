@@ -68,9 +68,9 @@ The kernel weights determines the type of features being extracted from the give
   }_{\text{Gaussian blur kernel}}.
 \end{align*}
 
-It is important to notice that kernel convolution has the effect of reducing the dimensionality of the input image.
-Pixels along the image border are partially ignored since the receptive field can not be properly centered on these pixel.
-A horizontal stride of $W_k > 1$ or a vertical stride of $H_k > 1$ will cause additional dimensional reduction.
+It is important to notice that kernel convolution has the additional effect of reducing the dimensionality of the input image.
+Firstly, pixels along the image border are partially ignored since the receptive field can not be properly centered on these pixel.
+Secondly, a horizontal stride of $W_k > 1$ or a vertical stride of $H_k > 1$ will cause additional dimensional reduction.
 For an image of size $H \times W$ and a kernel of size $H_k \times W_k$, the convoluted filter is reduced to size
 %
 \begin{equation*}
@@ -95,13 +95,11 @@ Such a padding is shown in gray in \figref{fig:convolution}.
 CNNs apply multiple different convolution kernels to the same input, resulting in a multiple set of filtered outputs.
 After having applied the layer's activation function to the output (see upcoming \enquote{activation functions} section) and the activations have been downsampled (see upcoming \enquote{pooling} section), the filtered outputs are passed onto the next layer.
 The number of filters are usually increased as you move deeper into the network where the resolution of the inputs are reduced.
+Unlike classical image processing, where kernel weights are carefully selected in order to construct an intended type of feature extraction, CNNs let each kernel weight be a trainable parameter.
+As the network is trained each kernel becomes specialized at extracting features of interest for use by the subsequent layers.
 
 An important aspect of convolution is that the kernel weights remain unchanged as the receptive field is moved over the input image.
 This \textit{parameter sharing} property \cite{visint-cnn} results in regions being treated identically no matter where in the image they are situated.
 This is one of the core reasons for why CNNs display a high degree of translational and rotational variance \cite{cnn-translational-invariance}, and are thus highly suited for inference on imaging data.
 The sharing of parameters has the added benefit of reducing the parametric complexity of the network, thus decreasing the computational cost of training it.
 Additionally, compared to a more classical \textit{multilayer perceptron}, which operates on flattened vectors, a fully convolutional neural network represents and operates on images in matrix form, thus taking the spatial relationship between pixels into account.
-
-\todo{trainable kernels.}
-
-The kernel weights are trainable parameters and are updated accordingly during each training step.
