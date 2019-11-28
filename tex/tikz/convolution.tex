@@ -12,31 +12,31 @@
 
 \[
 \underbracket[0.6pt][7pt]{
-\left(\begin{array}{ccccccc}
+\left[\begin{array}{ccccccc}
   \mymark{TL3}{0} & 0 & 0 & 0 & 0 & \mymark{TR3}{0} \\
   0 & 1 & \mymark{TL1}{2} & 0 & \mymark{TR1}{0} & 0 \\
   0 & 5 & 3 &               0 & 4 &               0 \\
   0 & 0 & \mymark{BL1}{0} & 0 & \mymark{BR1}{7} & 0 \\
   0 & 9 & 3 & 0 & 0 & 0 \\
   \mymark{BL3}{0} & 0 & 0 & 0 & 0 & \mymark{BR3}{0} \\
-\end{array}\right)
+\end{array}\right]
 }_{\text{Zero-padded input image}}
 *
 \underbracket[0.6pt][7pt]{
-\left(\begin{array}{ccc}
+\left[\begin{array}{ccc}
   \mymark{TL2}{1} & 1 & \mymark{TR2}{1}\\
   1  & 1 &              0 \\
   \mymark{BL2}{1} & 0 & \mymark{BR2}{0}
-\end{array}\right)
+\end{array}\right]
 }_{\text{Kernel}}
 =
 \underbracket[0.6pt][7pt]{
-\left(\begin{array}{ccccccc}
+\left[\begin{array}{ccccccc}
   1 & 8 & 5 & 0 \\
   8 & 11 & \mymark{C}{5} & 4 \\
   8 & 17 & 10 & 11 \\
   9 & 12 & 10 & 7 \\
-\end{array}\right)
+\end{array}\right]
 }_{\text{Convolved output}}
 \]
 

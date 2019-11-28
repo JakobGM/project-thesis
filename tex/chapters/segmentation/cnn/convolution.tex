@@ -18,20 +18,78 @@ This \textit{moving convolution} is illustrated in \figref{fig:convolution}.
 \begin{figure}[htb]
   \input{tikz/convolution.tex}
   \caption{
-    Visualization of a kernel convolution with a $3 \times 3$ kernel over an image of size $4 \times 4$ with additional zero-padding and stride size $1$.
+    Visualization of a kernel convolution with a $3 \times 3$ kernel over an image of size $4 \times 4$ with additional zero-padding and stride size of $1 \times 1$.
     The \textit{receptive field} is shown in \textcolor{orange}{orange}, the respective kernel weights in \textcolor{blue}{blue}, and the resulting convolution output in \textcolor{green}{green}.
     Zero padding of the input image is shown in gray.
   }
   \label{fig:convolution}
 \end{figure}
 
-\todo{Finish this section. Some ideas are given below.}
+The concept of a \textit{kernel} predates neural networks as it has been used for feature extraction in the field of image processing \cite[p.~11]{computer_vision_history}.
+The kernel weights determines the type of features being extracted from the given image, some common kernels are given below.
 
-How should we interpret the kernel?
-The concept of a \textit{kernel} predates neural networks, and is used in image processing.
-Kernel convolution can result in reduction of dimensionality.
-The first cause for dimension reduction is that the kernel $(n \times m)$ kernel matrix, with $n, m \geq 1$ can't possibly applied to a $N \times M$ image exactly $N \cdot M$ times. The convolution can't be fit into the image that many times.
-We will therefore lose information on the edges of the image after having applied the convolution.
-The solution to this problem is to pad the image with zeros.
-There are other ways to reduce the dimensionality with convolution.
-A $4 \times 4$ kernel with stride $4 \times 4$ will reduce the resolution in both dimensions by four, for instance.
+\begin{align*}
+  \underbracket[0.6pt][7pt]{
+    w_1 =
+    \begin{bmatrix}
+      0 & 0 & 0 \\
+      0 & 1 & 0 \\
+      0 & 0 & 0 \\
+    \end{bmatrix}
+  }_{\text{Identity kernel}},
+  &&
+  \underbracket[0.6pt][7pt]{
+    w_2 =
+    \begin{bmatrix}
+      -1 & -1 & -1 \\
+      -1 & 8 & -1 \\
+      -1 & -1 & -1 \\
+    \end{bmatrix}
+  }_{\text{Edge detection kernel}},
+  &&
+  \underbracket[0.6pt][7pt]{
+    w_3 =
+    \frac{1}{9}
+    \begin{bmatrix}
+      1 & 1 & 1 \\
+      1 & 1 & 1 \\
+      1 & 1 & 1 \\
+    \end{bmatrix}
+  }_{\text{Normalized box blur kernel}},
+  &&
+  \underbracket[0.6pt][7pt]{
+    w_4 =
+    \frac{1}{16}
+    \begin{bmatrix}
+      1 & 2 & 1 \\
+      2 & 4 & 2 \\
+      1 & 2 & 1 \\
+    \end{bmatrix}
+  }_{\text{Gaussian blur kernel}}.
+\end{align*}
+
+It is important to notice that kernel convolution has the effect of reducing the dimensionality of the input image.
+Pixels along the image border are partially ignored since the receptive field can not be properly centered on these pixel.
+A horizontal stride of $W_k > 1$ or a vertical stride of $H_k > 1$ will cause additional dimensional reduction.
+For an image of size $H \times W$ and a kernel of size $H_k \times W_k$, the convoluted filter is reduced to size
+%
+\begin{equation*}
+  \floor{(H - H_k + H_s) / H_s}
+  \times
+  \floor{(W - W_k + W_s) / W_s}.
+\end{equation*}
+%
+as shown by \cite{dive-into-deep-learning}.
+The reduction in dimensionality when using stride sizes of one is often undesirable, and for this reason it is common to add a \textit{padding} filled with zero-values at the border of the input image.
+Using a padding of height $H_p$ at the horizontal borders and a padding of width $W_p$ at the vertical borders results in a filter of size
+%
+\begin{equation*}
+  \floor{(H - H_k + H_s + \mathbf{H_p}) / H_s}
+  \times
+  \floor{(W - W_k + W_s + \mathbf{W_p}) / W_s}.
+\end{equation*}
+%
+Assuming the input height and width to be divisible by the stride height and width, respectively, we can set $H_p = H_k - 1$ and $W_p = W_k - 1$ in order to attain an output shape of $(H / H_s) \times (W / W_s)$ \cite{dive-into-deep-learning}.
+Such a padding is shown in gray in \figref{fig:convolution}.
+
+\todo{Parameter sharing, trainable kernels, and multiple filters.}
