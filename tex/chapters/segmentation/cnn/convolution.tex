@@ -92,4 +92,11 @@ Using a padding of height $H_p$ at the horizontal borders and a padding of width
 Assuming the input height and width to be divisible by the stride height and width, respectively, we can set $H_p = H_k - 1$ and $W_p = W_k - 1$ in order to attain an output shape of $(H / H_s) \times (W / W_s)$ \cite{dive-into-deep-learning}.
 Such a padding is shown in gray in \figref{fig:convolution}.
 
-\todo{Parameter sharing, trainable kernels, and multiple filters.}
+CNNs apply multiple different convolution kernels to the same input, resulting in a multiple set of filtered outputs.
+After having applied the layer's activation function to the output (see upcoming \enquote{activation functions} section) and the activations have been downsampled (see upcoming \enquote{pooling} section), the filtered outputs are passed onto the next layer.
+The number of filters are usually increased as you move deeper into the network where the resolution of the inputs are reduced.
+
+\todo{Parameter sharing, trainable kernels.}
+
+The kernel weights are trainable parameters and are updated accordingly during each training step.
+The fundamental property of CNNs is that it applies several different kernels to the input image, and the weights of each kernel are trainable parameters.
