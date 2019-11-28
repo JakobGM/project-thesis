@@ -1,17 +1,17 @@
-Input data normalization has been found to be of vital importance when training neural networks, in certain cases reducing predictive errors by several orders of magnitude and training times by one order of magnitude \cite{input_normalization_1997}.
+Input data normalization has been found to be of vital importance when training neural networks, in certain cases reducing predictive errors by several orders of magnitude and training times by one order of magnitude~\cite{input_normalization_1997}.
 How to normalize input data depends on distribution of the feature space, which will be investigated here.
 
-\todo{Write about global vs local normalization, and normalization vs. standardization.}
+\todo{Write about global vs.\ local normalization, and normalization vs.\ standardization.}
 
 \subsubsection*{RGB rasters}
 
 A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
 %
 \begin{equation*}
-  I_{i,j,c} \in \{0, 1, ..., 255\}, \text{ for } c \in \{r, g, b\}.
+  I_{i,j,c} \in \{0, 1, \ldots, 255\}, \text{ for } c \in \{r, g, b\}.
 \end{equation*}
 %
-The distribution of each color channel over the entire coverage area of the Trondheim aerial photography data set is shown in \figref{fig:rgb-density}, and aggregate statistics for each channel are listed in \tabref{tab:rgb-statistics}.
+The distribution of each color channel over the entire coverage area of the Trondheim aerial photography data set is shown in~\figref{fig:rgb-density}, and aggregate statistics for each channel are listed in~\tabref{tab:rgb-statistics}.
 
 \begin{figure}[htb]
   \begin{floatrow}
@@ -19,9 +19,10 @@ The distribution of each color channel over the entire coverage area of the Tron
       \includegraphics[width=\linewidth]{rgb-density}
     }{%
       \caption{
+        \\
         Distribution density for all three color channels in the aerial photography data set covering Trondheim municipality (2017).
         %Peak at 64 and 191.
-      }
+      }%
       \label{fig:rgb-density}
     }
     \inlinetable{%
@@ -43,8 +44,9 @@ The distribution of each color channel over the entire coverage area of the Tron
       \vspace{5em}
     }{%
       \caption{
+        \\
         Aggregate statistics for each image channel distribution for the aerial photography data set covering Trondheim municipality (2017).
-      }
+      }%
       \label{tab:rgb-statistics}
     }
   \end{floatrow}
@@ -58,7 +60,7 @@ This is in essence a lossless transformation, since the normalization function $
 The \enquote{$z$ channel} in the raster images represent elevation data from the respective digital surface model.
 Elevation measurements are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain $I_{i,j,z} \in (\SI{-3.4e38}{\meter},~\SI{3.4e8}{\meter})$.
 In practice, the measurements are bounded by the regional extrema, $(\SI{-433}{\meter},~\SI{8848}{\meter})$ for dry land globally, and $(\SI{-9}{\meter},~\SI{569}{\meter})$ for the Trondheim region.
-The distribution of $z$ channel values for the Trondheim region is shown in \figref{fig:elevation-density}, and aggregate statistics are listed in \tabref{tab:elevation-statistics}.
+The distribution of $z$ channel values for the Trondheim region is shown in~\figref{fig:elevation-density}, and aggregate statistics are listed in~\tabref{tab:elevation-statistics}.
 
 \begin{figure}[htb]
   \begin{floatrow}
@@ -68,7 +70,7 @@ The distribution of $z$ channel values for the Trondheim region is shown in \fig
       \caption{
         Distribution density for elevation data set covering Trondheim municipality (2017).
         Outlier values $(\SI{0}{\meter}, \SI{2.74}{\percent})$ and $(\SI{148}{\meter}, \SI{1.93}{\percent})$ have been cropped.
-      }
+      }%
       \label{fig:elevation-density}
     }
     \inlinetable{%
@@ -89,7 +91,7 @@ The distribution of $z$ channel values for the Trondheim region is shown in \fig
     }{%
       \caption{
         Aggregate statistics for elevation data set covering municipality of Trondheim (2017).
-      }
+      }%
       \label{tab:elevation-statistics}
     }
   \end{floatrow}
@@ -112,7 +114,7 @@ A normalization technique analogue to the RGB min-max scaling would be
   }.
 \end{equation*}
 
-In order to evaluate if this will normalize the $z$ raster channel across tiles, we plot the \enquote{tile-by-tile} $z$ channel statistics in \figref{fig:elevation-spread}.
+In order to evaluate if this will normalize the $z$ raster channel across tiles, we plot the \enquote{tile-by-tile} $z$ channel statistics in~\figref{fig:elevation-spread}.
 
 \begin{figure}[H]
   \centering
@@ -121,7 +123,7 @@ In order to evaluate if this will normalize the $z$ raster channel across tiles,
     Elevation value statistics for a tile subset of sample size $n = 10.000$.
     The left figure shows the minimum, mean, and maximum elevation, sorted by increasing mean from left to right.
     The right figure shows the histogram of the tile elevation \textit{ranges} (difference between maximum elevation and minimum elevation within tile).
-  }
+  }%
   \label{fig:elevation-spread}
 \end{figure}
 
@@ -129,7 +131,7 @@ While the global elevation range is $\SI{569}{\meter} - (\SI{-9}{\meter}) = \SI{
 Coupled with the fact that the tile elevation \textit{means} are somewhat uniformly distributed between \SI{0}{\meter} and \SI{200}{\meter}, ignoring the right tail, a global normalization will yield tile elevation values with small standard deviations and highly variable means.
 We can therefore conclude that global min-max scaling is not suitable for the elevation image channel.
 
-\todo{Write about the reasoning behind 0-1 normalization on elevation data. Translational invariance, sea level, and so on.}
+\todo{Write about the reasoning behind 0--1 normalization on elevation data. Translational invariance, sea level, and so on.}
 
 Any elevation normalization method must account for the fact that missing data values are replaced by a pre-defined \texttt{nodata} placeholder value, usually \SI{-3.4e38}{\meter}.
 Otherwise a large negative bias is introduced for all tiles with any missing data.

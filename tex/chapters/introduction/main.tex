@@ -2,7 +2,7 @@
 \addcontentsline{toc}{section}{Introduction}\markboth{Introduction}{Introduction}
 \pagenumbering{arabic}  % Start using Arabic numbers again
 \setcounter{page}{1}  % Reset page number
-\fancyhead[R]{\footnotesize\thepage\ of \pageref{LastPage}}  % Start writing page x of y
+\fancyhead[R]{\footnotesize\thepage\ of\ \pageref{LastPage}}  % Start writing page x of y
 
 \textit{Remote sensing} is the process of gathering information about an object without physical contact.
 One of the most common remote sensing technologies is \textit{aerial photography}.
@@ -10,7 +10,7 @@ Although aerial RGB photography is easily interpretable for humans, it is limite
 
 \textit{LiDAR technology} is able to measure distances to object surfaces by directing a beam of light (laser) and measuring the time of arrival and wavelength of the resulting reflection.
 The resulting data is therefore fundamentally three-dimensional.
-LiDAR has been applied in a wide array of fields such as meteorology \cite{lidar_meteorology_1966}, forestry analysis \cite{lidar_forestry_2000}, urban flood modelling \cite{lidar_flood_2013}, and autonomous driving systems \cite{lidar_self_driving_2018}.
+LiDAR has been applied in a wide array of fields such as meteorology~\cite{lidar_meteorology_1966}, forestry analysis~\cite{lidar_forestry_2000}, urban flood modelling~\cite{lidar_flood_2013}, and autonomous driving systems~\cite{lidar_self_driving_2018}.
 
 One of the applications of LiDAR technology is the creation of so-called \textit{digital surface models} (DSMs).
 DSMs are grayscale images representing the earth's surface and any potential objects \textit{upon} that surface such as natural canopy and human-made objects.
@@ -21,15 +21,15 @@ LiDAR data and aerial photography is usually provided by the respective cadastra
 Cadastral authorities are also responsible for keeping records of cadastral data such as cadastral plots, roads, and buildings.
 The exact type and quality of this data varies a lot between countries, even between administrative regions.
 This raises the question: \enquote{Can high-fidelity insights be inferred from otherwise low-fidelity geographic data?}.
-\figref{fig:data-enchancement} shows an outline of the possible \enquote{data enhancements} which are of interest within this domain.
+~\figref{fig:data-enchancement} shows an outline of the possible \enquote{data enhancements} which are of interest within this domain.
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{data-enchancement}
   \caption{
     Classification of geographical data quality.
     The classifications reflect a general observed trend in data sets, and a given region may therefore not fit into exactly one of these categories.
-    Some of the data types mentioned here will be described in section \ref{sec:data}.
-  }
+    Some of the data types mentioned here will be described in~\secref{sec:data}.
+  }%
   \label{fig:data-enchancement}
 \end{figure}
 
@@ -67,4 +67,5 @@ This section will describe the entire data pre-processing pipeline, model archit
   \item \todo{Train model on global mean standard deviation scaling.}
   \item \todo{Calculate class split for \texttt{nodata} indices, possibly arguing for zero filling method.}
   \item \todo{Explain how \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) provides us with uniquely high-quality ground truth for machine learning purposes.}
+  \item \todo{Should I include a section about optimization algorithms? If so, where does it fit in?}
 \end{itemize}

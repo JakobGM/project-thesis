@@ -8,9 +8,9 @@ We construct discretized segmentation masks from vectorized mask polygons in the
   \item Set remaining values to $0$.
 \end{itemize}
 
-A problem arises when pixels are partially contained by a polygon exterior and interior, i.e. when the pixel overlaps the polygon's boundary.
+A problem arises when pixels are partially contained by a polygon exterior and interior, i.e.\ when the pixel overlaps the polygon's boundary.
 The pixel must be rather arbitrarily considered as either contained (decision rule A) or not contained (decision rule B) by the polygon.
-Both decision rules are shown in \figref{fig:pixel-containment}.
+Both decision rules are shown in~\figref{fig:pixel-containment}.
 
 \begin{figure}[H]
   \centering
@@ -23,7 +23,7 @@ Both decision rules are shown in \figref{fig:pixel-containment}.
     are considered a part of the polygon (decision rule A), while in the left figure, only pixels
     entirely \textit{contained} within the interior are considered being part
     of the polygon (decision rule B).
-  }
+  }%
   \label{fig:pixel-containment}
 \end{figure}
 

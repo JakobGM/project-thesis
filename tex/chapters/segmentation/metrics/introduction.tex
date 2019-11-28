@@ -4,7 +4,7 @@ In order to evaluate the performance of a given model parametrization, $\vec{\th
 The performance metric encodes our notion of what constitutes as a good model fit.
 
 While the performance metric is what we really want to optimize, it may not be suitable for numerical optimization, for example due to being non-differentiable or too computationally costly.
-Machine learning optimization differs from classical optimization in that the performance metric is indirectly minimized through another \textit{loss} metric \cite[p.~272]{goodfellow}, $J(\vec{\theta} | X, \vec{y})$.
+Machine learning optimization differs from classical optimization in that the performance metric is indirectly minimized through another \textit{loss} metric~\cite[p.~272]{goodfellow}, $J(\vec{\theta} | X, \vec{y})$.
 The loss metric is minimized in the hope of improving the performance metric indirectly, and it is therefore of vital importance that there is a strong relationship between performing well on the loss function and performing well on the performance metric.
 
 We will provide a brief summary of popular losses and metrics for single-class semantic segmentation.

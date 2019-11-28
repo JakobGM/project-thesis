@@ -13,7 +13,7 @@ where $(i, j)$ spans the index set of the kernel.
 The region around $a_{x,y}$ which is involved in the convolution is referred to as the \textit{receptive field}.
 We can generate a \textit{filtered image} by moving this receptive field over the entire input image.
 The step size used when moving the receptive field is referred to as the \textit{stride size} of the convolution.
-This \textit{moving convolution} is illustrated in \figref{fig:convolution}.
+This \textit{moving convolution} is illustrated in~\figref{fig:convolution}.
 
 \begin{figure}[htb]
   \input{tikz/convolution.tex}
@@ -21,11 +21,11 @@ This \textit{moving convolution} is illustrated in \figref{fig:convolution}.
     Visualization of a kernel convolution with a $3 \times 3$ kernel over an image of size $4 \times 4$ with additional zero-padding and stride size of $1 \times 1$.
     The \textit{receptive field} is shown in \textcolor{orange}{orange}, the respective kernel weights in \textcolor{blue}{blue}, and the resulting convolution output in \textcolor{green}{green}.
     Zero padding of the input image is shown in gray.
-  }
+  }%
   \label{fig:convolution}
 \end{figure}
 
-The concept of a \textit{kernel} predates neural networks as it has been used for feature extraction in the field of image processing \cite[p.~11]{computer_vision_history}.
+The concept of a \textit{kernel} predates neural networks as it has been used for feature extraction in the field of image processing~\cite[p.~11]{computer_vision_history}.
 The kernel weights determines the type of features being extracted from the given image, some common kernels are given below.
 
 \begin{align*}
@@ -79,7 +79,7 @@ For an image of size $H \times W$ and a kernel of size $H_k \times W_k$, the con
   \floor{(W - W_k + W_s) / W_s}.
 \end{equation*}
 %
-as shown by \cite{dive-into-deep-learning}.
+as shown by~\cite{dive-into-deep-learning}.
 The reduction in dimensionality when using stride sizes of one is often undesirable, and for this reason it is common to add a \textit{padding} filled with zero-values at the border of the input image.
 Using a padding of height $H_p$ at the horizontal borders and a padding of width $W_p$ at the vertical borders results in a filter of size
 %
@@ -89,8 +89,8 @@ Using a padding of height $H_p$ at the horizontal borders and a padding of width
   \floor{(W - W_k + W_s + \mathbf{W_p}) / W_s}.
 \end{equation*}
 %
-Assuming the input height and width to be divisible by the stride height and width, respectively, we can set $H_p = H_k - 1$ and $W_p = W_k - 1$ in order to attain an output shape of $(H / H_s) \times (W / W_s)$ \cite{dive-into-deep-learning}.
-Such a padding is shown in gray in \figref{fig:convolution}.
+Assuming the input height and width to be divisible by the stride height and width, respectively, we can set $H_p = H_k - 1$ and $W_p = W_k - 1$ in order to attain an output shape of $(H / H_s) \times (W / W_s)$~\cite{dive-into-deep-learning}.
+Such a padding is shown in gray in~\figref{fig:convolution}.
 
 CNNs apply multiple different convolution kernels to the same input, resulting in a multiple set of filtered outputs.
 After having applied the layer's activation function to the output (see upcoming \enquote{activation functions} section) and the activations have been downsampled (see upcoming \enquote{pooling} section), the filtered outputs are passed onto the next layer.
@@ -99,7 +99,7 @@ Unlike classical image processing, where kernel weights are carefully selected i
 As the network is trained each kernel becomes specialized at extracting features of interest for use by the subsequent layers.
 
 An important aspect of convolution is that the kernel weights remain unchanged as the receptive field is moved over the input image.
-This \textit{parameter sharing} property \cite{visint-cnn} results in regions being treated identically no matter where in the image they are situated.
-This is one of the core reasons for why CNNs display a high degree of translational and rotational variance \cite{cnn-translational-invariance}, and are thus highly suited for inference on imaging data.
+This \textit{parameter sharing} property~\cite{visint-cnn} results in regions being treated identically no matter where in the image they are situated.
+This is one of the core reasons for why CNNs display a high degree of translational and rotational variance~\cite{cnn-translational-invariance}, and are thus highly suited for inference on imaging data.
 The sharing of parameters has the added benefit of reducing the parametric complexity of the network, thus decreasing the computational cost of training it.
 Additionally, compared to a more classical \textit{multilayer perceptron}, which operates on flattened vectors, a fully convolutional neural network represents and operates on images in matrix form, thus taking the spatial relationship between pixels into account.

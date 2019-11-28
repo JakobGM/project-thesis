@@ -1,10 +1,10 @@
 %%%%%%%%%%%%%%%%%%% Local functions %%%%%%%%%%%%%%%%%%%
 %% -- Draw marks
-\newbox\dumbox
+\newbox\dumbox% chktex 1
 \newcommand{\mymark}[2]{%
   \setbox\dumbox=\hbox{#2}%
-  \hbox to \wd\dumbox{\hss%
-    \tikz[overlay,remember picture,baseline=(#1.base)]{ \node (#1) {\box\dumbox}; }%
+  \hbox to \wd\dumbox{\hss% chktex 1
+    \tikz[overlay,remember picture,baseline=(#1.base)]{ \node (#1) {\box\dumbox}; }% chktex 36
     \hss}%
 }
 

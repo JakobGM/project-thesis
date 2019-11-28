@@ -1,4 +1,4 @@
-Image recognition seeks to answer three questions for any given image \cite[p.~1]{image_recognition}:
+Image recognition seeks to answer three questions for any given image~\cite[p.~1]{image_recognition}:
 
 \begin{enumerate}[nosep]
   \item \textbf{Identification:} Does the image contain any object of interest?
@@ -7,14 +7,14 @@ Image recognition seeks to answer three questions for any given image \cite[p.~1
 \end{enumerate}
 
 We will concern ourselves with only one object category (class) at any time, that class being buildings, and will simplify the following theory accordingly with this simplification in mind.
-The localization and classification of objects in a given image can be performed at different granularity levels, as shown in \figref{fig:segmentation-types}.
+The localization and classification of objects in a given image can be performed at different granularity levels, as shown in~\figref{fig:segmentation-types}.
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth,trim={0 4cm 0 3.4cm},clip]{segmentation-types}
   \caption{
     Different granularities for single-class building localization, using the Trondheim 2017 data set.
     Bounding box regression is shown on the left, semantic segmentation in the middle, and instance segmentation on the right.
-  }
+  }%
   \label{fig:segmentation-types}
 \end{figure}
 \newpage
@@ -36,7 +36,7 @@ Since a bounding box can be directly derived from a semantic segmentation mask, 
 \end{equation*}
 %
 An image with $C$ color channels, and of width $W$ and height $H$, is represented by a tensor $X \in \mathbb{R}^{W \times H \times C}$.
-This is somewhat simplified, but we will give a more nuanced description in section \ref{sec:raster-data}.
+This is somewhat simplified, but we will give a more nuanced description in~\secref{sec:raster-data}.
 Single-class semantic segmentation can therefore be formalized as constructing a binary predictor $\hat{f}$ of the form:
 %
 \begin{equation*}
@@ -47,7 +47,7 @@ Where $\mathbb{B}^{W \times H}$ denotes a boolean matrix, $1$ indicating that th
 In practice, however, statistical models will often predict a pixel-wise class \textit{confidence} in the continuous domain $[0, 1]$,
 %
 \begin{equation*}
-  \tilde{f}: \mathbb{R}^{W \times H \times C} \rightarrow [0, 1]^{W \times H},
+  \tilde{f}: \mathbb{R}^{W \times H \times C} \rightarrow {[0, 1]}^{W \times H},
 \end{equation*}
 %
 but a binary predictor can be easily constructed by choosing a suitable threshold, $T$, for which to distinguish positive predictions from negative ones
@@ -56,4 +56,4 @@ but a binary predictor can be easily constructed by choosing a suitable threshol
   \hat{f}(X) = \tilde{f}(X) > T, \hspace{2em} X \in \mathbb{R}^{W \times H \times C}.
 \end{equation*}
 %
-The choice of the exact threshold value, $T$, will influence the resulting \textit{sensitivity} and \textit{specificity} metrics of the model, terms which will be explained in the upcoming section \ref{sec:segmentation-metrics}.
+The choice of the exact threshold value, $T$, will influence the resulting \textit{sensitivity} and \textit{specificity} metrics of the model, terms which will be explained in the upcoming~\secref{sec:segmentation-metrics}.

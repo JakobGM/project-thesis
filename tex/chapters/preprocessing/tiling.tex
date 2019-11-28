@@ -1,7 +1,7 @@
 Given a specific geographic region, defined by the extent of the cadastral plot, we must retrieve the raster which entirely covers the region of interest.
 The simplest approach is to calculate the \textit{axis-aligned bounding box} of the plot, the minimum-area enclosing rectangle of the given plot.
-A bounding box is uniquely defined by its centroid $\vec{c} = [\nicefrac{1}{2}(x_{\mathrm{min}} + x_{\mathrm{max}}), \nicefrac{1}{2}(y_{\mathrm{min}} + y_{\mathrm{max}})]$, width $w = x_{\mathrm{max}} - x_{\mathrm{min}}$, and height $h = y_{\mathrm{max}} - y_{\mathrm{min}}$, and denoted by $B(\vec{c}, w, h)$.
-This is shown in \figref{fig:cadastral-bbox}.
+A bounding box is uniquely defined by its centroid $\vec{c} = [\nicefrac{1}{2}(x_{\mathrm{\min}} + x_{\mathrm{\max}}), \nicefrac{1}{2}(y_{\mathrm{\min}} + y_{\mathrm{\max}})]$, width $w = x_{\mathrm{\max}} - x_{\mathrm{\min}}$, and height $h = y_{\mathrm{\max}} - y_{\mathrm{\min}}$, and denoted by $B(\vec{c}, w, h)$.
+This is shown in~\figref{fig:cadastral-bbox}.
 
 \begin{figure}[htb]
   \captionsetup[subfigure]{position=b}
@@ -9,7 +9,7 @@ This is shown in \figref{fig:cadastral-bbox}.
   \subcaptionbox{
     Bounding box calculation for a given cadastral.
     The cadastral is drawn in \textcolor{orange}{orange},
-    and the resulting bounding box is drawn with \textcolor{blue}{blue} dashed lines.
+    and the resulting bounding box is drawn with \textcolor{blue}{blue} dashed lines.%
     \label{fig:cadastral-bbox}
   }{
     \input{tikz/cadastre_bbox.tex}
@@ -19,7 +19,7 @@ This is shown in \figref{fig:cadastral-bbox}.
     Figure showing the difference between a regular bounding box shown in
     \textcolor{blue}{blue}, and a minimum rotated rectangle shown in
     \textcolor{red}{red}.
-    Angle of rectangle rotation denoted by $\phi$.
+    Angle of rectangle rotation denoted by $\phi$.%
     \label{fig:rotated-bbox}
   }{
     \input{tikz/bbox_method.tex}
@@ -27,7 +27,7 @@ This is shown in \figref{fig:cadastral-bbox}.
 \end{figure}
 
 The edges of the bounding box is by definition oriented parallel to the coordinate axes.
-An alternative method is to calculate the \textit{arbitrarily oriented minimum bounding box} (AOMBB), a rectangle rotated by $\phi$ degrees w.r.t. the $x$-axis, as shown in \figref{fig:rotated-bbox}.
+An alternative method is to calculate the \textit{arbitrarily oriented minimum bounding box} (AOMBB), a rectangle rotated by $\phi$ degrees w.r.t.\ the $x$-axis, as shown in~\figref{fig:rotated-bbox}.
 
 While AOMBB results in a region with less superfluous raster data, it requires warping of the original raw raster when $\phi \not\in \{ \SI{0}{\degree}, \SI{90}{\degree}, \SI{180}{\degree}, \SI{270}{\degree} \}$.
 This requires data interpolation of the original raster data due to the rotation of the coordinate system, and may introduce artifacts in the warped raster data without careful parameter tuning.
@@ -38,7 +38,7 @@ Variable input sizes will cause issues for model architectures which require pre
 Convolutional neural networks do handle variable input sizes, but dimensions off all images in a \textit{single} training batch must be of the same size.
 It is therefore preferable to normalize the size of each bounding box.
 
-The distributions of the bounding box widths ($w$), heights ($h$), and maximal dimensions ($m = \max \{w, h\}$) are shown in \figref{fig:bbox-stats}.
+The distributions of the bounding box widths ($w$), heights ($h$), and maximal dimensions ($m = \max \{w, h\}$) are shown in~\figref{fig:bbox-stats}.
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{bbox_stats}
@@ -48,11 +48,11 @@ The distributions of the bounding box widths ($w$), heights ($h$), and maximal d
     The fraction of bounding boxes with dimension $\leq \SI{64}{m}$ is annotated as well.
     The $x$-axis has been cut off at the 90th percentile.
     \textit{Dataset: Trondheim cadastre}.
-  }
+  }%
   \label{fig:bbox-stats}
 \end{figure}
 
-As can be seen in \figref{fig:bbox-stats}, the distributions of $h$ and $w$ are quite similar.
+As can be seen in~\figref{fig:bbox-stats}, the distributions of $h$ and $w$ are quite similar.
 A square $1:1$ aspect ratio is therefore suitable for the normalized bounding box size.
 Specifically, a $\SI{64}{\meter} \times \SI{64}{\meter}$ bounding box will be of sufficient size to contain $\approx \SI{85}{\percent}$ of all cadastre plots in a single tile.
 With a LiDAR resolution of $\SI{0.2}{\meter}$, this results in a final image resolution of $\SI{256}{\pixel} \times \SI{256}{\pixel}$.
@@ -77,7 +77,7 @@ Now, define the following \enquote{enlarged} width and height:
 %
 The new bounding box defined by $B(\vec{c}, w^*, h^*)$ covers the original bounding box and is divisible by \SI{256}{\pixel} in both dimensions.
 In other words, the original bounding box is grown in all directions until both the width and height becomes a multiple of \SI{64}{\meter} and \SI{256}{\pixel}.
-This is demonstrated in \figref{fig:bbox-growing}.
+This is demonstrated in~\figref{fig:bbox-growing}.
 
 \begin{figure}[H]
   \centering
@@ -85,7 +85,7 @@ This is demonstrated in \figref{fig:bbox-growing}.
   \caption{
     Bounding box of width $2.25 \times \SI{64}{\meter} = \SI{144}{\meter}$ and height $1.25 \times \SI{64}{\meter} = \SI{80}{\meter}$.
     The bounding box is grown until it is 3 tiles wide and 2 tiles tall, i.e. $\SI{192}{\meter} \times \SI{128}{\meter}$.
-  }
+  }%
   \label{fig:bbox-growing}
 \end{figure}
 

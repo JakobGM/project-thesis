@@ -1,6 +1,6 @@
 Reparametrization of earlier layers during the training of a deep neural network results in a distributional change in the feature layer passed onto the subsequent layers.
 This forces subsequent layers to adapt to the new \enquote{distributional circumstances}, slowing training convergence in the process.
-This phenomenon, referred to as \textit{internal covariate shift}, was identified in a paper \cite{batch-normalization} by \citeauthor{batch-normalization} (\citeyear{batch-normalization}) where they propose a method called \textit{batch normalization} in order to remedy this issue.
+This phenomenon, referred to as \textit{internal covariate shift}, was identified in a paper~\cite{batch-normalization} by \citeauthor{batch-normalization}~(\citeyear{batch-normalization}) where they propose a method called \textit{batch normalization} in order to remedy this issue.
 Propose we have a layer activation $\vec{x}$ consisting of $d$ dimensions, i.e. $\vec{x} = (x^{(1)}, \ldots, x^{(d)})$.
 At first we normalize each feature dimension, $k$, independently
 

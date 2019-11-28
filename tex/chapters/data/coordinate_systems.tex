@@ -17,17 +17,17 @@ Cartesian distance norms such as $||\vec{p}_1 - \vec{p}_2||_2$ and Cartesian tra
   \caption{
     \\
     The figure shows the UTM zones required in order to cover the entirety of Europe, from \texttt{29S} to \texttt{38W}.
-    This public domain image has been sourced from Wikimedia \cite{wiki:europe_utm_zones}.
-  }
+    This public domain image has been sourced from Wikimedia~\cite{wiki:europe_utm_zones}.
+  }%
   \label{fig:europe-utm-zones}
 \end{wrapfigure}
 
-One such Cartesian approximation of the earth's surface is the Universal Transverse Mercator (UTM) coordinate system which divides the earth into 60 rectangular zones. The UTM zones covering Europe are shown in \figref{fig:europe-utm-zones}.
+One such Cartesian approximation of the earth's surface is the Universal Transverse Mercator (UTM) coordinate system which divides the earth into 60 rectangular zones. The UTM zones covering Europe are shown in~\figref{fig:europe-utm-zones}.
 We will therefore exclusively use UTM zone \texttt{32V} for our datasets sourced from Trondheim, Norway, situated in the southern part of Norway.
 Data in alternative coordinate systems will be transformed to this UTM zone before we start using the data.
 Since this is an affine coordinate system, we can easily generalize any models to other coordinate systems by applying the correct affine transformations.
 
-\texttt{GDAL} can be used to transform data between coordinate systems, e.g. converting from GPS to UTM \texttt{32V}:
+\texttt{GDAL} can be used to transform data between coordinate systems, e.g.\ converting from GPS to UTM \texttt{32V}:
 \begin{shellcode}
 $ gdaltransform \
     -s_srs EPSG:25830 \
