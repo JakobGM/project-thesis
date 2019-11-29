@@ -1,0 +1,6 @@
+The conventional last step in a given CNN layer is the application of a downsampling operation, referred to as \textit{pooling}.
+Yet again it has a biological motivation as it is inspired by the model of the visual cortex of the mammalian brain.
+There are several different methods of downsampling the resolution.
+As with moving convolution, pooling is implemented by moving a receptive field of size $>1$ (typically $2 \times 2$) over the activations and mapping these values to a lower dimensional space.
+There are several different ways to define such a mapping, the two most common being \textit{max pooling} and \textit{average pooling}, which respectively retrieve the maximum value and average value in the receptive field.
+Using a receptive field of size $2 \times 2$ and an identical stride size will therefore yield a downsampled image with one quarter as many pixels as the original input.
