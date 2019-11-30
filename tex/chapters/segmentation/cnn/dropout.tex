@@ -3,4 +3,11 @@ Dropout in CNNs explained by~\cite{dropout-cnn}.
 
 \begin{figure}[htb]
   \input{tikz/cnn-dropout.tex}
+  \caption{%
+    An example of how the pooled output can become altered due to \textit{dropout}.
+    Here using max-pooling with a receptive field and stride size of $2 \times 2$.
+    A dropout probability of $p = 0.25$ has been used.
+    Dropped values are shown as black boxes.
+  }%
+  \label{fig:dropout}
 \end{figure}
