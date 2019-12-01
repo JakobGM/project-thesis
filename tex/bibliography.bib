@@ -291,3 +291,54 @@
     archivePrefix={arXiv},
     primaryClass={cs.NE}
 }
+
+% CNN dropout technique, removing part of input image
+% https://arxiv.org/pdf/1708.04552.pdf
+@article{dropout-cutout,
+    title={Improved Regularization of Convolutional Neural Networks with Cutout},
+    author={Terrance DeVries and Graham W. Taylor},
+    year={2017},
+    eprint={1708.04552},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
+}
+
+% CNN dropout technique, dropping entire layers such that they simple forward their output
+@InProceedings{dropout-stochastic-depth,
+    author="Huang, Gao and Sun, Yu and Liu, Zhuang and Sedra, Daniel and Weinberger, Kilian Q.",
+    editor="Leibe, Bastian and Matas, Jiri and Sebe, Nicu and Welling, Max",
+    title="Deep Networks with Stochastic Depth",
+    booktitle="Computer Vision -- ECCV 2016",
+    year="2016",
+    publisher="Springer International Publishing",
+    address="Cham",
+    pages="646--661",
+    isbn="978-3-319-46493-0"
+}
+
+% Paper starting work on dropout in convolutional layers, introducing max-pooling dropout,
+% a.k.a. probabilistic weighted pooling
+% https://www.sciencedirect.com/science/article/pii/S0893608015001446
+@article{max-pooling-dropout,
+    title = "Towards dropout training for convolutional neural networks",
+    journal = "Neural Networks",
+    volume = "71",
+    pages = "1--10",
+    year = "2015",
+    issn = "0893-6080",
+    doi = "https://doi.org/10.1016/j.neunet.2015.07.007",
+    url = "http://www.sciencedirect.com/science/article/pii/S0893608015001446",
+    author = "Haibing Wu and Xiaodong Gu",
+    keywords = "Deep learning, Convolutional neural networks, Max-pooling dropout"
+}
+
+% Paper showing that the order of batch normalization and dropout is really important
+% https://arxiv.org/pdf/1904.03392.pdf
+@article{dropout-order,
+    title={Effective and Efficient Dropout for Deep Convolutional Neural Networks},
+    author={Shaofeng Cai and Yao Shu and Wei Wang and Meihui Zhang and Gang Chen and Beng Chin Ooi},
+    year={2019},
+    eprint={1904.03392},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
+}
