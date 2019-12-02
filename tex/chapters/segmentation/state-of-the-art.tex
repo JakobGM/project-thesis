@@ -1,7 +1,24 @@
-We will give an overview of the current state of image segmentation.
+At the time of this writing, CNNs have largely surpassed all previous methods for performing image segmentation~\cite{segmentation-overview}, but it is still a relatively new field with constantly new improvements being made.
+In the following section we will provide a overview of the current state-of-the-art methods being applied in the field, focusing on what distinguishes these approaches.
+Four CNN architectures are considered especially influential as they have become essential building blocks for many segmentation architectures; \textit{AlexNet}, \textit{VGG-16}, \textit{GoogLeNet}, and \textit{ResNet}~\cite{segmentation-overview}.
+
+\textit{AlexNet}~\cite{segmentation-alexnet} won several image classification competitions when it was first published in~\citeyear{segmentation-alexnet}, including the ILSVRC-2012 competition~\cite{segmentation-overview}.
+By employing five convolutional layers, max-pooling layers, ReLU activation functions, and dropout, followed up by a fully-connected feedforward classification network, it outperformed the 2nd place contender by a relatively large margin.
+
+The \textit{VGG-16}~\cite{vgg-16} architecture published in \citeyear{vgg-16} introduced the idea of stacking several convolution filters with small receptive fields in early layers.
+The number of convolution filters are gradually reduced as you move deeper into the network where the receptive fields are larger in size and the resolutions have been reduced.
+The result is a network with fewer parameters and more applications of the non-linear activation functions leading to an increased ability to discriminate inputs and reduced training times.
+VGG-16 achieved an impressive 92.7\% TOP-5 test accuracy in the ILSVRC-2013 classification competition, inspiring further research involving the techniques employed by the architecture~\cite{segmentation-overview}.
+
+Very deep networks are prone to overfitting and are subject to additional computational overhead.
+The \textit{GoogLeNet} architecture~\cite{googlenet} from \citeyear{googlenet} introduced the \textit{inception module} in order to combat this problem, a building block which allow networks to grow in depth and width with modest increases in computational overhead.
+The inception module discards the usual approach of ordering convolutions in a sequential manner, instead opting for several parallel pooled convolution branches with different dimensional properties.
+Finally a $1 \times 1$ convolution is applied to each branch in order to reduce the dimensionality of the output and the concatenated result is passed onto the next layer.
+
+The \textit{ResNet} architecture~\cite{resnet} from \citeyear{resnet} was the result of a continued effort to make deeper architectures feasible.
+By training a model with 152 layers ResNet won the ILSVRC-2016 competition with a remarkable 96.4\% accuracy~\cite{segmentation-overview}.
 
 \begin{itemize}
-  \item Deep learning image segmentation overview given here~\cite{segmentation-overview} (\citeyear{segmentation-overview}).
   \item Recent semantic segmentation progress described here~\cite{segmentation-progress} (\citeyear{segmentation-progress}).
   \item Use of fully convolutional networks for semantic segmentation described here~\cite{segmentation-fcnn} (\citeyear{segmentation-fcnn}).
   \item SegNet architecture described here~\cite{segmentation-segnet} (\citeyear{segmentation-segnet}).
