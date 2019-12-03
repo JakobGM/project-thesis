@@ -1,12 +1,12 @@
 In order to create a ground truth segmentation mask, we must convert the vector-formatted mask polygons (buildings for instance) into the same rasterized format as the remote sensing data.
 We construct discretized segmentation masks from vectorized mask polygons in the following manner:
 
-\begin{itemize}
+\begin{enumerate}[label=\textbf{\arabic*}]
   \item Transform the mask polygons into the pixel coordinate system of the raster tile, using the affine transformation defined by the tile origin.
   \item Superimpose the polygon on the discretized pixel grid and crop polygons outside the pixel region $(0, 255) \times (0, 255)$.
   \item Fill in the value $1$ for any pixel contained by the polygon exterior hulls, while not contained by any interior hull.
   \item Set remaining values to $0$.
-\end{itemize}
+\end{enumerate}
 
 A problem arises when pixels are partially contained by a polygon exterior and interior, i.e.\ when the pixel overlaps the polygon's boundary.
 The pixel must be rather arbitrarily considered as either contained (decision rule A) or not contained (decision rule B) by the polygon.

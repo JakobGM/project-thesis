@@ -1,6 +1,7 @@
 At the time of this writing, CNNs have largely surpassed all previous methods for performing image segmentation~\cite{segmentation-overview}, but it is still a relatively new field with constantly new improvements being made.
 In the following section we will provide a overview of the current state-of-the-art methods being applied in the field, focusing on what distinguishes these approaches.
 Four CNN architectures are considered especially influential as they have become essential building blocks for many segmentation architectures; \textit{AlexNet}, \textit{VGG-16}, \textit{GoogLeNet}, and \textit{ResNet}~\cite{segmentation-overview}.
+Note that these architectures were initially intended for \textit{classification} tasks only, but their conceptual ideas are important for \textit{segmentation} architectures as well.
 
 \textbf{AlexNet}~\cite{segmentation-alexnet} won several image classification competitions when it was first published in~\citeyear{segmentation-alexnet}, including the ILSVRC-2012 competition~\cite{segmentation-overview}.
 By employing five convolutional layers, max-pooling layers, ReLU activation functions, and dropout, followed up by a fully-connected feedforward classification network, it outperformed the 2nd place contender by a relatively large margin.
@@ -17,14 +18,34 @@ Finally a $1 \times 1$ convolution is applied to each branch in order to reduce 
 
 The \textbf{ResNet} architecture~\cite{resnet} from \citeyear{resnet} was the result of a continued effort to make deeper architectures feasible.
 By training a model with 152 layers ResNet won the ILSVRC-2016 competition with a remarkable 96.4\% accuracy~\cite{segmentation-overview}.
+The depth is achieved by introducing \textit{skip connections} between layers, an effective way to combat \textit{vanishing gradients}.
+
+The success of convolutional layers for classification tasks were eventually adapted for segmentation tasks as well.
+A fully convolutional, pixel-to-pixel classification network was first published by \citeauthor{segmentation-fcnn} in \citeyear{segmentation-fcnn}~\cite{segmentation-fcnn}.
+AlexNet, VGG-16, and GoogLeNet were successfully adapted in order to achieve state-of-the-art performance on the PASCAL-VOC dataset.
+
+\textit{Fully convolutional neural networks} (FCNN) quickly became the dominant technique used in segmentation challenges after the success in classification and localization challenges.
+The \textbf{U-Net} architecture, originally published in \citeyear{segmentation-unet} and intended for biomedical image segmentation, has become one of the more popular segmentation architectures.
+U-Net has a \textit{encoder/decoder}-structure; the network starts with a contracting path where context is extracted from the input image.
+This is followed by a symmetric expanding path in order to upscale the segmentation to the original resolution by the use of \textit{transposed convolution}, a trainable procedure also known as \textit{deconvolution}.
+\textit{Skip-connections} are introduced in order to supply information from the contracting layers to the expanding layers.
+\textbf{SegNet}~\cite{segmentation-segnet}, an architecture from the same time period, has a similar encoder/decoder structure as U-Net.
+The difference between the two architectures is that SegNet only copies over the max-pool indices in the skip connections instead of forwarding the entire feature layer, thus decreasing the memory requirements of the network.
+
+\textbf{R-CNN}~\cite{r-cnn}, and the subsequent improved architectures \textbf{Fast R-CNN}~\cite{fast-r-cnn} and \textbf{Faster R-CNN}~\cite{faster-r-cnn}, made great strides in image classification and localization tasks in \citeyear{r-cnn} and \citeyear{faster-r-cnn}.
+The crux of their success lies in the concept of a \textit{region proposal network} (RPN), a parallel network which is responsible for identifying \textit{regions of interest} (RoIs) in the convoluted feature maps.
+These RoIs are transformed to consistent dimensions by a custom pooling method called \textit{RoIPool}, or alternatively \textit{RoIWarp}, and subsequently classified and localized with a fully connected feedforward network.
+\textbf{Mask R-CNN}~\cite{mask-r-cnn}, published by the Facebook AI research group in \citeyear{mask-r-cnn}, sought to expand Faster R-CNN in order to predict segmentation as well.
+Mask R-CNN replaces RoIPool with \textit{RoIAlign}, a region of interest pooling method which preserves a one-to-one pixel mapping between the original feature map and the extracted region of interest.
+The output of the pooling operation is forwarded to a parallel FCNN branch in order to perform pixel-wise segmentation.
+The segmentation branch predicts independent masks without inter-class competition, and reuses the work performed by the classification branch in order to select which mask to apply in a given region.
+
+\textbf{Capsule networks} has become a topic of large interest in the research community as of late.
+First introduced in a paper~\cite{capsules} by \citeauthor{capsules}, it has since been applied to segmentation tasks as well.
+One such adaption is the \textbf{SegCaps} architecture~\cite{segmentation-segcaps}.
 
 \todo{Remaining topics:}
 \begin{itemize}
   \item Recent semantic segmentation progress described here~\cite{segmentation-progress} (\citeyear{segmentation-progress}).
-  \item Use of fully convolutional networks for semantic segmentation described here~\cite{segmentation-fcnn} (\citeyear{segmentation-fcnn}).
-  \item SegNet architecture described here~\cite{segmentation-segnet} (\citeyear{segmentation-segnet}).
-  \item U-Net architecture described here~\cite{segmentation-unet} (\citeyear{segmentation-unet}).
-  \item Mask R-CNN architecture described here~\cite{segmentation-mask-r-cnn} (\citeyear{segmentation-mask-r-cnn}).
-  \item SegCaps architecture described here~\cite{segmentation-segcaps} (\citeyear{segmentation-segcaps}).
   \item Panoptic feature pyramids described here~\cite{segmentation-panoptic-feature-pyramid} (\citeyear{segmentation-panoptic-feature-pyramid}).
 \end{itemize}
