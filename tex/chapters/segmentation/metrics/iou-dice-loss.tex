@@ -20,6 +20,8 @@ The IoU metric is defined as the area of the intersection between the predicted 
   }.
 \end{equation*}
 %
+In the case of multiple classes IoU is calculated for each class independently and the result is averaged, known as \textit{mean intersection over union} (MIoU).
+MIoU is the most commonly used segmentation metric in research and competitions due to its simplicity and representativeness~\cite{segmentation-overview}.
 Notice how the IoU metric is bounded between 0 and 1; $\mathrm{IoU} = 0$ representing a complete \enquote{predictive miss} and $\mathrm{IoU} = 1$ representing a prediction in perfect accordance with the ground truth.
 A visualization of this metric is given in \figref{fig:iou-metric} below.
 

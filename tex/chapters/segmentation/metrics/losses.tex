@@ -1,0 +1,31 @@
+So far we have only discussed metrics which are discrete, non-differentiable functions, thus making them unsuitable for direct optimization.
+As discussed earlier, we need to introduce a differentiable loss function which we can optimize.
+The most common loss function, not only for segmentation tasks, is \textit{binary cross entropy}.
+%
+\begin{equation*}
+  \mathcal{L}_{\mathrm{BCE}}(\hat{P}; Y)
+  =
+  - \sum\limits_i \sum\limits_j
+  Y_{ij} \log{(\hat{P}_{ij})}
+  +
+  (1 - Y_{ij}) \log{(1 - \hat{P}_{ij})}
+\end{equation*}
+
+Original dice loss proposal~\cite{original-soft-dice-loss} using $1 - \mathrm{Dice}$:
+
+\begin{equation*}
+  \mathcal{L}_{\mathrm{SDL}}(\hat{P}; Y)
+  =
+  \frac{%
+    2 \sum\limits_i \sum\limits_j
+    \hat{P}_{ij} Y_{ij}
+  }{%
+    \sum\limits_i \sum\limits_j \hat{P}_{ij}^2
+    +
+    \sum\limits_i \sum\limits_j Y_{ij}^2
+    +
+    \epsilon
+  }
+\end{equation*}
+
+Write about \cite{soft-losses,generalized-dice-overlap,original-soft-dice-loss}.

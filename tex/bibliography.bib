@@ -558,3 +558,49 @@
   editor = {Guyon, I. and Luxburg, U. V. and Bengio, S. and Wallach, H. and Fergus, R. and Vishwanathan, S. and Garnett, R.},
   date = {2017}
 }
+
+% Explaining segmentation losses derived from metrics
+% Also explains the discrepancy between BCEL and common metrics
+% Found no significant difference between metric-sensitive losses w.r.t. Dice or Jaccard [p. 98]
+% https://link.springer.com/chapter/10.1007/978-3-030-32245-8_11
+% https://link.springer.com/content/pdf/10.1007%2F978-3-030-32245-8.pdf
+@InProceedings{soft-losses,
+  author="Bertels, Jeroen and Eelbode, Tom and Berman, Maxim and Vandermeulen, Dirk and Maes, Frederik and Bisschops, Raf and Blaschko, Matthew B.", editor="Shen, Dinggang and Liu, Tianming and Peters, Terry M.  and Staib, Lawrence H.  and Essert, Caroline and Zhou, Sean and Yap, Pew-Thian and Khan, Ali",
+  title="Optimizing the Dice Score and Jaccard Index for Medical Image Segmentation: Theory and Practice",
+  booktitle="Medical Image Computing and Computer Assisted Intervention -- MICCAI 2019",
+  year="2019",
+  publisher="Springer International Publishing",
+  address="Cham",
+  pages="92--100",
+  isbn="978-3-030-32245-8"
+}
+
+% Soft dice loss article, comparing different losses derived from metrics
+% https://arxiv.org/pdf/1707.03237.pdf
+@article{generalized-dice-overlap,
+   title={Generalised Dice Overlap as a Deep Learning Loss Function for Highly Unbalanced Segmentations},
+   ISBN={9783319675589},
+   ISSN={1611-3349},
+   url={http://dx.doi.org/10.1007/978-3-319-67558-9_28},
+   DOI={10.1007/978-3-319-67558-9_28},
+   journal={Lecture Notes in Computer Science},
+   publisher={Springer International Publishing},
+   author={Sudre, Carole H. and Li, Wenqi and Vercauteren, Tom and Ourselin, Sebastien and Jorge Cardoso, M.},
+   year={2017},
+   pages={240–248}
+}
+
+% Original soft dice loss proposal
+% https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7785132
+@inproceedings{original-soft-dice-loss,
+  author={F. {Milletari} and N. {Navab} and S. {Ahmadi}},
+  booktitle={2016 Fourth International Conference on 3D Vision (3DV)},
+  title={V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation},
+  year={2016},
+  volume={},
+  number={},
+  pages={565-571},
+  doi={10.1109/3DV.2016.79},
+  ISSN={null},
+  month={Oct}
+}
