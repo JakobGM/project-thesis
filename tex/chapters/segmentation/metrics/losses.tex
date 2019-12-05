@@ -1,31 +1,49 @@
 So far we have only discussed metrics which are discrete, non-differentiable functions, thus making them unsuitable for direct optimization.
-As discussed earlier, we need to introduce a differentiable loss function which we can optimize.
-The most common loss function, not only for segmentation tasks, is \textit{binary cross entropy}.
+As discussed earlier, we need to introduce a differentiable surrogate loss function which we can optimize.
+They key insight is to define a loss function in the continuous probability domain instead of the discrete binary classification domain.
+In order to formulate proper loss functions, we will start by establishing some notation.
+Denote a ground truth binary classification mask as $Y \in \mathbb{B}^{H \times W}$ and the corresponding features as $X \in \mathbb{R}^{H \times W \times C}$.
+Assume a model $\hat{f}$ parametrized according to $\vec{\theta}$ which provides a probability estimate for $Y$ as $P = P(X; \vec{\theta}) = \hat{f}(X; \vec{\theta}) \in [0, 1]^{H \times W}$.
+For notational simplicity we will use a single linear index in order to denote single matrix elements, for instance $P_i \in [0, 1]$ for $i = 1, \ldots, HW$.
+
+The most common loss function for binary classification tasks is the \textit{binary cross entropy} (BCE) loss function defined as
 %
 \begin{equation*}
-  \mathcal{L}_{\mathrm{BCE}}(\hat{P}; Y)
+  \mathcal{L}_{\mathrm{BCE}}(P; Y)
   =
-  - \sum\limits_i \sum\limits_j
-  Y_{ij} \log{(\hat{P}_{ij})}
+  - \sum\limits_{i = 1}^{HW}
+  Y_i \log{(P_i)}
   +
-  (1 - Y_{ij}) \log{(1 - \hat{P}_{ij})}
+  (1 - Y_i) \log{(1 - P_i)}.
 \end{equation*}
-
-Original dice loss proposal~\cite{original-soft-dice-loss} using $1 - \mathrm{Dice}$:
-
+%
+Optimizining the BCE is equivalent to finding the maximum likelihood estimator for a binomial distribution.
+There are several issues with using the BCE as the loss function for segmentation tasks, though.
+Firstly, it does not take class imbalances into account.
+The \textit{weighted binary cross entropy} (wBCE) is one attempt at remedying this problem, but weighting is highly task-dependent and has been shown to be a negligible improvement over BCE~\cite[p.~98]{soft-losses}.
+Another issue is that BCE and wBCE are poor surrogates for the segmentation metrics introduced earlier, metrics which are those we actually intend to maximize.
+The solution is to introduce differentiable approximations of the discrete segmentation metrics introduced earlier.
+Such an approximation for the dice coefficient is the so-called \textit{soft dice loss} first introduced by~\citeauthor{original-soft-dice-loss}~\cite{original-soft-dice-loss}.
+This differentiable loss function is defined by
+%
 \begin{equation*}
-  \mathcal{L}_{\mathrm{SDL}}(\hat{P}; Y)
+  \mathcal{L}_{\mathrm{SDL}}(P; Y)
   =
   \frac{%
-    2 \sum\limits_i \sum\limits_j
-    \hat{P}_{ij} Y_{ij}
+    2 \sum\limits_{i = 1}^{HW}
+    P_i Y_i
   }{%
-    \sum\limits_i \sum\limits_j \hat{P}_{ij}^2
+    \sum\limits_{i = 1}^{HW} P_i^2
     +
-    \sum\limits_i \sum\limits_j Y_{ij}^2
+    \sum\limits_{i = 1}^{HW}  Y_i^2
     +
     \epsilon
   }
+  \approx
+  1 - F_1
 \end{equation*}
+%
+A similar differentiable approximation of the IoU metric, called \textit{soft Jaccard loss}, has also been derived~\cite{soft-jacard-loss}.
+Write about these being approximations of each other.
 
-Write about \cite{soft-losses,generalized-dice-overlap,original-soft-dice-loss}.
+Write about \cite{soft-losses,generalized-dice-overlap}.
