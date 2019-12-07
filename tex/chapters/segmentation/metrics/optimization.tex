@@ -1,0 +1,54 @@
+So far we have only mentioned that we must define a loss function to be optimized for a given neural network, but we have not mentioned exactly how this optimization is performed.
+The choice of optimization procedure has a great influence on the speed of training convergence, the final model performance, and the tendency to overfit the training data.
+Deep learning optimization is a huge field of research, and for the sake of brevity we will glance over a lot of detail and focus on the techniques applied in our models presented in~\secref{sec:experiments}.
+
+For \textit{supervised} machine learning we start with a labeled data set with $n$ observations.
+%
+\begin{equation*}
+  \mathcal{D} = \{(X_1, Y_1), (X_2, Y_2), \ldots, (X_n, Y_n)\}
+\end{equation*}
+%
+This data set is then partitioned into three disjunctive subsets, called the \textit{training}, \textit{validation}, and \textit{test} splits.
+%
+\begin{align*}
+  \mathcal{D}_{\mathrm{train}} \cup \mathcal{D}_{\mathrm{validation}} \cup \mathcal{D}_{\mathrm{test}} &= \mathcal{D}\\
+  \mathcal{D}_i \cap \mathcal{D}_j &= \emptyset,~~~\text{ for } i \neq j
+\end{align*}
+%
+The customary split is 70\% training data and 15\% for the two remaining splits.
+Now, as the name implies, the training split $\mathcal{D}_{\mathrm{train}}$ is used for training the neural network, the simplest optimization algorithm being iterated \textit{gradient descent}.
+At training step $s$ the network parametrization $\vec{\theta}$ is updated according to
+%
+\begin{align*}
+  \vec{\theta}^{(s + 1)}
+  =
+    \vec{\vec{\theta}}^{(s)}
+    -
+    \alpha \nabla_{\theta}
+      \sum_{X_i, Y_i \in \mathcal{D}_{\mathrm{train}}}
+      \mathcal{L}(\hat{f}(X_i; \vec{\theta}^{(s)}); Y_i)
+  ,
+\end{align*}
+%
+where $\alpha$ is the learning rate.
+Efficient calculation of the gradient $\nabla_{\vec{\theta}}$ is enabled by a method called \textit{backpropagation}.
+For each training step, the input data is passed forward through the neural network in order to calculate new predictions.
+Errors are then propagated backwards through the network in order to efficiently calculate partial derivatives with respect to each parameter $\theta_i$.
+
+A common modification to this scheme is the so-called \textit{mini-batch gradient descent} algorithm.
+The training set is yet again partitioned into smaller splits called \textit{batches}, and during training gradient descent is applied iteratively over each batch.
+After each \textit{epoch}, when all batches have been evaluated, the training split is shuffled and a new batch partition is formed.
+For sufficiently large batch sizes the feature distribution can be considered a sufficiently good approximation of the real sample space.
+The computational requirements of calculating the forward and backwards pass is therefore substantially lessened.
+Additionally, it has been shown that mini-batching has a regularization effect, thus reducing the tendency to overfit the model with respect to the training data.
+
+The validation split is used for hyperparameter tuning, the most common being \textit{early stopping}.
+After each epoch, a given loss or metric is evaluated over the validation split.
+As soon as the validation split has not improved for a given number of epochs, called the \textit{patience}, the training is stopped.
+This prevents overfitting and/or the identification of training convergence where the model is not improving any more.
+
+The test split is completely isolated from the model training procedure, and is solely kept for a final evaluation of the trained model.
+A substantial decreased evaluation performance on the training split relative to the training and validation evaluation indicates model overfitting.
+
+Lately other optimization methods than mini-batch gradient descent have been proposed, and these methods often show greater convergence speeds and less inclination to overfitting.
+One such method is the Adam optimizer published in XXXX.
