@@ -38,14 +38,12 @@ These RoIs are transformed to consistent dimensions by a custom pooling method c
 \textbf{Mask R-CNN}~\cite{mask-r-cnn}, published by the Facebook AI research group in \citeyear{mask-r-cnn}, sought to expand Faster R-CNN in order to predict segmentation as well.
 Mask R-CNN replaces RoIPool with \textit{RoIAlign}, a region of interest pooling method which preserves a one-to-one pixel mapping between the original feature map and the extracted region of interest.
 The output of the pooling operation is forwarded to a parallel FCNN branch in order to perform pixel-wise segmentation.
-The segmentation branch predicts independent masks without inter-class competition, and reuses the work performed by the classification branch in order to select which mask to apply in a given region.
+The segmentation branch predicts independent masks without inter-class competition, and reuses the work performed by the classification branch in order to select which mask to apply to a given region.
 
 \textbf{Capsule networks} has become a topic of large interest in the research community as of late.
 First introduced in a paper~\cite{capsules} by \citeauthor{capsules}, it has since been applied to segmentation tasks as well.
 One such adaption is the \textbf{SegCaps} architecture~\cite{segmentation-segcaps}.
-
-\todo{Remaining topics:}
-\begin{itemize}
-  \item Recent semantic segmentation progress described here~\cite{segmentation-progress} (\citeyear{segmentation-progress}).
-  \item Panoptic feature pyramids described here~\cite{segmentation-panoptic-feature-pyramid} (\citeyear{segmentation-panoptic-feature-pyramid}).
-\end{itemize}
+The main idea behind capsule networks is to output more data from each neuron, effectively allowing the network to make more informed decisions with this new context.
+The context is stored as a vector in each neuron, instead of the conventional scalar representation.
+Each vector encodes information about the spatial orientation, magnitude, prevalence, and other attributes of the extracted feature output of that neuron.
+These \textit{capsule vectors} are \textit{dynamically routed} to the capsules in the next layer based on vector similarity.
