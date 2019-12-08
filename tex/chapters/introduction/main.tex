@@ -4,22 +4,20 @@
 \setcounter{page}{1}  % Reset page number
 \fancyhead[R]{\footnotesize\thepage\ of\ \pageref{LastPage}}  % Start writing page x of y
 
-\textit{Remote sensing} is the process of gathering information about an object without physical contact.
-One of the most common remote sensing technologies is \textit{aerial photography}.
-Although aerial RGB photography is easily interpretable for humans, it is limited by being two-dimensional.
-
-\textit{LiDAR technology} is able to measure distances to object surfaces by directing a beam of light (laser) and measuring the time of arrival and wavelength of the resulting reflection.
-The resulting data is therefore fundamentally three-dimensional.
+\textit{Remote sensing} is the process of gathering information about an object without making physical contact, one such technology being \textit{aerial photography}.
+Although aerial RGB photography is intuitively interpretable for humans, it is limited to being fundamentally two-dimensional.
+\textit{LiDAR}, another remote sensing technology, is able to measure distances to object surfaces by directing a beam of light and measuring the time of arrival and wavelength of the ensuing reflection.
+The resulting data can therefore be used to construct a three-dimensional spatial representation of the object of interest.
 LiDAR has been applied in a wide array of fields such as meteorology~\cite{lidar_meteorology_1966}, forestry analysis~\cite{lidar_forestry_2000}, urban flood modelling~\cite{lidar_flood_2013}, and autonomous driving systems~\cite{lidar_self_driving_2018}.
 
-One of the applications of LiDAR technology is the creation of so-called \textit{digital surface models} (DSMs).
-DSMs are grayscale images representing the earth's surface and any potential objects \textit{upon} that surface such as natural canopy and human-made objects.
-In contrast, \textit{digital terrain models} (DTMs) represent the elevation of the \textit{bare} ground where all above-surface objects have been removed.
-While DTMs are often used in geographic and cartographic applications, DSMs can be used for inference of objects above ground, such as human-made structures.
+One of the applications of LiDAR technology is the construction of \textit{digital surface models} (DSMs).
+DSMs are grayscale images representing the earth's surface including all above-surface objects such as natural canopy and human-made objects.
+In contrast, \textit{digital terrain models} (DTMs) represent the elevation of the \textit{bare} ground where all above-surface objects have been artificially removed.
+While DTMs are often used in geographic and cartographic applications, DSMs can be used for localization and classification of objects above ground.
 
 LiDAR data and aerial photography is usually provided by the respective cadastral authority in a given country.
 Cadastral authorities are also responsible for keeping records of cadastral data such as cadastral plots, roads, and buildings.
-The exact type and quality of this data varies a lot between countries, even between administrative regions.
+The exact type and quality of this data varies substantially between countries and sometimes even between administrative regions in the same country.
 This raises the question: \enquote{Can high-fidelity insights be inferred from otherwise low-fidelity geographic data?}.
 ~\figref{fig:data-enchancement} shows an outline of the possible \enquote{data enhancements} which are of interest within this domain.
 
