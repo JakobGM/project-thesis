@@ -1,7 +1,7 @@
-The conventional last step in a given CNN layer is the application of a \textit{downsampling} operation, most often referred to as \textit{pooling}.
-As with convolution this operation has biological inspirations as it is inspired by a model of the mammalian visual cortex~\cite[p.~966]{visint-cnn}.
-The reduction in spatial resolution is considered to be one of the main reasons for why CNNs portray a high degree of translational invariance~\cite{cnn-translational-invariance}.
-As with moving convolution, pooling is implemented by moving a receptive field of size $>1$ (typically $2 \times 2$) over the activations and mapping these values to a lower dimensional space.
+The last layer in a given CNN block is conventionally a \textit{downsampling} operation, most often referred to as a \textit{pooling} layer.
+As with convolution, this operation has biological influences as it is inspired by a model of the mammalian visual cortex~\cite[p.~966]{visint-cnn}.
+The reduction in spatial resolution is considered to be one of the main reasons for why CNNs portray a high degree of translational and rotational invariance~\cite{cnn-translational-invariance}.
+As with moving convolution, pooling is implemented by moving a receptive field of size greater than $1$, typically $2 \times 2$, over the activations and mapping these values into a lower dimensional space.
 There are several different ways to define such a mapping, the two most common being \textit{max pooling} and \textit{average pooling}, which respectively retrieve the maximum value and average value from the receptive field.
 The former is exemplified in~\figref{fig:max-pooling}.
 

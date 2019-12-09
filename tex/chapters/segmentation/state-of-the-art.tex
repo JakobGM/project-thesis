@@ -33,7 +33,7 @@ This is followed by a symmetric expanding path in order to upscale the segmentat
 The difference between the two architectures is that SegNet only copies over the max-pool indices in the skip connections instead of forwarding the entire feature layer, thus decreasing the memory requirements of the network.
 
 \textbf{R-CNN}~\cite{r-cnn}, and the subsequent improved architectures \textbf{Fast R-CNN}~\cite{fast-r-cnn} and \textbf{Faster R-CNN}~\cite{faster-r-cnn}, made great strides in image classification and localization tasks in \citeyear{r-cnn} and \citeyear{faster-r-cnn}.
-The crux of their success lies in the concept of a \textit{region proposal network} (RPN), a parallel network which is responsible for identifying \textit{regions of interest} (RoIs) in the convoluted feature maps.
+The crux of their success lies in the concept of a \textit{region proposal network} (RPN), a parallel network which is responsible for identifying \textit{regions of interest} (RoIs) in the convolved feature maps.
 These RoIs are transformed to consistent dimensions by a custom pooling method called \textit{RoIPool}, or alternatively \textit{RoIWarp}, and subsequently classified and localized with a fully connected feedforward network.
 \textbf{Mask R-CNN}~\cite{mask-r-cnn}, published by the Facebook AI research group in \citeyear{mask-r-cnn}, sought to expand Faster R-CNN in order to predict segmentation as well.
 Mask R-CNN replaces RoIPool with \textit{RoIAlign}, a region of interest pooling method which preserves a one-to-one pixel mapping between the original feature map and the extracted region of interest.

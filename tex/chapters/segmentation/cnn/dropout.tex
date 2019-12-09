@@ -1,11 +1,11 @@
 Dropout is a regularization technique for neural networks intended to prevent \enquote{complex co-adaption of feature detectors}~\cite{dropout-original-paper}.
 In practice this is achieved by randomly omitting hidden nodes from the neural network during each training step; effectively forcing hidden nodes to become less interdependent.
-An alternative interpretation of the dropout procedure is that it is a computationally efficient form of model averaging, each dropout permutation being a single model instance.
+An alternative interpretation of the dropout procedure is that it is a computationally efficient form of model averaging, each dropout permutation being a model instance.
 This technique has been empirically shown to significantly increase the test performance in several different settings.
 
 Although originally intended for use in feedforward neural networks, dropout has been extensively applied in CNN architectures as well~\cite{dropout-cnn}.
-Since there are no nodes to be omitted in convolutional architectures, the dropout procedure needs to be adapted in order to be applicable in a CNN setting.
-One approach is to introduce a randomly located square mask (\textit{cutout}) to the input image~\cite{dropout-cutout}.
+Since there are no nodes to be omitted in fully convolutional layers, the dropout procedure needs to be adapted in order to be applicable in a CNN setting.
+One approach is to introduce a randomly located square mask (\textit{cutout}) in the input image~\cite{dropout-cutout}.
 \textit{Stochastic depth dropout} randomly selects entire layers to be dropped, replacing them with identity functions instead~\cite{dropout-stochastic-depth}.
 Dropout can also be integrated into max pooling layers, ignoring values at random during the search for the maximum value in the receptive field~\cite{max-pooling-dropout}.
 This has become known as \textit{max-pooling dropout} and is illustrated in~\figref{fig:max-pooling-dropout}.
