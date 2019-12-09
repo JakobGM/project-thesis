@@ -1,8 +1,8 @@
-Although the sensitivity and specificity metrics address the issue of class imbalances, they are still \textit{two} distinct metrics that need to be simultaneously inspected in order to get a full performance picture of a given prediction.
-We now pose the following problem: \enquote{is it possible to construct a \textit{single} scalar metric which incorporates the idea of sensitivity and specificity?}.
-The \textit{intersection over union} (IoU) and \textit{dice coefficient} ($F_1$) are two attempts at solving this problem.
+Although the sensitivity and specificity metrics address the issue of class imbalances, they are still \textit{two} distinct metrics that need to be simultaneously inspected in order to get a full overview of the model performance.
+Is it possible to construct a \textit{single} scalar metric which incorporates the ideas of both sensitivity and specificity?
+The \textit{intersection over union} (IoU) and \textit{dice coefficient} ($F_1$) are two metrics which try to do exactly this.
 
-The IoU metric is defined as the area of the intersection between the predicted segmentation mask and the ground truth mask divided by the union of these two masks, or more formally
+The IoU metric, also known as the \textit{Jaccard index}, is defined as the area of the intersection between the predicted segmentation mask and the ground truth mask divided by the union of these two masks, or more formally,
 %
 \begin{equation*}
   \mathrm{IoU}
@@ -22,8 +22,8 @@ The IoU metric is defined as the area of the intersection between the predicted 
 %
 In the case of multiple classes IoU is calculated for each class independently and the result is averaged, known as \textit{mean intersection over union} (MIoU).
 MIoU is the most commonly used segmentation metric in research and competitions due to its simplicity and representativeness~\cite{segmentation-overview}.
-Notice how the IoU metric is bounded between 0 and 1; $\mathrm{IoU} = 0$ representing a complete \enquote{predictive miss} and $\mathrm{IoU} = 1$ representing a prediction in perfect accordance with the ground truth.
-A visualization of this metric is given in \figref{fig:iou-metric} below.
+Notice how the IoU metric is bounded between 0 and 1; $\mathrm{IoU} = 0$ represents a complete \enquote{predictive miss}, while $\mathrm{IoU} = 1$ represents a prediction in perfect accordance with the ground truth.
+A visualization of this metric is given in~\figref{fig:iou-metric} below.
 
 \begin{figure}[H]
   \centering
@@ -34,8 +34,8 @@ A visualization of this metric is given in \figref{fig:iou-metric} below.
   \label{fig:iou-metric}
 \end{figure}
 
-An alternative metric is the dice coefficient, often called the $F_1$ score as well.
-The dice coefficient is defined by dividing twice the area of the intersection by the sum of the areas of the two masks:
+An alternative metric is the dice coefficient, also known as the \textit{$F_1$ score}.
+The dice coefficient is defined by taking twice the area of the intersection and dividing by the sum of the areas of the two masks:
 %
 \begin{equation*}
   \mathrm{F_1}
@@ -53,7 +53,7 @@ The dice coefficient is defined by dividing twice the area of the intersection b
   }.
 \end{equation*}
 %
-Again we observe that this metric is bounded to the interval $[0, 1]$, with the same interpretation of the endpoints as with the IoU metric.
+Again we observe that this metric is bounded to the interval $[0, 1]$, with the same interpretation of the endpoints $0$ and $1$ as with the IoU metric.
 The visual representation of this metric is given in~\figref{fig:dice-coefficient}.
 
 \begin{figure}[H]
@@ -65,7 +65,7 @@ The visual representation of this metric is given in~\figref{fig:dice-coefficien
   \label{fig:dice-coefficient}
 \end{figure}
 
-You may have noticed that these two metrics are quite similar; they involve the same quantities, only weighted differently, and are bounded by to the same domain.
+You may have noticed that these two metrics are quite similar; they involve the same quantities, only weighted differently, and map into the same interval.
 In fact, we can construct an exact relationship between these two metrics\footnote{The following relationship and the ensuing inequality bounds were noted by the \textit{Cross Validated Stack Exchange} user \enquote{Willem} here: \url{https://stats.stackexchange.com/a/276144}.}
 %
 \begin{equation*}
@@ -84,8 +84,8 @@ In fact, we can construct an exact relationship between these two metrics\footno
   }.
 \end{equation*}
 %
-The two metrics are therefore always positively correlated, as one metric increases or decreases, the other must necessarily follow suit.
-A useful insight for how these two metrics actually differ is to observe how the IoU metric is bounded by the $\mathrm{F_1}$ metric:
+By inspection the two metrics must always be positively correlated, that is, as one metric increases or decreases, the other must follow suit.
+A useful insight for understanding how these two metrics actually differ is to observe how the IoU metric is bounded by the dice coefficient:
 %
 \begin{equation*}
     \frac{%
@@ -96,9 +96,9 @@ A useful insight for how these two metrics actually differ is to observe how the
   \leq
     \mathrm{IoU}
   \leq
-    \mathrm{F_1}
+    \mathrm{F_1}.
 \end{equation*}
 %
-The IoU metric is \textit{always} less than or equal to the $\mathrm{F_1}$ metric, but never less than one half its value.
+The IoU is \textit{always} less than or equal to the dice coefficient, but never smaller than half the value.
 The fraction $\mathrm{IoU} / \mathrm{F_1}$ is equal to 1 whenever the prediction coincides with the ground truth and is equal to $1/2$ whenever there is no overlap at all.
-By drawing an analogy to the $p = 1$ (absolute/Manhattan) norm and $p = 2$ (Euclidean) norm, the $\mathrm{IoU}$ metric is somewhat a reflection of the \textit{worst} performance, while the $\mathrm{F_1}$ metric is more a reflection of the \textit{average} performance of a given prediction.
+By drawing an analogy to the $p = 1$ (absolute/Manhattan) norm and $p = 2$ (Euclidean) norm, we can say that the $\mathrm{IoU}$ metric weighs the worst case of a prediction more than the average case, and vice versa for the $\mathrm{F_1}$ metric.

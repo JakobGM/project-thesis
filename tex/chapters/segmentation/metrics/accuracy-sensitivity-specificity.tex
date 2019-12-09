@@ -1,9 +1,9 @@
 In order to describe segmentation metrics, it is useful to define the following quantities:
 
 \begin{center}
-  \fbox{
-    \parbox{0.9\linewidth}{
-      \begin{description}[font=\sffamily\bfseries, leftmargin=1cm]
+  \fbox{%
+    \parbox{0.9\linewidth}{%
+      \begin{description}[leftmargin=1cm, before={\renewcommand\makelabel[1]{\bfseries ##1:}}]
         \item[Condition Positive (P)]
           Number of object class pixels in ground truth mask.
         \item[Condition Negative (N)]
@@ -27,7 +27,7 @@ A visual representation of these classifications is given in~\figref{fig:confusi
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{confusions}
-  \caption{
+  \caption{%
     Binary segmentation problem of size $256 \times 256$.
     The ground truth, a rectangle of size $120 \times 80$ is shown on the left.
     The \enquote{predicted} mask, shown in the middle, is of the same size, but offset by $(-30, -30)$.
@@ -45,12 +45,12 @@ More formally, it can be defined as:
     \textbf{accuracy} = \frac{TP + TN}{TP + TN + FP + FN} = \frac{TP + TN}{P + N}
 \end{equation*}
 
-The problem with pixel-wise accuracy metrics is that it does not account for class imbalances.
+The problem with the pixel-wise accuracy metric is that it does not take class imbalances into account.
 Consider a problem where 95\% of all pixels are considered to be of class $0$, and the remaining 5\% of class $1$.
 If we construct a model which predicts $0$ regardless of the feature inputs provided to the model, the model will achieve a 95\% accuracy score.
-This makes pixel-wise accuracy scores difficult to interpret when you do not know the class balance of the respective dataset and the accuracy grouped by class.
-This is why it is often replaced by other metrics which takes imbalances into account.
-A pair of such metrics is \textit{sensitivity} and \textit{specificity}, formally defined as:
+This makes pixel-wise accuracy scores hard to interpret when you do not know the class balance of the respective dataset and the accuracy grouped by class.
+This is why it is often replaced by other metrics which take imbalances into account.
+A pair of such metrics are \textit{sensitivity} and \textit{specificity}, formally defined as:
 
 \begin{align*}
     \textbf{sensitivity}
@@ -70,5 +70,5 @@ A pair of such metrics is \textit{sensitivity} and \textit{specificity}, formall
     \frac{TN}{N}
 \end{align*}
 
-The \textit{sensitivity} is therefore a measure of how good the given model prediction was able to identify positives as a relative, fractional value.
-Likewise, the \textit{specificity} is a measure of how good the given model prediction was able to identify negatives as a relative, fractional value.
+The \textit{sensitivity} is therefore a measure of how good a given model prediction is able to identify positives as a relative, fractional value.
+Likewise, the \textit{specificity} is a measure of how good a given model prediction is able to identify negatives.

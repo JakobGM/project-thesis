@@ -15,7 +15,7 @@ This data set is then partitioned into three disjunctive subsets, referred to as
 \end{align*}
 %
 A common method is to shuffle the data and then allocate 70\% of the original data as training data and 15\% for the two remaining splits.
-Now, as the name implies, the training split $\mathcal{D}_{\mathrm{train}}$ is used for training the neural network, one of the simplest optimization algorithms being iterative \textit{gradient descent}.
+Now, as the name implies, the training split $\mathcal{D}_{\mathrm{train}}$ is used for training the neural network, one of the simplest optimization algorithms being iterated \textit{gradient descent}.
 At training step $s$ the network parametrization $\vec{\theta}$ is updated according to
 %
 \begin{align*}
@@ -32,17 +32,17 @@ At training step $s$ the network parametrization $\vec{\theta}$ is updated accor
 where $\alpha$ is the learning rate.
 Efficient calculation of the gradient $\nabla_{\vec{\theta}}$ for nonlinear networks of arbitrary connectivity is enabled by a method called \textit{backpropagation}~\cite{backpropagation}.
 For each training step, the input data is passed forward through the neural network in order to calculate new predictions.
-Errors are then subsequently propagated backwards through the network in order to efficiently calculate partial derivatives of each parameter $\theta_i$ with respect to the loss function.
+Errors are then subsequently propagated backwards through the network in order to efficiently calculate the partial derivatives of the loss function with respect to each parameter $\theta_i$.
 
 A common modification to this scheme is the so-called \textit{mini-batch gradient descent} algorithm~\cite{gradient-descent}.
 The training set is yet again partitioned into even smaller splits called \textit{batches}, and during training gradient descent is applied iteratively over each batch.
 After each \textit{epoch}, when all batches have been evaluated, the training split is shuffled and a new batch partition is formed.
-For sufficiently large batch sizes the feature distribution can be considered a good approximation of the real sample space, while having decreased the computational cost of each training step.
+For sufficiently large batch sizes the feature distribution of each batch can be considered a good approximation of the entire sample space, while still having decreased the computational cost of each training step.
 
 The validation split is used for hyperparameter tuning such as the selection of the number of training epochs by \textit{early stopping}~\cite{early-stopping}.
-After each epoch, a given validation-loss or -metric is evaluated over the validation split.
-As soon as the validation split has not improved for a given number of epochs, referred to as the early stopping \textit{patience}, the training is stopped and model weights corresponding to the best validation metric is chosen as the final model parametrization.
-This is intended to prevent overfitting the model on the training data.
+After each epoch, a given validation loss or metric is evaluated over the validation split.
+As soon as the validation split has not improved for a given number of epochs, referred to as the early stopping \textit{patience}, the training is stopped and model parametrization corresponding to the best validation metric is chosen as the final model.
+Early stopping is intended to prevent overfitting the model on the training data by using the validation metric as an indication of generalizability.
 The test split, in contrast to the training and validation splits, is completely isolated from the model training procedure, and is solely kept for a final evaluation of the trained model.
 
 The \textit{Adam optimizer} published in 2015~\cite{adam-optimizer} has become a popular gradient-based optimization algorithm for machine learning problems.

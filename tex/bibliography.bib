@@ -606,7 +606,7 @@
   month={Oct}
 }
 
-% Soft Jacard loss, there exists earlier papers, see soft-losses
+% Soft Jaccard loss, there exists earlier papers, see soft-losses
 % http://openaccess.thecvf.com/content_cvpr_2014/papers/Nowozin_Optimal_Decisions_from_2014_CVPR_paper.pdf
 @InProceedings{soft-jacard-loss,
   author = {Nowozin, Sebastian},
@@ -656,4 +656,17 @@
   booktitle={Advances in neural information processing systems},
   pages={402--408},
   year={2001}
+}
+
+% Soft jaccard loss which shows specific equation for how to define this loss
+% http://www.bmva.org/bmvc/2013/Papers/paper0032/paper0032.pdf
+% Used by this gist: https://github.com/keras-team/keras-contrib/blob/master/keras_contrib/losses/jaccard.py
+@inproceedings{jaccard-loss-with-equation,
+  title={What is a good evaluation measure for semantic segmentation?.},
+  author={Csurka, Gabriela and Larlus, Diane and Perronnin, Florent and Meylan, France},
+  booktitle={BMVC},
+  volume={27},
+  pages={2013},
+  year={2013},
+  organization={Citeseer}
 }
