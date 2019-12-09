@@ -5,7 +5,7 @@
 \fancyhead[R]{\footnotesize\thepage\ of\ \pageref{LastPage}}  % Start writing page x of y
 
 \textit{Remote sensing} is the process of gathering information about an object without making physical contact, one such technology being \textit{aerial photography}.
-Although aerial RGB photography is intuitively interpretable for humans, it is limited to being fundamentally two-dimensional.
+Although aerial RGB photography is intuitively interpretable for humans, it is fundamentally two-dimensional.
 \textit{LiDAR}, another remote sensing technology, is able to measure distances to object surfaces by directing a beam of light and measuring the time of arrival and wavelength of the ensuing reflection.
 The resulting data can therefore be used to construct a three-dimensional spatial representation of the object of interest.
 LiDAR has been applied in a wide array of fields such as meteorology~\cite{lidar_meteorology_1966}, forestry analysis~\cite{lidar_forestry_2000}, urban flood modelling~\cite{lidar_flood_2013}, and autonomous driving systems~\cite{lidar_self_driving_2018}.
@@ -19,7 +19,7 @@ LiDAR data and aerial photography is usually provided by the respective cadastra
 Cadastral authorities are also responsible for keeping records of cadastral data such as cadastral plots, roads, and buildings.
 The exact type and quality of this data varies substantially between countries and sometimes even between administrative regions in the same country.
 This raises the question: \enquote{Can high-fidelity insights be inferred from otherwise low-fidelity geographic data?}.
-~\figref{fig:data-enchancement} shows an outline of the possible \enquote{data enhancements} which are of interest within this domain.
+\figref{fig:data-enchancement} shows an outline of the possible \enquote{data enhancements} which are of interest within this domain. %chktex 2
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{data-enchancement}
@@ -31,39 +31,36 @@ This raises the question: \enquote{Can high-fidelity insights be inferred from o
   \label{fig:data-enchancement}
 \end{figure}
 
-It is the norm, not the exception, for cadastral authorities to provide building geometries in two dimensions dimensions only, referred to as \textit{building outlines}.
-Since high-resolution LiDAR data often covers the same geographic region, it is possible that two-dimensional building geometries can be extrapolated to three dimensions by the use of LiDAR data.
+The \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) provides geographic data of uniquely high quality for the entirety of Norway.
+This offers an opportunity to train supervised machine learning models on lower fidelity data in order to infer higher fidelity features.
+Such models can then be applied in other regions where only low-fidelity data is available as a method of data enhancement.
+
+\subsubsection*{Research questions}
+
+A \textit{building outline} is a two-dimensional representation of building \enquote{footprint}.
+Such data can be used for map annotations, flood risk analysis, and population density estimates, amongst other applications.
+The identification of building outlines from remote sensing data can be formulated as a \textit{semantic segmentation task}, a heavily researched topic which has had many advances in the last decade.
+Geographic data, such as building outlines, are formatted in an unsuitable way for direct machine learning, and must therefore be purposefully transformed and pre-processed.
+The development of a data pipeline for geographic data is the first topic of research in this thesis.
+
+\begin{description}
+  \item[RQ1] How can geographic data representation be transformed into a format suitable for machine learning?
+\end{description}
+
+After having developed such a pipeline, the focus will be to develop a segmentation model for identifying building footprints with data from this pipeline.
+The use of aerial photography and LiDAR data from the Norwegian municipality of Trondheim will be investigated, as well as the combination of these two data sources.
+
+\begin{description}
+  \item[RQ2] How can aerial photography and/or LiDAR data be used to predict accurate building outlines?
+\end{description}
+
+These research questions will lay down the ground work for my upcoming master's thesis where I will investigate the possibility of inferring roof surfaces represented as three-dimensional polygons from remote sensing data.
 Three-dimensional representations of buildings can for example be used for urban planning purposes.
 Another application, which incidentally prompted this research question in the first place, is the use of roof surface geometries to estimate the potential energy production of roof-mounted solar panel installations.
 
-In other cases, building outlines are not available at all, and could likewise be possibly inferred from LiDAR data and/or aerial photography.
-Such data can be used for map annotations, flood risk analysis, and population density estimates, amongst others.
-The identification of building outlines from remote sensing data can be formulated as a \textit{semantic segmentation task}, a heavily researched topic which has had many advances during the last decade.
+\subsubsection*{Thesis disposition}
 
-In this paper, we will investigate one of these applications; the inference of building outlines from remote sensing data (LiDAR and aerial photography).
-We will develop the necessary tools for preparing geographic data for a machine learning pipeline, as well as laying down the ground work required for inferring three-dimensional roof surfaces from LiDAR data in the future, the topic of my upcoming master's thesis.
-
-
-% --- Rewrite and fit into text ---
-% This paper will investigate the application of deep learning techniques in order to infer medium-fidelity insight from low-fidelity data, fidelity here being defined as in \figref{fig:data-enchancement}.
-% The \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}), on the other hand, provides consistent, high-fidelity three-dimensional data on most of the human-made structures in the entire country, this is not the case for the rest of the world, industrialized countries included.
-% This allows us to investigate the opportunity of training deep learning models with the Norwegian data as ground truth, and possibly are such models generalizable to data sourced from other countries.
-
-\todo{Rewrite and improve the next section when I am done.}
-
-We will start this paper by giving an overview of the problem domain, namely image segmentation.
-An introduction to the world of \textit{Geographic Information Systems} (GIS); the field which concerns itself with representing geographic data in a digital format, will follow.
-The focus will be how to prepare, interpret, and visualize geographic data for machine learning purposes.
-Next, we implement a deep learning architecture for solving such problems with a dataset covering the Norwegian municipality of Trondheim.
-This section will describe the entire data pre-processing pipeline, model architecture, training method, experimentation, and finally evaluation of the resulting models.
-
-\vspace{4em}
-\textbf{General TODOs:}
-\begin{itemize}
-  \item \todo{Rewrite all use of image channels to raster bands.}
-  \item \todo{Calculate evaluation metric on \texttt{nodata} values.}
-  \item \todo{Train model on global mean standard deviation scaling.}
-  \item \todo{Calculate class split for \texttt{nodata} indices, possibly arguing for zero filling method.}
-  \item \todo{Explain how \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) provides us with uniquely high-quality ground truth for machine learning purposes.}
-  \item \todo{Should I include a section about optimization algorithms? If so, where does it fit in?}
-\end{itemize}
+We will start by providing an overview of the problem domain of image segmentation and the methods currently being applied in the field in~\secref{sec:segmentation}.
+An introduction to the world of \textit{Geographic Information Systems} (GIS); the field which concerns itself with representing geographic data, will follow in~\secref{sec:data}.
+\secref{sec:pre-processing} will describe how geographic data can be pre-processed in order to train accurate machine learning models.
+The chosen model architecture, training procedure, and the final experimental results will be presented in~\secref{sec:experiments}.
