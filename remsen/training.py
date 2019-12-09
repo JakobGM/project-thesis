@@ -116,6 +116,11 @@ class Trainer:
             shutil.rmtree(str(self.checkpoint_path), ignore_errors=True)
             shutil.rmtree(str(self.tensorboard_dir), ignore_errors=True)
             shutil.rmtree(str(self.model_path), ignore_errors=True)
+
+            # Recreate directories
+            self.tensorboard_dir.mkdir(exist_ok=True)
+            self.checkpoint_path.mkdir(exist_ok=True)
+
             self.model.save(str(self.model_path))
             self.initial_epoch = 0
             return
@@ -140,7 +145,7 @@ class Trainer:
     def _callbacks(self):
         callbacks = get_callbacks(
             cache_dir=self.checkpoint_path,
-            early_stopping=True,
+            early_stopping=False,
         )
         tensorboard_callback = TensorBoard(
             log_dir=str(self.tensorboard_dir),

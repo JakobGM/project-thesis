@@ -6,6 +6,7 @@ from tensorflow.keras import (
     layers,
 )
 
+from remsen.losses import iou_loss
 from remsen.metrics import iou
 
 
@@ -64,6 +65,7 @@ def unet(
     img_height: int = 256,
     img_width: int = 256,
     img_channels: int = 1,
+    loss: str = "binary_cross_entropy",
 ) -> Model:
     inputs = layers.Input(
         shape=(img_height, img_width, img_channels),
@@ -129,7 +131,7 @@ def unet(
     model = Model(inputs=[inputs], outputs=[outputs])
     model.compile(
         optimizer="adam",
-        loss="binary_crossentropy",
+        loss=iou_loss if loss == "iou_loss" else loss,
         metrics=[iou],
     )
     return model

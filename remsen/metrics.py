@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 
+@tf.function
 def iou(y_true: tf.Tensor, y_pred: tf.Tensor) -> float:
     """Calculate intersection over union for the given batch."""
     # Cast both arrays to boolean arrays according to a cut-off of 0.5
