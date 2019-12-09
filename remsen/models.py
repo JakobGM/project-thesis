@@ -6,7 +6,7 @@ from tensorflow.keras import (
     layers,
 )
 
-from remsen.losses import iou_loss
+from remsen import losses
 from remsen.metrics import iou
 
 
@@ -20,7 +20,8 @@ def encoder(previous_layer, filters, dropout_rate):
         padding="same",
     )(previous_layer)
     convolution_layer = layers.BatchNormalization()(convolution_layer)
-    convolution_layer = layers.Dropout(dropout_rate)(convolution_layer)
+    if dropout_rate:
+        convolution_layer = layers.Dropout(dropout_rate)(convolution_layer)
     convolution_layer = layers.Conv2D(
         filters=filters,
         kernel_size=(3, 3),
@@ -50,7 +51,8 @@ def decoder(*, previous_layer, encoder, dropout_rate):
         padding="same"
     )(unconvolution_layer)
     unconvolution_layer = layers.BatchNormalization()(unconvolution_layer)
-    unconvolution_layer = layers.Dropout(dropout_rate)(unconvolution_layer)
+    if dropout_rate:
+        unconvolution_layer = layers.Dropout(dropout_rate)(unconvolution_layer)
     unconvolution_layer = layers.Conv2D(
         filters=encoder.shape[3],
         kernel_size=(3, 3),
@@ -66,6 +68,7 @@ def unet(
     img_width: int = 256,
     img_channels: int = 1,
     loss: str = "binary_cross_entropy",
+    dropout: bool = True,
 ) -> Model:
     inputs = layers.Input(
         shape=(img_height, img_width, img_channels),
@@ -77,49 +80,49 @@ def unet(
     encoder_1, pool_1 = encoder(
         previous_layer=inputs,
         filters=32,
-        dropout_rate=0.1,
+        dropout_rate=0.1 if dropout else False,
     )
     encoder_2, pool_2 = encoder(
         previous_layer=pool_1,
         filters=64,
-        dropout_rate=0.1,
+        dropout_rate=0.1 if dropout else False,
     )
     encoder_3, pool_3 = encoder(
         previous_layer=pool_2,
         filters=128,
-        dropout_rate=0.2,
+        dropout_rate=0.2 if dropout else False,
     )
     encoder_4, pool_4 = encoder(
         previous_layer=pool_3,
         filters=256,
-        dropout_rate=0.2,
+        dropout_rate=0.2 if dropout else False,
     )
     middle_layer, _ = encoder(
         previous_layer=pool_4,
         filters=512,
-        dropout_rate=0.3,
+        dropout_rate=0.3 if dropout else False,
     )
 
     # Decoder layers
     decoder_4 = decoder(
         previous_layer=middle_layer,
         encoder=encoder_4,
-        dropout_rate=0.2,
+        dropout_rate=0.2 if dropout else False,
     )
     decoder_3 = decoder(
         previous_layer=decoder_4,
         encoder=encoder_3,
-        dropout_rate=0.2,
+        dropout_rate=0.2 if dropout else False,
     )
     decoder_2 = decoder(
         previous_layer=decoder_3,
         encoder=encoder_2,
-        dropout_rate=0.1,
+        dropout_rate=0.1 if dropout else False,
     )
     decoder_1 = decoder(
         previous_layer=decoder_2,
         encoder=encoder_1,
-        dropout_rate=0.1,
+        dropout_rate=0.1 if dropout else False,
     )
 
     outputs = layers.Conv2D(
@@ -128,10 +131,16 @@ def unet(
         activation=activations.sigmoid,
     )(decoder_1)
 
+    available_losses = {
+        "binary_cross_entropy": "binary_cross_entropy",
+        "iou_loss": losses.iou_loss,
+        "dice_loss": losses.dice_loss,
+    }
+
     model = Model(inputs=[inputs], outputs=[outputs])
     model.compile(
         optimizer="adam",
-        loss=iou_loss if loss == "iou_loss" else loss,
+        loss=available_losses[loss],
         metrics=[iou],
     )
     return model
