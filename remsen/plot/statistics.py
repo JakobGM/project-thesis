@@ -139,10 +139,13 @@ def plot_raster_spread(cache):
         if index > 10_000:
             break
         tiles = cache.lidar_tiles(cadastre_index=index)
-        for tile in tiles:
-            tile = tile.flatten()
-            if tile.sum() <= 64:
+        masks = cache.mask_tiles(cadastre_index=index)
+        for (tile, mask) in zip(tiles, masks):
+            mask = mask.flatten()
+            if mask.sum() <= 64:
                 continue
+            tile = tile.flatten()
+            tile = np.ma.masked_where(tile < -3.4e38, tile)
             minima.append(tile.min())
             mean.append(tile.mean())
             maxima.append(tile.max())
