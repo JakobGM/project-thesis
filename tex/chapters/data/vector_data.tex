@@ -1,9 +1,9 @@
-A \textit{line string} is a ordered collection of geographic points $(\vec{p}_0, \ldots, \vec{p}_n)$ defining a path that connects each consecutive point by a straight line.
-A \textit{simple} line string is a path which does \textit{not} cross itself, while a \textit{complex} line string is one that does.
-
-A \textit{linear ring} is a line string where the first and last points are identical, $l = (\vec{p}_0, \ldots, \vec{p}_n, \vec{p}_0)$.
-A \textit{polygon} is therefore represented by a simple linear ring which defines its \textit{exterior hull}, and zero or more simple linear strings which defines any possible \textit{interior hulls}.
-This is illustrated in~\figref{fig:polygon-representation}.
+A \textit{line string} is an ordered collection of geographic points $(\vec{p}_0, \ldots, \vec{p}_n)$ defining a path which connects each consecutive point by a straight line.
+The points are therefore necessarily order dependent.
+A \textit{simple} line string is a path which does \textit{not} intersect itself, while a \textit{complex} line string is one that does.
+When the first and last points of a line string are identical it is considered a \textit{linear ring}, i.e.\ $l = (\vec{p}_0, \ldots, \vec{p}_n, \vec{p}_0)$.
+A \textit{polygon} can therefore be represented by a simple linear ring which defines its \textit{exterior hull} and any number of simple linear strings which defines its \textit{interior hulls}.
+\figref{fig:polygon-representation} illustrates these concepts for polygons with and without interior hulls. % chktex 2
 
 \begin{figure}[htb]
   \centering
@@ -11,7 +11,7 @@ This is illustrated in~\figref{fig:polygon-representation}.
   \textcolor{gray}{\vrule}
   \hspace{0.01\linewidth}
   \input{tikz/interior_hull.tex}
-  \caption{
+  \caption{%
     Simple polygon with four unique vertices is shown on the left hand side.
     A complex polygon with an outer hull
     and an interior hull is shown on the right hand side for comparison.
@@ -19,36 +19,26 @@ This is illustrated in~\figref{fig:polygon-representation}.
   \label{fig:polygon-representation}
 \end{figure}
 
-A polygon is considered invalid if one or more of its linear rings are self-intersecting (complex).
-It is not uncommon for data providers to provide certain polygons in an invalid state, and since such polygons are not processable by many GIS tools, they should be fixed.
+A polygon is considered invalid if one or more of its linear rings are self-intersecting, i.e.\ if any of its rings is considered to be complex.
+Data providers frequently provide polygons in invalid states and such polygons must be corrected since they are often not processable by common GIS tools.
 Zero-buffering invalid polygons (growing the polygon in all directions by zero units) fixes such problems, as can be seen in~\figref{fig:complex-zero-buffer}.
 
 \begin{figure}[H]
   \centering
   \input{tikz/self_intersecting_polygon.tex}
-  \caption{Zero-buffering the polygon fixes self-intersecting polygons, as is shown here.}%
+  \caption{Illustration of how zero-buffering an invalid polygon corrects self-intersecting polygons.}%
   \label{fig:complex-zero-buffer}
 \end{figure}
 
-Zero-buffering polygons has the added benefit of normalizing vector data by re-ordering the polygon vertices in an anti-clockwise manner and removing redundant vertices, as shown in~\figref{fig:redundant-zero-buffer}.
+Zero-buffering polygons has the added benefit of normalizing vector data by re-ordering the polygon vertices in an anti-clockwise manner and removing redundant vertices as shown in~\figref{fig:redundant-zero-buffer}.
 
 \begin{figure}[H]
   \centering
   \input{tikz/unnecessary_vertices.tex}
-  \caption{Zero-buffering the polygon removes redundant vertices, as shown here.}%
+  \caption{Illustration of how zero-buffering polygons removes redundant vertices.}%
   \label{fig:redundant-zero-buffer}.
 \end{figure}
 
 This allows you to apply simpler similarity measures for comparing polygons, and reduces computational costs when processing the polygons.
-We therefore pre-process all polygon data by applying a zero-buffer with \texttt{ogr2ogr}.
-
-\begin{shellcode}
-$ ogr2ogr -f "GPKG" ${output_file} ${input_file}
-    -sql "select ST_buffer(Geometry, 0.0)"
-\end{shellcode}
-
-We have here also converted the given vector data file to the \textit{GeoPackage} format.
-While geographic data providers use a wide array of file formats, most commonly GeoJSON, ESRI Shapefiles, and GML, we convert all files to the modern GeoPackage format, which supports unicode characters and has no length limit on data fields, and is therefore considered the best format for modern GIS pipelines~\cite{hame_shapefile_2019}.
-\texttt{ogr2ogr} supports file conversions between most common vector file formats, which makes the data pipeline generalizable to data sources from different regions.
-
-We will come back to how to combine vector and raster datasets by \textit{rasterization} in~\secref{sec:masking}, where it will also become clear why the removal of redundant vertices is of importance.
+Technical details for applying zero-buffers to vector data is provided in~\appref{app:zero-buffer}.
+We will come back to how to combine vector and raster datasets by \textit{rasterization} in~\secref{sec:masking} where it will also become clear why the removal of redundant vertices is of importance.

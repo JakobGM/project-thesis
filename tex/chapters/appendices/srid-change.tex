@@ -1,0 +1,7 @@
+\texttt{GDAL} can be used to transform data between coordinate systems, e.g.\ converting from GPS to UTM \texttt{32V}:
+\begin{shellcode}
+$ gdaltransform \
+    -s_srs EPSG:4236 \
+    -t_srs EPSG:25832 \
+    ${source_data} ${target}
+\end{shellcode}

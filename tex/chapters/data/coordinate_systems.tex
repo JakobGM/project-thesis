@@ -1,20 +1,16 @@
-The most common spherical coordinate system for representing \textit{arbitrary} positions on earth's surface is the \textit{geographic coordinate system} (GPS).
+One of the most common coordinate system for representing \textit{arbitrary} positions on earth's surface is the \textit{geographic coordinate system} (GPS).
 A given point, $\vec{p} = (\phi, \lambda, z)$, is represented by an angular latitude and longitude, $\phi$ and $\lambda$ respectively, and a radial distance from the mean sea level, $z$.
-Negative values for $z$ do not necessarily imply that the given point is below the ground, as certain areas (such as in the Netherlands) are situated below sea level.
+A negative value for $z$ does not necessarily imply that the given point is below ground, as certain areas (such as in the Netherlands) are situated below sea level.
 It is therefore not sufficient to represent elevation data with unsigned floating point numbers.
 
-Even though GPS is able to uniquely represent geographic positions with a high degree of accuracy, it is unsuitable for many applications.
-Cartesian transformations and norms are cumbersome to calculate, and data structures and visualizations which are fundamentally two dimensional, such as maps, rasters, and matrices, become difficult to with spherical coordinates.
+Although GPS is able to uniquely represent arbitrary geographic points with a high degree of accuracy, it is still unsuitable for many applications.
+Cartesian transformations and distance norms are cumbersome to calculate, and data structures and visualizations which are fundamentally two dimensional in nature, such as maps, rasters, and matrices, are difficult to construct from spherical coordinates.
 
-In order to solve this problem we define a set of coordinate system \textit{projections} which approximate given regions of the earth's surface as flat planes.
-The resulting coordinate systems are Cartesian, and thus allow us to represent geographic points in the more common $\vec{p} = (x, y, z)$ format.
-Cartesian distance norms such as $||\vec{p}_1 - \vec{p}_2||_2$ and Cartesian translations $\vec{p}_1 + \vec{\Delta}$ stay within pre-defined error tolerances as long as operations are contained to the validity region of the given projection.
-
-\begin{wrapfigure}[15]{r}{0.38\linewidth}
+\begin{wrapfigure}[20]{r}{0.38\linewidth}
   \vspace{-1em}
   \centering
   \includegraphics[width=0.9\linewidth]{europe-utm-zones.png}
-  \caption{
+  \caption{%
     \\
     The figure shows the UTM zones required in order to cover the entirety of Europe, from \texttt{29S} to \texttt{38W}.
     This public domain image has been sourced from Wikimedia~\cite{wiki:europe_utm_zones}.
@@ -22,14 +18,12 @@ Cartesian distance norms such as $||\vec{p}_1 - \vec{p}_2||_2$ and Cartesian tra
   \label{fig:europe-utm-zones}
 \end{wrapfigure}
 
-One such Cartesian approximation of the earth's surface is the Universal Transverse Mercator (UTM) coordinate system which divides the earth into 60 rectangular zones. The UTM zones covering Europe are shown in~\figref{fig:europe-utm-zones}.
-We will therefore exclusively use UTM zone \texttt{32V} for our datasets sourced from Trondheim, Norway, situated in the southern part of Norway.
-Data in alternative coordinate systems will be transformed to this UTM zone before we start using the data.
-Since this is an affine coordinate system, we can easily generalize any models to other coordinate systems by applying the correct affine transformations.
+In order to solve this problem we define a set of coordinate system \textit{projections} which approximate predefined regions of the earth's surface as flat planes.
+The resulting coordinate systems are Cartesian and thus allow us to represent geographic points in the more common $\vec{p} = (x, y, z)$ format.
+Cartesian distance norms such as $||\vec{p}_1 - \vec{p}_2||_2$ and Cartesian translations $\vec{p}_1 + \vec{p}_2$ stay within predefined error tolerances as long as operations are contained to the validity region of the given projection.
 
-\texttt{GDAL} can be used to transform data between coordinate systems, e.g.\ converting from GPS to UTM \texttt{32V}:
-\begin{shellcode}
-$ gdaltransform \
-    -s_srs EPSG:25830 \
-    -t_srs EPSG:25830 ${source_data}
-\end{shellcode}
+One such Cartesian approximation of the earth's surface is the Universal Transverse Mercator (UTM) coordinate system which divides the earth into 60 rectangular zones~\cite[p.~48]{map-projections}. The UTM zones covering Europe are shown in~\figref{fig:europe-utm-zones}.
+We will exclusively use UTM zone \texttt{32V} for our datasets covering the municipality of Trondheim situated in the southern part of Norway.
+Data provided in alternative coordinate systems will be mapped to this UTM zone before we start using the data.
+Since this is an affine coordinate system, we can easily generalize any models to other coordinate systems by applying the correct affine transformations.
+Technical details for how to map between different coordinate systems are given in~\appref{app:srid-change} for reproducibility.

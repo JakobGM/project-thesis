@@ -3,7 +3,7 @@ How to normalize input data depends on distribution of the feature space, which 
 
 \todo{Write about global vs.\ local normalization, and normalization vs.\ standardization.}
 
-\subsubsection*{RGB rasters}
+\topic{RGB rasters}
 
 A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
 %
@@ -55,7 +55,7 @@ The distribution of each color channel over the entire coverage area of the Tron
 The image channels can be easily normalized to the domain $[0, 1]$ by dividing by $255$ across all three image channels.
 This is in essence a lossless transformation, since the normalization function $f(x) = x/255$ is trivially invertible, and thus no information is lost by this normalization.
 
-\subsubsection*{LiDAR rasters}
+\topic{LiDAR rasters}
 
 The \enquote{$z$ channel} in the raster images represent elevation data from the respective digital surface model.
 Elevation measurements are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain $I_{i,j,z} \in (\SI{-3.4e38}{\meter},~\SI{3.4e8}{\meter})$.
@@ -138,7 +138,7 @@ Otherwise a large negative bias is introduced for all tiles with any missing dat
 Leaving \texttt{nodata} values unnormalized with such extreme values will heavily influence the weighted sum calculated by nodes in any neural network, and must therefore filled in with values from the normalized domain to prevent this.
 Filling in $0$ values for all \texttt{nodata} indices has been shown to work well for min-max normalization.
 
-The \enquote{\texttt{nodata}-aware} min-max normalization algorithm used for pre-processing elevation input data is:
+The \enquote{\texttt{nodata}-aware} min-max normalization algorithm used for preprocessing elevation input data is:
 
 \vspace{0.5em}
 \fbox{

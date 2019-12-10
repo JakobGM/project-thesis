@@ -1,21 +1,20 @@
-Raster data is simply scalar measurements imposed onto a grid with rectangular grid cells.
-
-A color image, $I$, of width $\mathrm{W}$ and height $\mathrm{H}$, for instance, will contain three color channels,
-\textcolor{red}{red}, \textcolor{green}{green}, and \textcolor{blue}{blue}, (RGB)
-and can be represented by a three-dimensional array of size $\mathrm{W} \times \mathrm{H} \times \mathrm{3}$.
-Each color channel in a given pixel is represented by an unsigned 8-bit integer, i.e.
+Raster data consists of a set of scalar measurements imposed onto a grid.
+A color image, $I$, of width $\mathrm{W}$ and height $\mathrm{H}$, will contain three color channels; red, green, and blue (RGB), and can be represented by a three-dimensional array of size $\mathrm{H} \times \mathrm{W} \times \mathrm{3}$.
+Each color channel for a given pixel is represented by an unsigned 8-bit integer, i.e.
+%
 \begin{equation*}
   I_{i, j, c} \in \{0, 1, \ldots, 255\},
   \hspace{2.5em}
-  i = 0, \ldots, \mathrm{H} - 1,
+  i = 1, \ldots, \mathrm{H} ,
   ~~
-  j = 0, \ldots, \mathrm{W} - 1,
+  j = 1, \ldots, \mathrm{W},
   ~~
-  c = \mathrm{\textcolor{red}{R}, \textcolor{green}{G},\textcolor{blue}{B}}.
+  c = \mathrm{\textcolor{red}{1}, \textcolor{green}{2}, \textcolor{blue}{3}}.
 \end{equation*}
-
-A LiDAR height map, $Z$, is likewise encoded as a single-channel grayscale image of size $\mathrm{W} \times \mathrm{H}$.
-Each pixel is represented by a signed 32-bit floating point value, i.e.
+%
+A LiDAR elevation map, which we will denote as $Z$, is likewise encoded as a single-channel grayscale image of size $\mathrm{W} \times \mathrm{H}$.
+Each pixel is represented by a signed 32-bit floating point value which gives the following approximate value domain
+%
 \begin{equation*}
   Z_{i, j} \in \mathbb{R},
   \hspace{2.5em}
@@ -23,12 +22,12 @@ Each pixel is represented by a signed 32-bit floating point value, i.e.
   ~~
   j = 0, \ldots, \mathrm{W} - 1.
 \end{equation*}
-
-These two raster types must be handled differently during data normalization due to their different value domains, which we will come back to in~\secref{sec:raster-normalization}.
+%
+These two raster types must be handled differently during data standardization/normalization due to their different value domains, which we will come back to in~\secref{sec:raster-normalization}.
 
 % Do not split the following section over different pages
 \begin{minipage}{\textwidth}
-  For GIS rasters we must define the spatial extent of the given image as well, specified by:
+  For GIS rasters specifically we must additionally provide the spatial extent of the given raster defined by:
   \begin{itemize}[noitemsep]
     \item A coordinate system, for example UTM \texttt{32V}.
     \item The coordinate of the center of the upper left pixel, $I_{1, 1}$; the \textit{origin} $\vec{r}_0 = {[x_0, y_0]}^T$.
@@ -37,34 +36,14 @@ These two raster types must be handled differently during data normalization due
 \end{minipage}
 \vspace{0.5em}
 
-The pixel $I_{i, j, c}$ therefore represents a rectangle of width $\Delta_x$ and height $\Delta_y$ centered at the spatial coordinate $\vec{r}_0 + \vec{\Delta} \cdot [i, j]$, everything being interpreted in the given coordinate system.
+The pixel $I_{i, j, c}$ therefore represents a rectangle of width $\Delta_x$ and height $\Delta_y$ centered at the spatial coordinate $\vec{r}_0 + \vec{\Delta} \cdot [i, j]$ interpreted in the given coordinate system.
 
-Missing data in remote sensing rasters are specified by filling in a pre-defined \texttt{nodata} placeholder value.
+Missing data in remote sensing rasters is specified by filling in a predefined \texttt{nodata} placeholder value.
 For RGB data this is often set to $0$, resulting in a black pixel.
 LiDAR rasters often use $\texttt{nodata} = -2^{127} \times (2 - 2^{-23}) \approx 3.4028234664 \times 10^{38}$, the smallest normal number representable by a single-precision floating point number.
-Such \texttt{nodata} values may arise from measurement errors and regions which are outside the given covarage area of the dataset, and must be special-cased during data normalization, which we will come back to in~\secref{sec:raster-normalization}.
+Such \texttt{nodata} values may arise from measurement errors or by pixels situated outside the given coverage area of the dataset, and must be special-cased during data normalization, which we will come back to in~\secref{sec:raster-normalization}.
 
-\subsubsection*{Merging raster datasets}
-
-Aerial photography and LiDAR data is usually provided in several smaller raster files, organized in a tiled pattern in order to reduce file sizes.
-Each file is a \texttt{.geotiff} file, a container format which specifies necessary metadata and the underlying image data in a lossless format such as \texttt{PNG}.
-This poses the problem of having to look up which files that cover a given region of interest and merging these files together before processing them.
-
-A simpler approach is to create a \textit{GDAL Virtual Format} file (\texttt{VRT}) which is a virtual dataset file referencing all the respective tiles and bands (GIS uses the term bands for what we would otherwise refer to as image channels).
-In simple cases, a \texttt{VRT} file can be autogenerated with the \texttt{gdalbuildvrt} GDAL utility.
-
-\begin{shellcode}
-$ gdalbuildvrt raster.vrt ${raster_directory}/*.tif
-\end{shellcode}
-%
-The resulting \texttt{vrt} file behaves like single merged file, and can be read and processed by most GIS tools, but in practice it is just a small XML file and does not require you to load the entire raster dataset into memory.
-
-Using the same file format, we can also combine overlapping raster datasets by expanding the number of channels in the resulting raster.
-
-\begin{shellcode}
-$ gdalbuildvrt -resolution ${resolution} combined.vrt -separate ${vrt1} ${vrt2} 
-\end{shellcode}
-%
-Where \texttt{-resolution} can be set to either \texttt{highest}, \texttt{lowest}, or \texttt{average}, depending on how you want to handle datasets with different resolutions.
-This is how we will merge the aerial photography (RGB) data with the DSM data (Z), resulting in a single consistent ZRGB dataset.
-The resulting \texttt{VRT} file will only contain the first band from each source file, and needs to be manually edited according to the VRT schema~\cite{vrt_schema_2015} in order to include the green and blue bands of the original RGB dataset.
+When we will train models on the combination of LiDAR and aerial photography data, these two types of rasters must be merged in order to attain a consistent three-dimensional array of size $H \times W \times 4$.
+These rasters can not be simply superposed when their pixel sizes $\vec{\Delta}$ and/or origins $\vec{r}_0$ differ.
+In such cases we will apply bilinear interpolation on the raster of greatest resolution and subsequently downsample it in order to align all pixels.
+See \appref{app:raster-merging} for how this is performed in practice.

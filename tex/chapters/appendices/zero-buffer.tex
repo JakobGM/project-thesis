@@ -1,0 +1,8 @@
+\begin{shellcode}
+$ ogr2ogr -f "GPKG" ${output_file} ${input_file} \
+    -sql "select ST_buffer(Geometry, 0.0)"
+\end{shellcode}
+
+We have here also converted the given vector data file to the \textit{GeoPackage} format.
+While geographic data providers use a wide array of file formats, most commonly GeoJSON, ESRI Shapefiles, and GML, we convert all files to the modern GeoPackage format, which supports unicode characters and has no length limit on data fields, and is therefore considered the best format for modern GIS pipelines~\cite{hame_shapefile_2019}.
+\texttt{ogr2ogr} supports file conversions between most common vector file formats, which makes the data pipeline generalizable to data sources from different regions.
