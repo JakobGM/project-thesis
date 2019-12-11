@@ -11,12 +11,19 @@ def iou_loss(y_true: tf.Tensor, y_pred: tf.Tensor, smooth=100):
     return tf.reduce_sum((1 - jac) * smooth)
 
 
-def dice_loss(y_true, y_pred, smooth=1e-5):
-    """Calculate the soft dice loss."""
+@tf.function
+def dice_loss(y_pred, y_true, smooth=1e-5):
+    """
+    Calculate the soft dice loss.
+
+    Source: https://tensorlayer.readthedocs.io/en/latest/_modules/tensorlayer/cost.html
+    """
     y_true = tf.dtypes.cast(y_true, tf.float32)
-    intersection = tf.reduce_sum(y_true * y_pred, axis=(1, 2, 3))
-    true_area = tf.reduce_sum(y_true, axis=(1, 2, 3))
-    pred_area = tf.reduce_sum(y_pred, axis=(1, 2, 3))
-    dice = (2. * intersection + smooth) / (true_area + pred_area + smooth)
-    dice = tf.reduce_mean(dice, name='dice_coe')
+    intersection = tf.reduce_sum(y_pred * y_true, axis=(1, 2, 3))
+    sum = (
+        tf.reduce_sum(y_pred, axis=(1, 2, 3))
+        + tf.reduce_sum(y_true, axis=(1, 2, 3))
+    )
+    dice = (2. * intersection + smooth) / (sum + smooth)
+    dice = tf.reduce_mean(dice)
     return dice
