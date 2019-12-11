@@ -99,17 +99,15 @@ class Trainer:
             "4) Load best validation loss model",
         ]
 
-        answer = input(prompt="\n".join(message))
+        answer = input("\n".join(message))
         if answer not in "1 2 3 4".split():
             self._existing_model()
 
         if answer == "1":
             answer = input(
-                prompt=(
-                    "You sure? "
-                    f"You will delete {self.checkpoint_path} "
-                    f"and {self.tensorboard_dir}... [y/N]"
-                ),
+                "You sure? "
+                f"You will delete {self.checkpoint_path} "
+                f"and {self.tensorboard_dir}... [y/N]",
             )
             if answer.upper() != "Y":
                 self._existing_model()
