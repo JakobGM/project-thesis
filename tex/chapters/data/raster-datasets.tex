@@ -6,6 +6,26 @@
   \includegraphics[width=0.75\linewidth]{data/lidar-example}
 \end{figure}
 
+\begin{figure}[htb]
+  \begin{tikzpicture}
+    \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=0.75\linewidth]{data/non-orthophoto-example}};
+    \begin{scope}[x={(image.south east)},y={(image.north west)}]
+      \draw[orange, ultra thick, fill=orange!50, fill opacity=0.25]
+        (0.34, 0.3) --
+        (0.615, 0.55) --
+        (0.61, 0.69) --
+        (0.33, 0.445) --
+        cycle;
+      % \draw[orange, thick, fill=orange!50, fill opacity=0.25]
+      %   (0.89, 0.07) --
+      %   (0.98, 0.14) --
+      %   (0.975, 0.2) --
+      %   (0.892, 0.14) --
+      %   cycle;
+    \end{scope}
+  \end{tikzpicture}
+\end{figure}
+
 \begin{table}[htb]
   \centering
   \resizebox{\textwidth}{!}{%
@@ -31,7 +51,7 @@
     \SIrange{60}{85}{\percent} & 1.1 \\
     \bottomrule
   \end{tabular}
-  \caption{
+  \caption{%
     Control of point cloud density of the Trondheim 2017 LiDAR data set.
     The densities are calculated within rolling windows of size $\SI{10}{\meter} \times \SI{10}{\meter}$~\cite{trondheim_lidar_2017}.
     }
