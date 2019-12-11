@@ -33,6 +33,14 @@ def plot_training(
     colors = prop_cycle.by_key()['color']
 
     training_data = {name: tensorboard_dataframe(name=name) for name in names}
+
+    # Clip training series to simulate same number of epochs
+    min_epoch = 1e8
+    for data in training_data.values():
+        min_epoch = min(min_epoch, data.index.max())
+    for data in training_data.values():
+        data.drop(index=data.index[data.index >= min_epoch], inplace=True)
+
     for i, name in enumerate(names):
         if "train" in splits:
             metrics = training_data[name]["train_" + metric]
