@@ -12,7 +12,7 @@ def iou_loss(y_true: tf.Tensor, y_pred: tf.Tensor, smooth=100):
 
 
 @tf.function
-def dice_loss(y_pred, y_true, smooth=1e-5):
+def dice_loss(y_true, y_pred, smooth=1e-5):
     """
     Calculate the soft dice loss.
 
@@ -25,5 +25,5 @@ def dice_loss(y_pred, y_true, smooth=1e-5):
         + tf.reduce_sum(y_true, axis=(1, 2, 3))
     )
     dice = (2. * intersection + smooth) / (sum + smooth)
-    dice = tf.reduce_mean(dice)
+    dice = tf.reduce_mean(1 - dice)
     return dice
