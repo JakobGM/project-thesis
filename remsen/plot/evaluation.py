@@ -84,13 +84,21 @@ def plot_training(
     handles, labels = ax.get_legend_handles_labels()
     handles.append(Line2D([0], [0], color="xkcd:black"))
     handles.append(Line2D([0], [0], color="xkcd:black", linestyle="--"))
-    labels.append("Validation")
-    labels.append("Train")
+
+    multiple_splits = len(splits) != 1
+    if multiple_splits:
+        labels.append("Validation")
+        labels.append("Train")
+        title = None
+    else:
+        title = splits[0].capitalize() + " metric"
+
     ax.legend(
         handles,
         labels,
-        ncol=3,
+        ncol=3 if multiple_splits else 2,
         loc="upper right" if metric == "loss" else "lower right",
+        title=title,
     )
 
     # Save to deterministic filepath
