@@ -86,6 +86,7 @@ def plot_training(
     handles.append(Line2D([0], [0], color="xkcd:black", linestyle="--"))
 
     multiple_splits = len(splits) != 1
+    comparison = len(splits) > 1
     if multiple_splits:
         labels.append("Validation")
         labels.append("Train")
@@ -96,7 +97,7 @@ def plot_training(
     ax.legend(
         handles,
         labels,
-        ncol=3 if multiple_splits else 2,
+        ncol=3 if not comparison and multiple_splits else 2,
         loc="upper right" if metric == "loss" else "lower right",
         title=title,
     )

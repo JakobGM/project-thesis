@@ -1,24 +1,52 @@
 \section{Experiments}%
 \label{sec:experiments}
 
-\begin{figure}[htb]
+\subsection{RGB Data}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metrics/only_rgb-train+validation-iou}
+\end{figure}
+
+\subsection{LiDAR Data}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metrics/without_rgb-train+validation-iou}
+\end{figure}
+
+\subsection{RGB+LiDAR Data}
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-iou}
   \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-loss}
 \end{figure}
 
-\begin{figure}[htb]
+\subsection{Batch Normalization}
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-validation-iou}
 \end{figure}
 
-\begin{figure}[htb]
+\subsection{Dropout}
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
 \end{figure}
 
-\begin{figure}[htb]
+\subsection{LiDAR Normalization}
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_metric_normalization+without_rgb-validation-iou}
 \end{figure}
 
+\subsection{Data Augmentation}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metrics/lidar_without_augment+without_rgb-validation-iou}
+\end{figure}
