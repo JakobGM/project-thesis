@@ -3,6 +3,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 
+from ipypb import track
+
+import numpy as np
+
 import pandas as pd
 
 from tensorboard.backend.event_processing.event_accumulator import (
@@ -170,6 +174,138 @@ class Trainer:
             initial_epoch=self.initial_epoch,
         )
         self.initial_epoch = history.epoch[-1] + 1
+
+    def calculate_evaluation_statistics(self) -> pd.DataFrame:
+        # Add new metrics to model
+        model = self.model
+        model.compile(
+            optimizer=model.optimizer,
+            loss=model.loss,
+            metrics=model.metrics + [
+                "binary_accuracy",
+                "FalseNegatives",
+                "FalsePositives",
+                "Precision",
+                "Recall",
+            ],
+        )
+
+        # Construct dictionary which will become dataframe
+        results = {
+            "cadastre": [],
+            "tile": [],
+            "iou": [],
+            "binary_accuracy": [],
+            "false_positives": [],
+            "false_negatives": [],
+            "precision": [],
+            "recall": [],
+            "loss": [],
+            "nodata": [],
+            "split": [],
+            "mask": [],
+            "min_elevation": [],
+            "max_elevation": [],
+            "range": [],
+        }
+
+        # Use cadastre indeces and their respective split allocation
+        self.dataset.create_splits()
+        train = self.dataset.train_cadastre.copy()
+        val = self.dataset.validation_cadastre.copy()
+        test = self.dataset.test_cadastre.copy()
+        indices = sorted([
+            *zip(train, ["train"] * len(train)),
+            *zip(val, ["val"] * len(val)),
+            *zip(test, ["test"] * len(test)),
+        ])
+
+        # Find the type of data used by the model
+        num_channels = model.input.shape[3]
+        with_rgb = num_channels in (3, 4)
+        with_lidar = num_channels in (1, 4)
+
+        for index, split in track(indices):
+            # Get all tiles for the cadastre
+            tiles = self.dataset.tiles(
+                cadastre_index=index,
+                with_tile_dimensions=False,
+                with_rgb=True,
+            )
+            lidar_tiles = tiles["lidar"]
+            mask_tiles = tiles["mask"]
+            rgb_tiles = tiles["rgb"]
+            iterator = zip(lidar_tiles, mask_tiles, rgb_tiles)
+
+            for tile_number, (lidar_tile, mask_tile, rgb_tile) in enumerate(iterator):
+                # Identifying columns
+                results["cadastre"].append(index)
+                results["tile"].append(tile_number)
+                results["split"].append(split)
+
+                # Number of pixels that constitute buildings
+                results["mask"].append(mask_tile.sum())
+
+                # Nodata values
+                nodata_indices = lidar_tile == self.dataset.lidar_nodata_value
+                nodata = nodata_indices.sum()
+                results["nodata"].append(nodata)
+
+                # Calculate elevation ranges
+                valid_lidar = lidar_tile[~nodata_indices]
+                min_elevation = valid_lidar.min()
+                max_elevation = valid_lidar.max()
+                results["min_elevation"].append(min_elevation)
+                results["max_elevation"].append(max_elevation)
+                results["range"].append(max_elevation - min_elevation)
+
+                # Create inputs for evaluation
+                lidar_input = lidar_tile.reshape(1, 256, 256, 1)
+                mask_tile = mask_tile.reshape(1, 256, 256, 1)
+                rgb_tile = rgb_tile.reshape(1, 256, 256, 3)
+                input_arrays = []
+                if with_lidar:
+                    lidar_arrays = self.dataset.input_tile_normalizer(lidar_input)
+                    input_arrays.append(lidar_arrays)
+                if with_rgb:
+                    rgb_tile = rgb_tile.astype("float32")
+                    rgb_tile /= 255
+                    input_arrays.append(rgb_tile)
+                input_arrays = np.concatenate(input_arrays, axis=3)
+
+                # Create inputs for evaluation and evaluate
+                # lidar_input = self.dataset.input_tile_normalizer(tiles=lidar_tile)
+                evaluation = model.evaluate(input_arrays, mask_tile, verbose=0)
+
+                metrics = {
+                    name: value
+                    for name, value
+                    in zip(model.metrics_names, evaluation)
+                }
+                results["iou"].append(metrics["iou"])
+                results["loss"].append(metrics["loss"])
+                results["binary_accuracy"].append(metrics["binary_accuracy"])
+                results["false_negatives"].append(metrics["FalseNegatives"])
+                results["false_positives"].append(metrics["FalsePositives"])
+                results["precision"].append(metrics["Precision"])
+                results["recall"].append(metrics["Recall"])
+        df = pd.DataFrame.from_dict(results)
+        df["split"] = df.split.astype("category")
+
+        # Save for use by self.evaluation_statistics()
+        cache_path = self.checkpoint_path / "evaluation.pkl"
+        df.to_pickle(cache_path)
+        return df
+
+    @classmethod
+    def evaluation_statistics(cls, name: Optional[str] = None):
+        if name:
+            cache_path = Path(f".cache/models/{name}/evaluation.pkl")
+            if cache_path.exists():
+                return pd.read_pickle(cache_path)
+        else:
+            models = list(Path(".cache/models").iterdir())
+            return {m.name: cls.evaluation_statistics(m.name) for m in models}
 
 
 def tensorboard_dataframe(

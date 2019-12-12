@@ -183,6 +183,7 @@ class Dataset:
             tiles.reshape(tiles.shape[0], 256 * 256),
             axis=1,
         ).reshape(tiles.shape[0], 1, 1, 1)
+        # max_vals[:] = 30
         np.divide(tiles, max_vals, out=tiles)
         return tiles
 
@@ -357,6 +358,32 @@ class Dataset:
             self.plot_prediction(model=model, cadastre_index=worst_cadastre)
             del cadastre_metrics[worst_cadastre]
 
+    def create_splits(
+        self,
+        train_split: float = 0.70,
+        validation_split: float = 0.15,
+        test_split: float = 0.15,
+    ):
+        """Split all data into train, validation, and test subsets."""
+        cadastre_indeces = self.cache.cadastre_indeces
+        train_indeces, remaining = train_test_split(
+            cadastre_indeces,
+            train_size=train_split,
+            shuffle=True,
+            random_state=42,
+        )
+        val_indeces, test_indeces = train_test_split(
+            remaining,
+            train_size=validation_split / (validation_split + test_split),
+            shuffle=False,
+            random_state=43,
+        )
+
+        # Persist cadastre splits to self
+        self.train_cadastre = train_indeces
+        self.validation_cadastre = val_indeces
+        self.test_cadastre = test_indeces
+
     def tf_dataset(
         self,
         batch_size: int = 16,
@@ -426,35 +453,21 @@ class Dataset:
                                 yield x, y
                             batch = []
 
-        # Split all data into train, validation, and test subsets
-        cadastre_indeces = self.cache.cadastre_indeces
-        train_indeces, remaining = train_test_split(
-            cadastre_indeces,
-            train_size=train_split,
-            shuffle=True,
-            random_state=42,
+        self.create_splits(
+            train_split=train_split,
+            validation_split=validation_split,
+            test_split=test_split,
         )
-        val_indeces, test_indeces = train_test_split(
-            remaining,
-            train_size=validation_split / (validation_split + test_split),
-            shuffle=False,
-            random_state=43,
-        )
-
-        # Persist cadastre splits to self
-        self.train_cadastre = train_indeces
-        self.validation_cadastre = val_indeces
-        self.test_cadastre = test_indeces
 
         # TODO: Implement this with Cache.dataframe query
         print("Calculating number of training tiles...")
         num_train_tiles = 0
-        for _ in _generator(train_indeces, epochs=1):
+        for _ in _generator(self.train_cadastre, epochs=1):
             num_train_tiles += 1
 
         print("Calculating number of validation tiles...")
         num_val_tiles = 0
-        for _ in _generator(val_indeces, epochs=1):
+        for _ in _generator(self.validation_cadastre, epochs=1):
             num_val_tiles += 1
 
         train = tf.data.Dataset.from_generator(
@@ -464,7 +477,7 @@ class Dataset:
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
             ),
-            args=(train_indeces, epochs),
+            args=(self.train_cadastre, epochs),
         )
         validation = tf.data.Dataset.from_generator(
             generator=_generator,
@@ -473,7 +486,7 @@ class Dataset:
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
             ),
-            args=(val_indeces, epochs),
+            args=(self.validation_cadastre, epochs),
         )
         test = tf.data.Dataset.from_generator(
             generator=_generator,
@@ -482,7 +495,7 @@ class Dataset:
                 tf.TensorShape([256, 256, num_channels]),
                 tf.TensorShape([256, 256, 1]),
             ),
-            args=(test_indeces,),
+            args=(self.test_cadastre,),
         )
 
         # Prefetching
