@@ -20,6 +20,7 @@ from tensorflow.keras.callbacks import (
 )
 from tensorflow.keras.models import Model, load_model
 
+from remsen.losses import dice_loss, iou_loss
 from remsen.metrics import iou
 if TYPE_CHECKING:
     from remsen.data import Dataset
@@ -139,7 +140,11 @@ class Trainer:
         )
         self.model = load_model(
             str(self.model_path),
-            custom_objects={"iou": iou},
+            custom_objects={
+                "iou": iou,
+                "iou_loss": iou_loss,
+                "dice_loss": dice_loss,
+            },
         )
         self.model.load_weights(str(checkpoint))
         self.initial_epoch = int(checkpoint.name.split(".")[0])
