@@ -1,12 +1,11 @@
-Our data sets need to be preprocessed in order to apply a customary machine learning pipeline.
+The data sets provided to us are in a state unsuitable for direct use by machine learning frameworks.
+For this reason we need to develop a preprocessing pipeline that transforms the data into a more customary format.
 The data preprocessing should be generalizable to different regions, data formats, data types (vector vs.\ raster), coordinate systems, and so on.
-This will allow any potential models to be trained and/or tested against other geographic regions.
+The goal is to implement a modelling pipeline that can be applied to other geographic regions in the future.
 
-The data sets represents data over a continuous geographic area.
-We must therefore define a \textit{sample space} which allows us to split the data into respective training, validation, and test sets.
-Our sample space will be the respective cadastral plots defined over a given region.
-The intent is to implement an algorithm which receives the geographic extent of a cadastral plot and returns a segmentation map of the buildings within the provided area.
-
-The preprocessing is somewhat time- and space-consuming, and must therefore be performed before training and persisted to disk.
-Finally, there is an intent to prevent any data loss during the preprocessing step, such as downsampling and interpolation, thus keeping the original raw features.
-This allows us to experiment with different data augmentation techniques during training instead without having to preprocess the entire data set anew.
+Our data sets are defined over a single, contiguous geographic area, and we must therefore define a \textit{sample space} which allows us to split the data into training-, validation-, and test-sets.
+The collection of all cadastral plots in a given region is a suitable sample space since cadastral plots are non-overlapping regions of relatively small size and have a high probability of containing one or more buildings.
+A large raster dataset covering a sparsely populated region can therefore be substantially reduced in size before training.
+An alternative approach is to split the entire data set into regularly sized tiles and use this tile collection as the sample space.
+A tiled sample space, for anything other than densely populated areas, will suffer from class imbalances due to low building densities in most tiles.
+We will try to justify this choice of cadastral plots as the sample space in~\secref{sec:experiments}.
