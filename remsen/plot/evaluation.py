@@ -4,6 +4,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.ticker import PercentFormatter
 
 from remsen.plot.utils import configure_latex
 from remsen.training import Trainer, tensorboard_dataframe
@@ -122,6 +123,7 @@ def metric_correlation(
     splits: Iterable[str] = ("train", "test"),
     labels: Optional[Tuple[str, str]] = None,
     minimum_building_area: float = 4,
+    mask_color: bool = False,
 ):
     # Enable LaTeX rendering of plots
     configure_latex(scaler=2)
@@ -158,9 +160,13 @@ def metric_correlation(
         # Create scatter plot of x model performance vs. y model
         x = split_metrics[metric + "_x"]
         y = split_metrics[metric + "_y"]
-        ax.scatter(
+        building_area = 100 * split_metrics["mask_x"] / (256 ** 2)
+        color_plot = ax.scatter(
             x,
             y,
+            c=building_area if mask_color else None,
+            vmin=0,
+            vmax=100,
             alpha=0.2,
             edgecolor="",
             rasterized=True,
@@ -253,12 +259,20 @@ def metric_correlation(
 
     # Reduce padding between subplots
     fig.tight_layout()
+    if mask_color:
+        # [left, bottom, width, height]
+        colorbar_ax = fig.add_axes([1, 0.15, 0.05, 0.7])
+        fig.colorbar(
+            color_plot,
+            cax=colorbar_ax,
+            format=PercentFormatter(),
+        )
 
     # Semantic path for this plot
     save_path = Path(
         "tex/img/metric_correlation/"
         f"{x_model}+{y_model}"
-        f"+{metric}.pdf"
+        f"+{metric}{'+color' if mask_color else ''}.pdf"
     )
 
     # We have used rasterized=True in scatter, so we need to increase DPI
