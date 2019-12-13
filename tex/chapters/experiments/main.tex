@@ -16,12 +16,22 @@
   \includegraphics[width=0.9\linewidth]{metrics/without_rgb-train+validation-iou}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+only_rgb+iou}
+\end{figure}
+
 \subsection{RGB+LiDAR Data}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-iou}
   \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-loss}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+with_rgb+iou}
 \end{figure}
 
 \subsection{Batch Normalization}
@@ -38,6 +48,11 @@
   \includegraphics[width=0.9\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_dropout+iou}
+\end{figure}
+
 \subsection{LiDAR Normalization}
 
 \begin{figure}[H]
@@ -45,9 +60,19 @@
   \includegraphics[width=0.9\linewidth]{metrics/lidar_metric_normalization+without_rgb-validation-iou}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_metric_normalization+iou}
+\end{figure}
+
 \subsection{Data Augmentation}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_without_augment+without_rgb-validation-iou}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_augment+iou}
 \end{figure}

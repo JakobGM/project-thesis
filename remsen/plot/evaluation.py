@@ -1,10 +1,12 @@
-from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Tuple
 
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 
 from remsen.plot.utils import configure_latex
-from remsen.training import tensorboard_dataframe
+from remsen.training import Trainer, tensorboard_dataframe
 
 
 def plot_training(
@@ -110,3 +112,155 @@ def plot_training(
     fig.tight_layout()
     fig.savefig(path)
     return fig, ax
+
+
+def metric_correlation(
+    x_model: str,
+    y_model: str,
+    metric: str = "iou",
+    splits: Iterable[str] = ("train", "test"),
+    labels: Optional[Tuple[str, str]] = None,
+    minimum_building_area: float = 4,
+):
+    # Enable LaTeX rendering of plots
+    configure_latex(scaler=2)
+
+    # Retrieve relevant data
+    columns = ["cadastre", "tile", "split", "mask", metric]
+    dfx = Trainer.evaluation_statistics(name=x_model)[columns]
+    dfy = Trainer.evaluation_statistics(name=y_model)[columns]
+
+    # Remove all rows with building area less than the given amount
+    dfx = dfx[dfx["mask"] > minimum_building_area * 16]
+
+    # Join the two model results
+    metrics = dfx.merge(dfy, on=["cadastre", "tile", "split"], how="inner")
+
+    # Indexable colors from the current color scheme
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+
+    fig, (axes,) = plt.subplots(
+        1,
+        len(splits),
+        squeeze=False,
+        sharex=True,
+        sharey=True,
+    )
+    for split, ax in zip(splits, axes):
+        # Annotate the given split
+        ax.set_title(r"\textbf{" + split.capitalize() + " split}")
+
+        # Only use data from given split
+        split_metrics = metrics[metrics.split == split]
+
+        # Create scatter plot of x model performance vs. y model
+        x = split_metrics[metric + "_x"]
+        y = split_metrics[metric + "_y"]
+        ax.scatter(
+            x,
+            y,
+            alpha=0.2,
+            edgecolor="",
+            rasterized=True,
+        )
+
+        # Plot dummy points in each corner in order to have correct
+        # limits. Dirty hack, but easiest way to do it.
+        ax.scatter([0, 0, 1, 1], [0, 1, 0, 1], s=0)
+
+        # Both axes represents the same metric, so 1:1 aspect makes sense
+        ax.set_aspect(1)
+
+        # All further plotting should not change the axis limits
+        ax.set_xlim(auto=False)
+        ax.set_ylim(auto=False)
+
+        # Plot the line where models perform equally
+        ax.plot([-10, 10], [-10, 10], color="black")
+
+        # How often is the x model better than the y model?
+        x_better = x > y
+        x_better = 100 * x_better.sum() / len(x_better)
+
+        # Annotate split in across x = y with arrows
+        ax.arrow(x=0.2, y=0.2, dx=0.1, dy=-0.1, color=colors[2], head_width=0.025)
+        ax.arrow(x=0.2, y=0.2, dx=-0.1, dy=0.1, color=colors[1], head_width=0.025)
+
+        # Annotate the proportion of when x is better than y
+        ax.text(
+            x=0.2 + 0.07,
+            y=0.2 - 0.05,
+            s=r"$\mathbf{" + str(round(x_better, 1)) + r"\%}$",
+            color=colors[2],
+            fontsize=12,
+        )
+
+        # Annotate the proportion of when y is better than x
+        ax.text(
+            x=0.2 - 0.06,
+            y=0.2 - 0.0,
+            s=r"$\mathbf{" + str(round(100 - x_better, 1)) + r"\%}$",
+            color=colors[1],
+            fontsize=12,
+            horizontalalignment='right',
+        )
+
+        # Annotate mean IoU of each model
+        x_mean = x.mean()
+        y_mean = y.mean()
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+        ax.plot(
+            [x_min, y_mean],
+            [y_mean, y_mean],
+            color=colors[1],
+            linestyle="--",
+        )
+        ax.vlines(
+            x=x_mean,
+            ymin=y_min,
+            ymax=x_mean,
+            color=colors[2],
+            linestyle="--",
+        )
+        ax.text(
+            x=x_min + 0.03,
+            # y=y_mean - 0.02,
+            y=y_mean + 0.5 * (y_max - y_mean),
+            s=r"$\mathbf{\overline{IoU} = " + f"{y_mean:0.3f}" + r"}$",
+            color=colors[1],
+            fontsize=12,
+            horizontalalignment="left",
+            verticalalignment="center",
+        )
+        ax.text(
+            x=x_mean + 0.5 * (x_max - x_mean),
+            y=y_min + 0.1,
+            s=r"$\mathbf{\overline{IoU} = " + f"{x_mean:0.3f}" + r"}$",
+            color=colors[2],
+            fontsize=12,
+            horizontalalignment="center",
+            verticalalignment="bottom",
+            rotation=-90,
+        )
+
+    # Apply labels if provided
+    if labels:
+        fig.text(0.53, 0.06, labels[0].replace("IoU", r"[$\mathrm{IoU}$]"), ha="center")
+        axes[0].set_ylabel(labels[1].replace("IoU", r"[$\mathrm{IoU}$]"))
+
+    # Reduce padding between subplots
+    fig.tight_layout()
+
+    # Semantic path for this plot
+    save_path = Path(
+        "tex/img/metric_correlation/"
+        f"{x_model}+{y_model}"
+        f"+{metric}.pdf"
+    )
+
+    # We have used rasterized=True in scatter, so we need to increase DPI
+    # before saving.
+    mpl.rcParams['savefig.dpi'] = 300
+    fig.savefig(save_path)

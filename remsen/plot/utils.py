@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_pgf import FigureCanvasPgf
 from matplotlib.backend_bases import register_backend
+from matplotlib.backends.backend_pgf import FigureCanvasPgf
 
 
 def configure_latex(scaler: float = 1.5, width_scaler: float = 1):
