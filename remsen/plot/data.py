@@ -1,6 +1,4 @@
-from typing import Tuple
-
-from matplotlib import cm
+from matplotlib import cm, colors
 
 import numpy as np
 
@@ -12,7 +10,8 @@ def imshow_with_mask(
     mask: np.ndarray,
     ax,
     cmap: str = None,
-    edge_color: Tuple[int, int, int, int] = (255, 0, 0, 180),
+    edge_color: str = "xkcd:black",
+    alpha: int = 180,
 ):
     """Plot image with overlayed mask."""
     image = image.copy()
@@ -29,6 +28,8 @@ def imshow_with_mask(
     ax.imshow(image)
 
     # Plot edge of mask with given RGBA value
+    edge_color = (255 * np.array(colors.to_rgba(edge_color))).astype(int)
+    edge_color[-1] = alpha
     edges = utils.edge_pixels(np.squeeze(mask))
     image[:, :, :][edges] = edge_color
     ax.imshow(image)

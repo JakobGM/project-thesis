@@ -152,16 +152,15 @@ def decorate_prediction(ax, prediction, building_tile):
     prediction = prediction.reshape(256, 256)
     ax.imshow(
         prediction,
-        cmap="seismic",
+        cmap="RdYlBu",
         vmin=0,
         vmax=1,
     )
     imshow_with_mask(
         image=prediction,
         mask=building_tile,
-        cmap="seismic",
+        cmap="RdYlBu",
         ax=ax,
-        edge_color=(0, 255, 0, 255),
     )
     return ax
 
