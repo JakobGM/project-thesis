@@ -9,6 +9,7 @@ from tensorflow.keras.models import Model
 
 from remsen.data import Dataset
 from remsen.plot.data import imshow_with_mask
+from remsen.plot.utils import configure_latex
 from remsen.training import Trainer
 
 
@@ -17,16 +18,22 @@ def plot_prediction(
     tile_index: int = 0,
     dataset: Optional[Dataset] = None,
     model: Union[str, Model] = "without_rgb",
+    save: bool = False,
 ):
+    configure_latex()
     if not dataset:
         dataset = Dataset()
+
     if isinstance(model, str):
+        model_name = model
         trainer = Trainer(
-            name=model,
+            name=model_name,
             model=None,
             dataset=dataset,
         )
         model = trainer.model
+    else:
+        model_name = model
 
     # Get all the data we could possibly need
     tiles = dataset.tiles(
@@ -70,7 +77,6 @@ def plot_prediction(
     )
     if with_rgb and with_lidar:
         lidar_ax, rgb_ax, prediction_ax, metric_ax = axes.flatten()
-        rgb_ax.title.set_text("RGB data")
     elif with_lidar:
         lidar_ax, prediction_ax, metric_ax = axes.flatten()
     else:
@@ -101,6 +107,7 @@ def plot_prediction(
         ax=metric_ax,
         prediction=prediction,
         building_tile=building_tile,
+        multiple_inputs=multiple_inputs,
     )
     decorate_metrics(
         ax=prediction_ax,
@@ -113,12 +120,15 @@ def plot_prediction(
     for axis in axes.flatten():
         axis.tick_params(labelbottom=False, labelleft=False, width=0.0)
     plt.tight_layout()
-    plt.show()
+    if save:
+        figure_id = f"{model_name}-{cadastre_index}-{tile_index}"
+        save_path = f"tex/img/predictions/{figure_id}.pdf"
+        fig.savefig(save_path, bbox_inches="tight", pad_inches=0)
 
 
 def decorate_lidar(ax, lidar_tile, building_tile, cadastre_index=None):
     """Plot LiDAR data on given axis."""
-    ax.title.set_text("LiDAR data")
+    ax.set_title(r"\textbf{LiDAR input}", fontsize=20)
     lidar_tile = lidar_tile.reshape(256, 256)
     ax = imshow_with_mask(image=lidar_tile, mask=building_tile, ax=ax)
     if cadastre_index is None:
@@ -143,12 +153,13 @@ def decorate_lidar(ax, lidar_tile, building_tile, cadastre_index=None):
 
 def decorate_rgb(ax, rgb_tile, building_tile):
     """Plot RGB data to given axis."""
+    ax.set_title(r"\textbf{RGB input}", fontsize=20)
     imshow_with_mask(image=rgb_tile, mask=building_tile, ax=ax)
 
 
 def decorate_prediction(ax, prediction, building_tile):
     """Plot prediction probabilities on given axis."""
-    ax.title.set_text("Prediction probabilities")
+    ax.set_title(r"\textbf{Sigmoid activations}", fontsize=20)
     prediction = prediction.reshape(256, 256)
     ax.imshow(
         prediction,
@@ -165,7 +176,7 @@ def decorate_prediction(ax, prediction, building_tile):
     return ax
 
 
-def decorate_confusions(ax, prediction, building_tile):
+def decorate_confusions(ax, prediction, building_tile, multiple_inputs):
     """Plot confusion categories on given axis."""
     prediction = prediction.reshape(256, 256)
     predicted_mask = (prediction > 0.5).astype("uint8")
@@ -190,16 +201,23 @@ def decorate_confusions(ax, prediction, building_tile):
         Patch(facecolor='#2ECC40', edgecolor="white", label='FP'),
         Patch(facecolor='#FF4136', edgecolor="white", label='FN'),
     ]
+    # Quick hack to prevent misalignment of legend
+    if multiple_inputs:
+        legend_position = (0.5, -0.09)
+    else:
+        legend_position = (0.5, -0.15)
+
     ax.legend(
         handles=legend_elements,
         loc="lower center",
         ncol=4,
-        bbox_to_anchor=(0.5, -0.075),
+        bbox_to_anchor=legend_position,
         frameon=False,
         handlelength=1.3,
         handleheight=1.5,
+        prop={'size': 17},
     )
-    ax.title.set_text("TP / TN / FP / FN, cut-off = 0.5")
+    ax.set_title(r"\textbf{TP, TN, FP, FN} (cut-off $ = 0.5$)", fontsize=20)
     return ax
 
 
@@ -221,7 +239,11 @@ def decorate_metrics(ax, x, y, model):
     loss = metrics["loss"]
     iou = metrics["iou"]
     ax.set_xlabel(
-        f"Loss = {loss:.4f},   IoU = {iou:0.4f}",
-        size=13,
+        r"$\mathrm{Loss} = "
+        f"{loss:.4f},~~~"
+        r"\mathrm{IoU} = "
+        f"{iou:0.4f}$",
+        size=20,
+        labelpad=10,
     )
     return ax
