@@ -32,3 +32,4 @@ def imshow_with_mask(
     edges = utils.edge_pixels(np.squeeze(mask))
     image[:, :, :][edges] = edge_color
     ax.imshow(image)
+    return ax

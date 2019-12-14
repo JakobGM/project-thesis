@@ -13,8 +13,8 @@ from remsen.training import Trainer
 
 
 def plot_prediction(
-    cadastre_index=0,
-    tile_index=0,
+    cadastre_index: int = 0,
+    tile_index: int = 0,
     dataset: Optional[Dataset] = None,
     model: Union[str, Model] = "without_rgb",
 ):
@@ -28,46 +28,103 @@ def plot_prediction(
         )
         model = trainer.model
 
-    # Prepare data for prediction
-    with_rgb = model.input.shape[-1] == 4
+    # Get all the data we could possibly need
     tiles = dataset.tiles(
         cadastre_index=cadastre_index,
         with_tile_dimensions=False,
-        with_rgb=with_rgb,
+        with_rgb=True,
     )
     lidar_tile = tiles["lidar"][tile_index]
+    rgb_tile = tiles["rgb"][tile_index]
     building_tile = tiles["mask"][tile_index]
     input_tile = dataset.input_tile_normalizer(lidar_tile.copy())[0]
 
-    if with_rgb:
-        rgb_tile = tiles["rgb"][tile_index]
+    # Determine the type of data required by the model
+    num_channels = model.input.shape[-1]
+    with_rgb = num_channels in (3, 4)
+    with_lidar = num_channels in (1, 4)
+
+    if with_rgb and with_lidar:
         input_tile = np.concatenate(
             [input_tile, rgb_tile / 255],
             axis=2,
         )
-    input_tile = np.expand_dims(input_tile, 0)
+    elif with_rgb:
+        input_tile = rgb_tile / 255
+    else:
+        input_tile = input_tile
 
-    # (2, 2) plot if with RGB, otherwise (1, 3)
+    # Construct prediction for given input data
+    input_tile = input_tile.reshape(1, 256, 256, -1)
+    prediction = model.predict(input_tile)
+
+    # (2, 2) plot if RGB+LiDAR, otherwise (1, 3)
+    multiple_inputs = with_rgb and with_lidar
     fig, axes = plt.subplots(
-        nrows=2 if with_rgb else 1,
-        ncols=2 if with_rgb else 3,
+        nrows=2 if multiple_inputs else 1,
+        ncols=2 if multiple_inputs else 3,
         figsize=(15, 15),
         sharex=True,
         sharey=True,
         squeeze=False,
     )
-    if with_rgb:
+    if with_rgb and with_lidar:
         lidar_ax, rgb_ax, prediction_ax, metric_ax = axes.flatten()
         rgb_ax.title.set_text("RGB data")
-        imshow_with_mask(image=rgb_tile, mask=building_tile, ax=rgb_ax)
-    else:
+    elif with_lidar:
         lidar_ax, prediction_ax, metric_ax = axes.flatten()
+    else:
+        rgb_ax, prediction_ax, metric_ax = axes.flatten()
 
-    lidar_ax.title.set_text("LiDAR data")
-    prediction_ax.title.set_text("Prediction probabilities")
-    metric_ax.title.set_text("TP / TN / FP / FN, cut-off = 0.5")
+    # Add input data to subplots
+    if with_lidar:
+        decorate_lidar(
+            ax=lidar_ax,
+            lidar_tile=lidar_tile,
+            building_tile=building_tile,
+            cadastre_index=cadastre_index,
+        )
+    if with_rgb:
+        decorate_rgb(
+            ax=rgb_ax,
+            rgb_tile=rgb_tile,
+            building_tile=building_tile,
+        )
 
-    cadastre_text = axes[0][0].annotate(
+    # Add prediction visualization to remaining subplots
+    decorate_prediction(
+        ax=prediction_ax,
+        prediction=prediction,
+        building_tile=building_tile,
+    )
+    decorate_confusions(
+        ax=metric_ax,
+        prediction=prediction,
+        building_tile=building_tile,
+    )
+    decorate_metrics(
+        ax=prediction_ax,
+        x=input_tile,
+        y=building_tile,
+        model=model,
+    )
+
+    # Remove all ticks
+    for axis in axes.flatten():
+        axis.tick_params(labelbottom=False, labelleft=False, width=0.0)
+    plt.tight_layout()
+    plt.show()
+
+
+def decorate_lidar(ax, lidar_tile, building_tile, cadastre_index=None):
+    """Plot LiDAR data on given axis."""
+    ax.title.set_text("LiDAR data")
+    lidar_tile = lidar_tile.reshape(256, 256)
+    ax = imshow_with_mask(image=lidar_tile, mask=building_tile, ax=ax)
+    if cadastre_index is None:
+        return ax
+
+    cadastre_text = ax.annotate(
         f'Cadastre\n{cadastre_index}',
         xy=(0.98, 0.98),
         xycoords='axes fraction',
@@ -81,33 +138,38 @@ def plot_prediction(
     cadastre_text.set_path_effects(
         [patheffects.withStroke(linewidth=2, foreground='black', alpha=0.3)],
     )
+    return ax
 
-    for axis in axes.flatten():
-        axis.tick_params(labelbottom=False, labelleft=False, width=0.0)
 
-    lidar_tile = np.squeeze(lidar_tile)
-    imshow_with_mask(image=lidar_tile, mask=building_tile, ax=lidar_ax)
+def decorate_rgb(ax, rgb_tile, building_tile):
+    """Plot RGB data to given axis."""
+    imshow_with_mask(image=rgb_tile, mask=building_tile, ax=ax)
 
-    lidar_tile = np.expand_dims(lidar_tile, 0)
-    lidar_tile = np.expand_dims(lidar_tile, -1)
 
-    predicted_building_tile = model.predict(input_tile)
-    predicted_building_tile = np.squeeze(predicted_building_tile)
-    prediction_ax.imshow(
-        predicted_building_tile,
+def decorate_prediction(ax, prediction, building_tile):
+    """Plot prediction probabilities on given axis."""
+    ax.title.set_text("Prediction probabilities")
+    prediction = prediction.reshape(256, 256)
+    ax.imshow(
+        prediction,
         cmap="seismic",
         vmin=0,
         vmax=1,
     )
     imshow_with_mask(
-        image=predicted_building_tile,
+        image=prediction,
         mask=building_tile,
         cmap="seismic",
-        ax=prediction_ax,
+        ax=ax,
         edge_color=(0, 255, 0, 255),
     )
+    return ax
 
-    predicted_mask = (predicted_building_tile > 0.5).astype("uint8")
+
+def decorate_confusions(ax, prediction, building_tile):
+    """Plot confusion categories on given axis."""
+    prediction = prediction.reshape(256, 256)
+    predicted_mask = (prediction > 0.5).astype("uint8")
     building_tile = np.squeeze(building_tile)
     tp = np.logical_and(predicted_mask == 1, building_tile == 1)
     tn = np.logical_and(predicted_mask == 0, building_tile == 0)
@@ -120,7 +182,7 @@ def plot_prediction(
     )
     bounds = [0, 1.5, 2.5, 3.5, 5]
     norm = colors.BoundaryNorm(bounds, cmap.N)
-    metric_ax.imshow(confusion_matrix, cmap=cmap, norm=norm)
+    ax.imshow(confusion_matrix, cmap=cmap, norm=norm)
 
     # Add TP/TN/FP/FN legend to plot
     legend_elements = [
@@ -129,7 +191,7 @@ def plot_prediction(
         Patch(facecolor='#2ECC40', edgecolor="white", label='FP'),
         Patch(facecolor='#FF4136', edgecolor="white", label='FN'),
     ]
-    metric_ax.legend(
+    ax.legend(
         handles=legend_elements,
         loc="lower center",
         ncol=4,
@@ -138,12 +200,17 @@ def plot_prediction(
         handlelength=1.3,
         handleheight=1.5,
     )
+    ax.title.set_text("TP / TN / FP / FN, cut-off = 0.5")
+    return ax
 
+
+def decorate_metrics(ax, x, y, model):
+    """Add model prediction metrics to given axis."""
     # Add metrics to plot
-    building_tile = np.expand_dims(building_tile, 0)
+    building_tile = np.expand_dims(y, 0)
     building_tile = np.expand_dims(building_tile, -1)
     evaluation = model.evaluate(
-        x=input_tile,
+        x=x,
         y=building_tile,
         verbose=0,
     )
@@ -154,10 +221,8 @@ def plot_prediction(
     }
     loss = metrics["loss"]
     iou = metrics["iou"]
-    prediction_ax.set_xlabel(
+    ax.set_xlabel(
         f"Loss = {loss:.4f},   IoU = {iou:0.4f}",
         size=13,
     )
-
-    plt.tight_layout()
-    plt.show()
+    return ax
