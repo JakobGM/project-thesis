@@ -18,3 +18,10 @@ def configure_latex(scaler: float = 1.5, width_scaler: float = 1):
             "backend": "ps",
         }
     )
+
+
+def get_colors():
+    """Return indexable colors from current color scheme."""
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+    return colors

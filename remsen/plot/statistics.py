@@ -9,7 +9,8 @@ import numpy as np
 
 import pandas as pd
 
-from remsen.plot.utils import configure_latex
+from remsen.plot.utils import configure_latex, get_colors
+from remsen.training import Trainer
 
 
 def plot_bbox_distribution() -> None:
@@ -205,3 +206,29 @@ def plot_raster_spread(cache):
     sorted_ax.get_xaxis().set_ticks([])
     fig.savefig("/code/tex/img/elevation-spread.pdf")
     return fig, sorted_ax
+
+
+def plot_mask_balance():
+    """Plot distribution of building density in all tiles."""
+    configure_latex()
+    df = Trainer.evaluation_statistics(name="without_rgb")
+    fig, ax = plt.subplots(1, 1)
+    building_fraction = df["mask"] / (256 ** 2)
+    ax.hist(building_fraction, bins=100)
+    ax.set_xlabel("Building density")
+    ax.set_ylabel("Number of tiles")
+    ax.xaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
+
+    colors = get_colors()
+    ax.axvline(
+        x=building_fraction.mean(),
+        color=colors[1],
+        label=(
+            r"Average building density: $"
+            f"{100 * building_fraction.mean():2.1f}"
+            r"\%$"
+        ),
+    )
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig("tex/img/mask-balance.pdf")
