@@ -3,185 +3,19 @@
 
 \subsection{RGB Data}%
 \label{sec:rgb-experiment}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/only_rgb-train+validation-iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-20071-3}  % chktex 8
-  \caption{%
-    Median IoU prediction.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-2177-1}  % chktex 8
-  \caption{%
-    Worst without area filter.
-    Bad because of small building.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-2551-0}  % chktex 8
-  \caption{%
-    Worst with area filter above 17.1\% building mask (average).
-    Bad because of bad data.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-29430-6}  % chktex 8
-  \caption{%
-    Worst with area filter above 17.1\% building mask (average).
-    First bad one with proper data.
-    Shadows, low contrasts and depressions.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-31479-0}  % chktex 8
-  \caption{%
-    Looks like flat concrete.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-45783-1}  % chktex 8
-  \caption{%
-    Uncommon roof texture.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-4831-0}  % chktex 8
-  \caption{%
-    Remarkable error correction.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-27003-2}  % chktex 8
-  \caption{%
-    Another good error correction.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/only_rgb-8117-3}  % chktex 8
-  \caption{%
-    Problem with greenery.
-  }
-\end{figure}
+\input{chapters/experiments/rgb-model}
 
 \subsection{LiDAR Data}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/without_rgb-train+validation-iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/without_rgb-19872-0}  % chktex 8
-  \caption{%
-    Median IoU prediction.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+only_rgb+iou}
-\end{figure}
+\input{chapters/experiments/lidar-model}
 
 \subsection{RGB+LiDAR Data}
+\input{chapters/experiments/rgb+lidar-model}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-iou}
-  \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-loss}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{predictions/with_rgb-24017-0}  % chktex 8
-  \caption{%
-    Median IoU prediction.
-  }
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+with_rgb+iou}
-\end{figure}
-
-\subsection{Batch Normalization}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-validation-iou}
-\end{figure}
-
-\subsection{Dropout}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_dropout+iou}
-\end{figure}
+\subsection{Modelling Techniques}
+\input{chapters/experiments/techniques}
 
 \subsection{LiDAR Normalization}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_metric_normalization+without_rgb-validation-iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_metric_normalization+iou}
-\end{figure}
-
-\subsection{Data Augmentation}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_without_augment+without_rgb-validation-iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_augment+iou}
-\end{figure}
+\input{chapters/experiments/normalization}
 
 \subsection{Losses}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_dice_loss+lidar_jaccard_loss+without_rgb-validation-iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_jaccard_loss+iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_dice_loss+iou}
-\end{figure}
+\input{chapters/experiments/losses}

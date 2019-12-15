@@ -1,0 +1,54 @@
+We train on RGB tiles with three image channels.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{metrics/only_rgb-train+validation-iou}
+\end{figure}
+
+The median IoU prediction is shown in the following figure.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{predictions/only_rgb-20071-3}  % chktex 8
+  \caption{%
+    Median IoU prediction.
+  }
+\end{figure}
+
+Many of the bad predictions are due to bad data or really small buildings, such as shown in the following plot.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{predictions/only_rgb-2177-1}  % chktex 8
+  \includegraphics[width=\linewidth]{predictions/only_rgb-2551-0}  % chktex 8
+  \caption{%
+    Worst without area filter. Bad because of small building. \\
+    Worst with area filter above 17.1\% building mask (average).
+    Bad because of bad data.
+  }
+\end{figure}
+
+Bad predictions on proper data shown in the following plot.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{predictions/only_rgb-29430-6}  % chktex 8
+  \includegraphics[width=\linewidth]{predictions/only_rgb-31479-0}  % chktex 8
+  \includegraphics[width=\linewidth]{predictions/only_rgb-45783-1}  % chktex 8
+  \includegraphics[width=\linewidth]{predictions/only_rgb-8117-3}  % chktex 8
+  \caption{%
+    Worst with area filter above 17.1\% building mask (average).  First bad one with proper data.  Shadows, low contrasts and depressions. \\
+    Looks like flat concrete. \\
+    Uncommon roof texture. \\
+    Problem with greenery.
+  }
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{predictions/only_rgb-4831-0}  % chktex 8
+  \includegraphics[width=\linewidth]{predictions/only_rgb-27003-2}  % chktex 8
+  \caption{%
+    Remarkable error correction. \\
+  }
+\end{figure}
