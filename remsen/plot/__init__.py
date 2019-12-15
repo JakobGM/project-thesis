@@ -9,6 +9,7 @@ from remsen.plot.prediction import (  # noqa: ignore
     plot_prediction,
     plot_worst_prediction,
     plot_prediction_comparison,
+    plot_rgb_help,
 )
 from remsen.plot.statistics import (  # noqa: ignore
     plot_bbox_distribution,

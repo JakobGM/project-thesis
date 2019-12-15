@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
+import matplotlib as mpl
 from matplotlib import colors, patheffects, pyplot as plt
 from matplotlib.patches import Patch
 
@@ -358,3 +359,66 @@ def plot_prediction_comparison(
 
         best_fig.savefig(best_path, bbox_inches="tight", pad_inches=0)
         worst_fig.savefig(worst_path, bbox_inches="tight", pad_inches=0)
+
+
+def plot_rgb_help(save: bool = False):
+    configure_latex(scaler=2)
+    lidar_df = Trainer.evaluation_statistics(name="without_rgb")
+    rgb_df = Trainer.evaluation_statistics(name="only_rgb")
+    both_df = Trainer.evaluation_statistics(name="with_rgb")
+    indep_df = lidar_df.merge(
+        rgb_df,
+        on=["cadastre", "tile", "split"],
+        suffixes=("_lidar", "_rgb"),
+    )
+    indep_df["rgb_improvement"] = indep_df.iou_rgb - indep_df.iou_lidar
+    comparison = both_df.merge(indep_df, on=["cadastre", "tile", "split"])
+    comparison["combo_improvement"] = comparison.iou - comparison.iou_lidar
+
+    fig, ax = plt.subplots(1, 1)
+    ax.set_aspect(1)
+    ax.scatter(
+        x=comparison.rgb_improvement,
+        y=comparison.combo_improvement,
+        alpha=0.2,
+        edgecolor="",
+        rasterized=True,
+    )
+
+    plt.axhline(0, color="black")
+    plt.axvline(0, color="black")
+
+    ax.set_xlabel(r"$\mathrm{IoU(RGB) - IoU(LiDAR)}$")
+    ax.set_ylabel(r"$\mathrm{IoU(LiDAR + RGB) - IoU(LiDAR)}$")
+
+    num_windows = 20
+    windows = np.linspace(-1, 1, num_windows)
+    window_width = 2 / num_windows
+    x, means, medians, lower, upper = [], [], [], [], []
+    for window in windows:
+        index = np.logical_and(
+            comparison.rgb_improvement >= window,
+            comparison.rgb_improvement < window + window_width,
+        )
+        if not np.any(index):
+            continue
+        x.append(window + 0.5 * window_width)
+        means.append(comparison.combo_improvement[index].mean())
+        medians.append(comparison.combo_improvement[index].median())
+        lower.append(comparison.combo_improvement[index].quantile(0.25))
+        upper.append(comparison.combo_improvement[index].quantile(0.75))
+
+    ax.step(
+        x,
+        medians,
+        where="mid",
+        color="xkcd:orange",
+        label="Moving\ninterval\nmedian",
+    )
+    ax.legend(framealpha=1)
+
+    mpl.rcParams['savefig.dpi'] = 300
+    fig.tight_layout()
+    if save:
+        fig.savefig("tex/img/rgb-helps.pdf")
+???
