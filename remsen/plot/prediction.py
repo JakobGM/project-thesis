@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from pathlib import Path
+from typing import Optional, Tuple, Union
 
 from matplotlib import colors, patheffects, pyplot as plt
 from matplotlib.patches import Patch
@@ -124,6 +125,8 @@ def plot_prediction(
         figure_id = f"{model_name}-{cadastre_index}-{tile_index}"
         save_path = f"tex/img/predictions/{figure_id}.pdf"
         fig.savefig(save_path, bbox_inches="tight", pad_inches=0)
+
+    return fig, axes
 
 
 def decorate_lidar(ax, lidar_tile, building_tile, cadastre_index=None):
@@ -282,3 +285,76 @@ def plot_worst_prediction(
         tile_index=worst.tile,
         save=save,
     )
+
+
+def plot_prediction_comparison(
+    worst_model: str = "only_rgb",
+    best_model: str = "without_rgb",
+    area_filter: float = 0,
+    offset: int = 0,
+    save: bool = False,
+    names: Tuple[str, str] = ("RGB", "LiDAR"),
+):
+    dfx = Trainer.evaluation_statistics(name=best_model)
+    dfy = Trainer.evaluation_statistics(name=worst_model)
+    df = dfx.merge(dfy, on=["cadastre", "tile", "split", "mask"])
+    df = df[df.split == "test"]
+    df["iou_improvement"] = df.iou_x - df.iou_y
+    df = df.sort_values(by="iou_improvement")
+    df = df[df["mask"] > area_filter * 256 ** 2]
+
+    best_improvement = df.iloc[-(offset + 1)]
+    cadastre = best_improvement.cadastre
+    tile = best_improvement.tile
+    worst_fig, worst_axes = plot_prediction(
+        cadastre_index=cadastre,
+        tile_index=tile,
+        save=False,
+        model=worst_model,
+    )
+    worst_fig.tight_layout()
+    worst_metric_ax = worst_axes.flatten()[-1]
+    worst_metric_ax.get_legend().remove()
+    worst_metric_ax.set_title("")
+    worst_prediction_ax = worst_axes.flatten()[-2]
+    worst_prediction_ax.set_title("")
+
+    best_fig, best_axes = plot_prediction(
+        cadastre_index=cadastre,
+        tile_index=tile,
+        save=False,
+        model=best_model,
+    )
+    best_fig.tight_layout()
+    best_metric_ax = best_axes.flatten()[-1]
+    best_metric_ax.set_title("")
+    best_prediction_ax = best_axes.flatten()[-2]
+    best_prediction_ax.set_title("")
+
+    best_fig.text(
+        0.66,
+        0.658,
+        r"\textbf{" + f"{names[1]} model" + "}",
+        ha="center",
+        fontsize=20,
+    )
+    worst_fig.text(
+        0.66,
+        0.658,
+        r"\textbf{" + f"{names[0]} model" + "}",
+        ha="center",
+        fontsize=20,
+    )
+
+    if save:
+        save_dir = Path(
+            "tex/img/prediction_improvement/"
+            f"{worst_model}+{best_model}/"
+            f"{cadastre}+{tile}"
+        )
+        save_dir.mkdir(exist_ok=True, parents=True)
+        best_path = save_dir / "best.pdf"
+        worst_path = save_dir / "worst.pdf"
+
+        best_fig.savefig(best_path, bbox_inches="tight", pad_inches=0)
+        worst_fig.savefig(worst_path, bbox_inches="tight", pad_inches=0)

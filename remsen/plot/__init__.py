@@ -8,6 +8,7 @@ from remsen.plot.prediction import (  # noqa: ignore
     plot_median_prediction,
     plot_prediction,
     plot_worst_prediction,
+    plot_prediction_comparison,
 )
 from remsen.plot.statistics import (  # noqa: ignore
     plot_bbox_distribution,

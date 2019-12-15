@@ -1,6 +1,10 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/without_rgb-train+validation-iou}
+  \caption{%
+    LiDAR training.
+  }%
+  \label{fig:lidar-training}
 \end{figure}
 
 \begin{figure}[H]
@@ -8,12 +12,17 @@
   \includegraphics[width=\linewidth]{predictions/without_rgb-19872-0}  % chktex 8
   \caption{%
     Median IoU prediction.
-  }
+  }%
+  \label{fig:lidar-median-prediction}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+only_rgb+iou}
+  \caption{%
+    RGB vs. LiDAR correlation
+  }%
+  \label{fig:rgb-lidar-correlation}
 \end{figure}
 
 \begin{figure}[H]
@@ -22,7 +31,8 @@
   \includegraphics[width=\linewidth]{predictions/without_rgb-2551-0}  % chktex 8
   \caption{%
     Same issue as with RGB.
-  }
+  }%
+  \label{fig:lidar-fundamental-issues}
 \end{figure}
 
 \begin{figure}[H]
@@ -35,4 +45,34 @@
     Fixes RGB issues.
   }%
   \label{fig:lidar-corrected-rgb}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/22880+1/worst.pdf}
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/22880+1/best.pdf}
+  \rule[1ex]{\textwidth}{.5pt}
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/21925+3/worst.pdf}
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/21925+3/best.pdf}
+  \caption{%
+    Best improvement from RGB to LiDAR.
+    (Top) Best improvement without area filter. Buildings along edges are usually more tricky for RGB model.
+    \\
+    (Bottom) Next best improvement from RGB to LiDAR without above average mask value.
+    The best has already been shown in an earlier figure.
+  }%
+  \label{fig:lidar-better-than-rgb}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/26819+1/worst.pdf}
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/26819+1/best.pdf}
+  \rule[1ex]{\textwidth}{.5pt}
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/9702+0/worst.pdf}
+  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/9702+0/best.pdf}
+  \caption{%
+    Best improvement from LiDAR to RGB.
+  }%
+  \label{fig:rgb-better-than-lidar}
 \end{figure}

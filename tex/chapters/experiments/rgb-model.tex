@@ -3,6 +3,10 @@ We train on RGB tiles with three image channels.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/only_rgb-train+validation-iou}
+  \caption{%
+    RGB training.
+  }%
+  \label{fig:rgb-training}
 \end{figure}
 
 The median IoU prediction is shown in the following figure.
@@ -12,7 +16,8 @@ The median IoU prediction is shown in the following figure.
   \includegraphics[width=\linewidth]{predictions/only_rgb-20071-3}  % chktex 8
   \caption{%
     Median IoU prediction.
-  }
+  }%
+  \label{rgb-median-prediction}
 \end{figure}
 
 Many of the bad predictions are due to bad data or really small buildings, such as shown in the following plot.
@@ -26,6 +31,7 @@ Many of the bad predictions are due to bad data or really small buildings, such 
     Worst with area filter above 17.1\% building mask (average).
     Bad because of bad data.
   }
+  \label{fig:rgb-fundamental-issues}
 \end{figure}
 
 Bad predictions on proper data shown in the following plot.
@@ -50,6 +56,7 @@ Bad predictions on proper data shown in the following plot.
   \includegraphics[width=\linewidth]{predictions/only_rgb-4831-0}  % chktex 8
   \includegraphics[width=\linewidth]{predictions/only_rgb-27003-2}  % chktex 8
   \caption{%
-    Remarkable error correction. \\
-  }
+    Remarkable perspective correction. \\
+  }%
+  \label{fig:perspective-correction}
 \end{figure}
