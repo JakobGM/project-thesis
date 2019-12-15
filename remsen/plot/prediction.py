@@ -247,3 +247,38 @@ def decorate_metrics(ax, x, y, model):
         labelpad=10,
     )
     return ax
+
+
+def plot_median_prediction(name, save=False):
+    """Plot the median prediction for a given model."""
+    df = Trainer.evaluation_statistics(name=name)
+    df = df[df.split == "test"]
+    df = df.sort_values(by="iou")
+    median = df.iloc[len(df) // 2]
+    plot_prediction(
+        model=name,
+        cadastre_index=median.cadastre,
+        tile_index=median.tile,
+        save=save,
+    )
+
+
+def plot_worst_prediction(
+    name: str,
+    save: bool = False,
+    area_filter: float = 0,
+    offset: int = 0,
+):
+    """Plot worst prediction for given model."""
+    # Worst without filter due to small object
+    df = Trainer.evaluation_statistics(name=name)
+    df = df[df.split == "test"]
+    df = df[df["mask"] > area_filter * (256 ** 2)]
+    df = df.sort_values(by="iou")
+    worst = df.iloc[offset]
+    plot_prediction(
+        model=name,
+        cadastre_index=worst.cadastre,
+        tile_index=worst.tile,
+        save=save,
+    )

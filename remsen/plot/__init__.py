@@ -4,7 +4,11 @@ from remsen.plot.evaluation import (  # noqa: ignore
     metric_correlation,
 )
 from remsen.plot.figures import plot_segmentation_types  # noqa: ignore
-from remsen.plot.prediction import plot_prediction  # noqa: ignore
+from remsen.plot.prediction import (  # noqa: ignore
+    plot_median_prediction,
+    plot_prediction,
+    plot_worst_prediction,
+)
 from remsen.plot.statistics import (  # noqa: ignore
     plot_bbox_distribution,
     plot_gdalinfo_histogram,
