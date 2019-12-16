@@ -1,14 +1,17 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_dice_loss+lidar_jaccard_loss+without_rgb-validation-iou}
+  \caption{%
+    Training with different losses.
+  }
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_jaccard_loss+iou}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_dice_loss+iou}
+  \caption{%
+    Top: Jaccard loss compared to BCE loss.
+    Bottom: Dice loss compared to BCE loss.
+  }
 \end{figure}

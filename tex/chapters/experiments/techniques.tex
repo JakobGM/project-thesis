@@ -3,6 +3,9 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-validation-iou}
+  \caption{%
+    Batch normalization training.
+  }
 \end{figure}
 
 \topic{Dropout}
@@ -10,11 +13,17 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
+  \caption{%
+    Dropout training.
+  }
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_dropout+iou}
+  \caption{%
+    Dropout compared to without dropout.
+  }
 \end{figure}
 
 \topic{Data Augmentation}
@@ -22,9 +31,15 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/lidar_without_augment+without_rgb-validation-iou}
+  \caption{%
+    Data augmentation training.
+  }
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_augment+iou}
+  \caption{%
+    Augmentation compared to non-augmentation.
+  }
 \end{figure}
