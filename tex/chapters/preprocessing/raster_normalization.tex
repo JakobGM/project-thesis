@@ -140,21 +140,14 @@ Filling in $0$ values for all \texttt{nodata} indices has been shown to work wel
 
 The \enquote{\texttt{nodata}-aware} min-max normalization algorithm used for preprocessing elevation input data is:
 
-\vspace{0.5em}
-\fbox{
-  \parbox{0.96\linewidth}{
-    \vspace{0.5em}
-    \textbf{Nodata-aware min-max normalization algorithm}
-    \begin{enumerate}
-      \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): I_{i,j,z} \neq \texttt{nodata}\}$.
-      \item Calculate $\alpha = \underset{(i,j) \in \mathcal{V}}{\max} I_{i,j,z}$ and $\beta = \underset{(i,j) \in \mathcal{V}}{\min} I_{i,j,z}$.
-      \item Construct normalized raster defined by
-        \begin{equation*}
-            I_{i,j,z}^* = \begin{cases}
-              \frac{I_{i,j,z} - \beta}{\alpha - \beta}, & \text{if } (i,j) \in \mathcal{V}, \\
-              0, & \text{otherwise.}
-            \end{cases}
-        \end{equation*}
-    \end{enumerate}
-  }
-}
+\begin{algorithm}{Nodata-aware min-max normalization}{alg:min-max-scaling}
+  \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): I_{i,j,z} \neq \texttt{nodata}\}$.
+  \item Calculate $\alpha = \underset{(i,j) \in \mathcal{V}}{\max} I_{i,j,z}$ and $\beta = \underset{(i,j) \in \mathcal{V}}{\min} I_{i,j,z}$.
+  \item Construct normalized raster defined by
+    \begin{equation*}
+        I_{i,j,z}^* = \begin{cases}
+          \frac{I_{i,j,z} - \beta}{\alpha - \beta}, & \text{if } (i,j) \in \mathcal{V}, \\
+          0, & \text{otherwise.}
+        \end{cases}
+    \end{equation*}
+\end{algorithm}
