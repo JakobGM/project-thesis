@@ -44,3 +44,13 @@
 
 % Copyright symbol
 \renewcommand{\copyright}[1]{\textcopyright #1}
+
+% Annotate graphics part of figure in left margin
+\newcommand{\marginlabel}[2]{%
+  \begin{tikzpicture}
+    \node[anchor=south west, inner sep=0] (image) at (0,0) {#2};  % chktex 8
+    \begin{scope}[x={(image.south east)},y={(image.north west)}]
+      \node[overlay] (label) at (-0.04, 0.5) {\textcolor{gray}{\textbf{(#1)}}};
+    \end{scope}
+  \end{tikzpicture}
+}
