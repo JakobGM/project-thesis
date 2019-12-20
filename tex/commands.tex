@@ -46,11 +46,21 @@
 \renewcommand{\copyright}[1]{\textcopyright #1}
 
 % Annotate graphics part of figure in left margin
-\newcommand{\marginlabel}[2]{%
+\newcommand{\marginlabel}[1]{%
+  \refstepcounter{subfigure}
   \begin{tikzpicture}
-    \node[anchor=south west, inner sep=0] (image) at (0,0) {#2};  % chktex 8
+    \tikzmath{
+      \thisfigure=\thefigure+1;
+    }
+    \node[anchor=south west, inner sep=0] (image) at (0,0) {#1};  % chktex 8
     \begin{scope}[x={(image.south east)},y={(image.north west)}]
-      \node[overlay] (label) at (-0.04, 0.5) {\textcolor{gray}{\textbf{(#1)}}};
+      \node[overlay] (label) at (-0.04, 0.5)
+        {\textcolor{gray}{\textbf{(\SI[zero-decimal-to-integer]{\thisfigure}\thesubfigure)}}};
     \end{scope}
   \end{tikzpicture}
+}
+
+% Not perfect, but a way to reference margin-labeled graphics using command above
+\newcommand{\marginref}[2]{%
+  (\ref{#1}\hspace{0.2em}#2)%
 }

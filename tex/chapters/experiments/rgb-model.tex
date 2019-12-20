@@ -53,8 +53,8 @@ Two representative examples from the latter category are shown in~\figref{fig:rg
 
 \begin{figure}[H]
   \centering
-  \marginlabel{a}{\includegraphics[width=\linewidth]{predictions/only_rgb-2177-1}};  % chktex 8
-  \marginlabel{b}{\includegraphics[width=\linewidth]{predictions/only_rgb-2551-0}};  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-2177-1}};  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-2551-0}};  % chktex 8
   \caption{%
     Prediction A, shown on the top, is the worst prediction in the test set with an IoU metric of \num{0}.
     Prediction B, shown on the bottom, is the worst prediction amongst all test cases with a building density above \SI{17.1}{\percent}, the average building density in the data set.
@@ -63,9 +63,9 @@ Two representative examples from the latter category are shown in~\figref{fig:rg
   \label{fig:rgb-fundamental-issues}
 \end{figure}
 
-\figref{fig:rgb-fundamental-issues} shows the worst outliers in the test set, prediction (a) being the worst prediction \emph{overall}, while prediction (b) is the worst prediction with an above average building density. % chktex 2
+\figref{fig:rgb-fundamental-issues} shows the worst outliers in the test set, prediction \marginref{fig:rgb-fundamental-issues}{a} being the worst prediction \emph{overall}, while prediction \marginref{fig:rgb-fundamental-issues}{b} is the worst prediction with an above average building density. % chktex 2
 These two predictions demonstrate the two main issues that result in negative outliers in the test metrics.
-The first one, as shown in prediction (a), is when the ground truth masks become vanishingly small.
+The first one, as shown in prediction \marginref{fig:rgb-fundamental-issues}{a}, is when the ground truth masks become vanishingly small.
 Small masks are not just generally difficult for CNNs to segment, they are negatively affected from the fact that the IoU metric is drastically more sensitive to classification changes of single pixels.
 That is, misclassifying 100 pixels when the ground truth mask contains \num{10000} pixels yields a much greater IoU metric compared to if the ground truth mask had contained only \num{1000} positive pixels.
 How this phenomenon affects the RGB model is demonstrated in~\figref{fig:rgb-density-relationship}.
@@ -78,7 +78,7 @@ How this phenomenon affects the RGB model is demonstrated in~\figref{fig:rgb-den
   \label{fig:rgb-density-relationship}
 \end{figure}
 
-The second issue causing extreme negative outliers is the presence of false data in the ground truth segmentation masks, as shown in prediction (b) in~\figref{fig:rgb-fundamental-issues}.
+The second issue causing extreme negative outliers is the presence of false data in the ground truth segmentation masks, as shown in prediction \marginref{fig:rgb-fundamental-issues}{b} in~\figref{fig:rgb-fundamental-issues}.
 Such errors are almost exclusively caused by buildings having been built or demolished in the intermittent time period between the datum of the feature data set and the datum of the ground truth data set.
 The presence of errors in the ground truth mask is fortunately exceedingly rare.
 
@@ -88,10 +88,10 @@ We present four especially illustrative examples of when the RGB model faces dif
 
 \begin{figure}[H]
   \centering
-  \marginlabel{a}{\includegraphics[width=\linewidth]{predictions/only_rgb-29430-6}}  % chktex 8
-  \marginlabel{b}{\includegraphics[width=\linewidth]{predictions/only_rgb-31479-0}}  % chktex 8
-  \marginlabel{c}{\includegraphics[width=\linewidth]{predictions/only_rgb-45783-1}}  % chktex 8
-  \marginlabel{d}{\includegraphics[width=\linewidth]{predictions/only_rgb-8117-3}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-29430-6}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-31479-0}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-45783-1}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-8117-3}}  % chktex 8
   \caption{%
     Illustrative failures of CNN segmentation of building outlines using RGB data.
     Worst with area filter above 17.1\% building mask (average).  First bad one with proper data.  Shadows, low contrasts and depressions.
