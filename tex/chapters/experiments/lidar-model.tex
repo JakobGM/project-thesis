@@ -1,39 +1,72 @@
+A model using only LiDAR data is trained, and the training procedure is summarized in~\figref{fig:lidar-training}.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metrics/without_rgb-train+validation-iou}
   \caption{%
-    LiDAR training.
+    Training of U-Net model for 89 epochs, using LiDAR data.
+    The training epochs are given along the horizontal axis, while the end-of-epoch IoU evaluations are given along the vertical axis.
+    Validation split IoU is shown as a \textcolor{blue}{blue} solid line, while the training split IoU is shown as a \textcolor{blue}{blue} dashed line.
+    The epoch yielding the best validation IoU is annotated as a solid \textcolor{blue}{blue} circle, in this case the 87th epoch with a validation IoU of \num{0.9366}.
   }%
   \label{fig:lidar-training}
 \end{figure}
+
+\todo{quantify exactly how much better LiDAR is compared to RGB}.
+As before we plot the median test split prediction in~\figref{fig:lidar-median-prediction}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{predictions/without_rgb-19872-0}  % chktex 8
   \caption{%
-    Median IoU prediction.
+    LiDAR model median IoU prediction from the test set.
+    The left panel shows the single-channel LiDAR input provided to the model.
+    The remaining two tiles are identical to previous prediction plots; see caption of~\figref{fig:rgb-explanation} for detailed explanation.
   }%
   \label{fig:lidar-median-prediction}
 \end{figure}
+
+The LiDAR model has a great comparative advantage over the RGB model in that it manages to predict straight edges with a great degree of confidence and accuracy.
+Whenever the LiDAR models fails it often includes and/or excludes a \enquote{well-defined} region and as a result still produces properly shaped building outlines.
+The erroneous inclusion of an extended roof overhang over a front door or the exclusion of a small and low annex are two examples of commonly observed well-behaved failures.
+
+While it has been established that the LiDAR model outperforms the RGB model \emph{in aggregate}, it is still of interest to compare these two models on a more case-by-case basis.
+The two models are compared tile-by-tile in the IoU scatter plot presented in~\figref{fig:rgb-lidar-correlation}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+only_rgb+iou}
   \caption{%
-    RGB vs. LiDAR correlation
+    Scatter plot showing the correlation between the evaluation metric performance of two models, LiDAR vs.\ RGB\@.
+    Each \textcolor{blue}{blue} scatter point $(x_i, y_i)$ corresponds to a given tile, $i$, where the $x$-coordinate is the IoU metric of the LiDAR model prediction and the $y$-coordinate is the IoU metric of the RGB model prediction for that given tile.
+    Tiles belonging to the train split are shown in the left half while the tiles belonging to the test split are shown in the right.
+    The horizontal dashed lines in \textcolor{orange}{orange} indicate the \emph{mean} IoU metric of the RGB model for the respective splits, while the vertical dashed lines in \textcolor{green}{green} indicate the \emph{mean} IoU for the LiDAR model.
+    Diagonal \textcolor{black}{black} lines indicates $x = y$, and the arrows with accompanying percentages indicate the fraction of points above and below this line.
   }%
   \label{fig:rgb-lidar-correlation}
 \end{figure}
 
+If the RGB and LiDAR models were indistinguishable in metric evaluation, the scatter points would be entirely situated along the diagonal black lines in~\figref{fig:rgb-lidar-correlation}, which is not the case here due to LiDAR outperforming the RGB model.
+While LiDAR is on average better than RGB, RGB still beats LiDAR in about \SI{14}{\percent} of the test cases.
+This may be partly caused by the randomness introduced into the training procedure, and thus the final model parametrization, but may be an early indication of a heterogeneous data model using both LiDAR \emph{and} RGB might outperform both these homogeneous data models.
+Another thing to notice is how discrepancy between the train split and test split when it comes to the mean IoU metric is much larger for the RGB model (\num{0.04}) than for the LiDAR model (\num{0.026}).
+Besides just outperforming the RGB model, this may also indicate that the LiDAR model generalizes better than the RGB model.
+
+In~\figref{fig:lidar-fundamental-issues} we present the prediction of the LiDAR model on the same geographic tile as the RGB model prediction presented in~\figref{fig:rgb-fundamental-issues}.
+
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{predictions/without_rgb-2177-1}  % chktex 8
-  \includegraphics[width=\linewidth]{predictions/without_rgb-2551-0}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/without_rgb-2177-1}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/without_rgb-2551-0}}  % chktex 8
   \caption{%
-    Same issue as with RGB.
+    LiDAR model prediction on same input as presented in~\figref{fig:rgb-fundamental-issues}.
   }%
   \label{fig:lidar-fundamental-issues}
 \end{figure}
+
+The LiDAR model predictions, \marginref{fig:lidar-fundamental-issues}{a} and \marginref{fig:lidar-fundamental-issues}{b}, demonstrates the same issues as seen with the RGB model, namely vanishingly small segmentation masks and erroneous ground truths.
+This comes as no surprise, especially since these are considered independent of RGB data and its properties.
+What about the RGB model issues considered intrinsic to the nature of RGB data, as exemplified in~\figref{fig:rgb-prediction-issues}; can these be remedied by the LiDAR model?
+\figref{fig:lidar-corrected-rgb} presents the LiDAR model predictions on the same geographic tiles as used by the RGB model in~\figref{fig:rgb-prediction-issues}. % chktex 2
 
 \begin{figure}[H]
   \centering
