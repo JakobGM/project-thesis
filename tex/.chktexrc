@@ -390,6 +390,7 @@ Silent
     \node
     \lfloor \rfloor \lceil \rceil
 
+    \thefigure
 }[
 # Here you can put regular expressions to match Silent macros.  It was
 # designed for  the case where you  have many custom macros  sharing a
