@@ -42,7 +42,7 @@ The two models are compared tile-by-tile in the IoU scatter plot presented in~\f
     The horizontal dashed lines in \textcolor{orange}{orange} indicate the \emph{mean} IoU metric of the RGB model for the respective splits, while the vertical dashed lines in \textcolor{green}{green} indicate the \emph{mean} IoU for the LiDAR model.
     Diagonal \textcolor{black}{black} lines indicates $x = y$, and the arrows with accompanying percentages indicate the fraction of points above and below this line.
   }%
-  \label{fig:rgb-lidar-correlation}
+  \label{fig:rgb-lidar-correlation}\label{fig:correlation-explanation}
 \end{figure}
 
 If the RGB and LiDAR models were indistinguishable in metric evaluation, the scatter points would be entirely situated along the diagonal black lines in~\figref{fig:rgb-lidar-correlation}, which is not the case here due to LiDAR outperforming the RGB model.

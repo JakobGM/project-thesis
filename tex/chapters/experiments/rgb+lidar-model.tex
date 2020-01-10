@@ -1,27 +1,50 @@
+We present a model trained on the combination of both LiDAR and RGB data.
+The training procedure of the combined data model is shown in~\figref{fig:rgb-lidar-training}, and the training procedure of the LiDAR model has been included for comparison.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-iou}
   \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-loss}
   \caption{%
-    LiDAR + RGB training/validation loss and metric.
-  }
+    Training of U-Net models for 89 epochs.
+    \textcolor{blue}{Blue} indicates the model using just LiDAR data, while \textcolor{orange}{orange} is used to indicate the combined data model (RGB + LiDAR).
+    The left figure shows the IoU, while the right figure shows the binary cross-entropy loss.
+    Solid lines indicate validation split metrics, while dashed lines indicate training split metrics.
+    The epochs yielding the best validation IoU for each model are annotated as solid circles with respective colors.
+  }%
+  \label{fig:rgb-lidar-training}
 \end{figure}
+
+The median performing test prediction is shown in~\figref{fig:rgb-lidar-median}, most predictions show the same behaviour and weaknesses as the model based on solely LiDAR data.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{predictions/with_rgb-24017-0}  % chktex 8
+  \includegraphics[width=0.66\linewidth]{predictions/with_rgb-24017-0}  % chktex 8
   \caption{%
-    Median IoU prediction.
-  }
+    Median IoU prediction from the test set using both remote sensing data types, RGB and LiDAR.
+  }%
+  \label{fig:rgb-lidar-median}
 \end{figure}
+
+Although the LiDAR model largely outperformed the RGB model in every measure, the combined model utilizing both LiDAR and RGB still outperforms the model using \emph{just} LiDAR data.
+When adding RGB to to LiDAR model, the mean IoU on the test set improves from \num{0.934} to \num{0.938}, not an insignificant improvement.
+A tile-by-tile comparison of the LiDAR model vs.\ the combined model, similar to the one presented in~\figref{fig:correlation-explanation}, is shown in~\figref{fig:lidar-combined-correlation}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+with_rgb+iou}
   \caption{%
-    Correlation between LiDAR model and LiDAR + RGB model.
-  }
+    Scatter plot showing the correlation between the evaluation metric performance of two models, LiDAR vs.\ RGB + LiDAR\@.
+    The combined data model is shown along the vertical axis, while the model using just LiDAR data is shown along the horizontal axis.
+    See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
+  }%
+  \label{fig:lidar-combined-correlation}
 \end{figure}
+
+In what way does the combined data model outperform the LiDAR model?
+The combined model usually produces predictions almost identical to the LiDAR model, but in the minority of the cases where the RGB model performs better than the LiDAR model, the combined model seems to mimic the RGB model rather than the LiDAR model.
+In~\figref{fig:rgb-better-than-lidar} we presented two test tiles where the RGB model evaluated better than the LiDAR model.
+The combined model predictions on the same test tiles are presented in~\figref{fig:rgb-selection}.
 
 \begin{figure}[H]
   \centering
@@ -29,15 +52,30 @@
   \textcolor{gray}{\vrule}
   \includegraphics[width=0.49\textwidth]{predictions/with_rgb-9702-0}  % chktex 8
   \caption{%
-    When RGB is better than LiDAR, RGB+LiDAR is as well.
-  }
+    Predictions on test tiles using the model trained on both LiDAR data and RGB data in combination.
+    The individual data model predictions using the same tiles are given in~\figref{fig:rgb-better-than-lidar}.
+  }%
+  \label{fig:rgb-selection}
 \end{figure}
+
+The observed pattern is that the combined data model usually imitates the LiDAR-only model, usually only deviating whenever the RGB data is more descriptive than the LiDAR data.
+\figref{fig:rgb-help} substantiates this interpretation of how the combined data model improves upon the LiDAR model.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{rgb-helps}
+  \includegraphics[width=0.66\linewidth]{rgb-helps}
   \caption{%
-    How RGB \enquote{aids} the LiDAR model when it can.
-  }
+    Scatter plot of points $(x_i, y_i)$, one point for each test tile, $i$.
+    The $x$-coordinate is the difference between the RGB model's IoU evaluation and the LiDAR model's IoU evaluation, i.e.\ how much better RGB performs than LiDAR.
+    The $y$-coordinate is the difference between the combined data model's IoU evaluation and the LiDAR model's evaluation, i.e.\ how much better the combined data performs compared to just LiDAR.
+    The median $y$-coordinate has been calculated in bins of width \num{0.1} and have been annotated in \textcolor{orange}{orange}.
+  }%
   \label{fig:rgb-help}
 \end{figure}
+
+The scatter plot in~\figref{fig:rgb-help} requires some explanation.
+Each point represents a geographic tile in the test split, and the coordinates $(x_i, y_i)$ involves the IoU metrics of the LiDAR model, RGB model, and the combined data model.
+The $x$-coordinate is the IoU of the RGB model prediction minus the IoU of the LiDAR model prediction, using the same tile.
+With other words, whenever $x > 0$, the RGB model predicts better than the LiDAR model.
+The $y$-coordinate is the difference between the combined data model's IoU metric and the LiDAR model's IoU metric.
+With other words, whenever $y > 0$, the combined data model performs better than the model based on just LiDAR data.
