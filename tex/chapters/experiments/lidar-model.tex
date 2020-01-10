@@ -70,42 +70,49 @@ What about the RGB model issues considered intrinsic to the nature of RGB data, 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{predictions/without_rgb-29430-6}  % chktex 8
-  \includegraphics[width=\linewidth]{predictions/without_rgb-31479-0}  % chktex 8
-  \includegraphics[width=\linewidth]{predictions/without_rgb-45783-1}  % chktex 8
-  \includegraphics[width=\linewidth]{predictions/without_rgb-8117-3}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/without_rgb-29430-6}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/without_rgb-31479-0}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/without_rgb-45783-1}}  % chktex 8
+  \marginlabel{\includegraphics[width=\linewidth]{predictions/without_rgb-8117-3}}  % chktex 8
   \caption{%
-    Fixes RGB issues.
+    LiDAR model prediction on same input as presented in~\figref{fig:rgb-prediction-issues}.
   }%
   \label{fig:lidar-corrected-rgb}
 \end{figure}
 
+As can be seen in~\figref{fig:lidar-corrected-rgb}, the texture and contrast issues observed in~\figref{fig:rgb-prediction-issues} have been largely remedied in the LiDAR model predictions, although with the exception of prediction \marginref{fig:lidar-corrected-rgb}{a} to some degree.
+
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/22880+1/worst.pdf}
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/22880+1/best.pdf}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/22880+1/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/22880+1/best.pdf}}
   \rule[1ex]{\textwidth}{.5pt}
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/21925+3/worst.pdf}
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/21925+3/best.pdf}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/21925+3/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/only_rgb+without_rgb/21925+3/best.pdf}}
   \caption{%
-    Best improvement from RGB to LiDAR.
-    (Top) Best improvement without area filter. Buildings along edges are usually more tricky for RGB model.
-    \\
-    (Bottom) Next best improvement from RGB to LiDAR without above average mask value.
-    The best has already been shown in an earlier figure.
+    Geographic test tiles where the LiDAR model performs much better than the RGB model.
+    The top half shows the greatest improvement when going from RGB to LiDAR, while the bottom half shows the next best improvement for the geographic tiles with above-average building density.
   }%
   \label{fig:lidar-better-than-rgb}
 \end{figure}
 
+\figref{fig:lidar-better-than-rgb} presents two test cases where the LiDAR model outperforms the RGB model to a large degree.  % chktex 2
+The LiDAR model generally outperforms the RGB model when it comes to building outlines situated along the borders of the input tiles, usually requiring less context before being able to distinguish buildings.
+Prediction \marginref{fig:lidar-better-than-rgb}{c} demonstrates three RGB issues: contrasts, roof greenery, and non-orthogonal perspective, while LiDAR prediction \marginref{fig:lidar-better-than-rgb}{d} suffers from none of these issues.
+
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/26819+1/worst.pdf}
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/26819+1/best.pdf}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/26819+1/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/26819+1/best.pdf}}
   \rule[1ex]{\textwidth}{.5pt}
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/9702+0/worst.pdf}
-  \includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/9702+0/best.pdf}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/9702+0/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+only_rgb/9702+0/best.pdf}}
   \caption{%
-    Best improvement from LiDAR to RGB.
+    Geographic test tiles where the RGB model performs much better than the LiDAR model.
   }%
   \label{fig:rgb-better-than-lidar}
 \end{figure}
+
+As can be seen in~\figref{fig:rgb-lidar-correlation} there are certain test cases where the RGB model outperforms the LiDAR model to a significant degree, two such cases being presented in~\figref{fig:rgb-better-than-lidar}.
+Prediction \marginref{fig:rgb-better-than-lidar}{b} demonstrates how good the RGB model is in detecting the presence of orange roof tiles, no matter how small the area, while LiDAR prediction \marginref{fig:rgb-better-than-lidar}{a} faces difficulty due to the dense greenery.
+LiDAR prediction \marginref{fig:rgb-better-than-lidar}{c} seems to have too little context in order to determine what is ground level and what is not, while RGB prediciton \marginref{fig:rgb-better-than-lidar}{d} manages well due to roof texture recognition.
