@@ -6,10 +6,20 @@ Data augmentation.
 
 \topic{Software}
 
-Quick summary of software stack.
-TensorFlow 2, GDAL, numpy, rasterio, fiona (is this really necessary, besides TensorFlow?).
+GDAL/OGR \cite{dep:gdal}, Rasterio \cite{dep:rasterio}, Fiona \cite{dep:fiona}, Numpy \cite{dep:numpy}, TensorFlow \cite{dep:tensorflow}, Shapely \cite{dep:shapely}, scikit-image \cite{dep:scikit-image} and scikit-learn \cite{dep:sklearn}, GeoPandas \cite{dep:geopandas}, docker \cite{dep:docker}.
 
 \topic{Hardware}
 
-Quick summary of the hardware specifications used for training and prediction.
-Time used per epoch, per sample, and per batch?
+All numerical experiments have been performed by a desktop class computer with the following relevant technical specifications:
+
+\begin{itemize}
+  \item \textbf{Processor:} \textit{AMD Ryzen 9 3900X} -- 12 cores / 24 threads, \SI{3.8}{\giga\hertz} base clock / \SI{4.6}{\giga\hertz} boost clock.
+  \item \textbf{Graphics card:} \textit{MSI GeForce 2070 Super Gaming X TRIO} -- \SI{8}{\giga\byte} GDDR6 VRAM, \SI{1605}{\mega\hertz} clock speed, \SI{9.062}{\tera\flops} 32-bit performance.
+  \item \textbf{Memory:} \textit{Corsair Vengeance LPX DDR4 \SI{3200}{\mega\hertz} 32GB}.
+  \item \textbf{Storage:} \textit{Intel 660p 1TB M.2 SSD} -- Up to \SI{1800}{\mega\byte\per\second} read and write speed.
+\end{itemize}
+
+With a batch size of 16, each batched training step takes \SI{218}{\milli\second} of computation, resulting in approximately \SI{14}{\milli\second} per sample image tile.
+With \num{2563} training batches, each training epoch requires approximately \SI{9.5}{\minute}, but with \num{549} additional validation batch evaluations each epoch uses approximately 12 minutes from end to end.
+Most experiments have been trained for 90 epochs, hence requiring altogether 18 hours of training.
+\todo{Find exact time used by validation step.}
