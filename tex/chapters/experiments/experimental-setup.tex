@@ -6,7 +6,13 @@ Data augmentation.
 
 \topic{Software}
 
-GDAL/OGR \cite{dep:gdal}, Rasterio \cite{dep:rasterio}, Fiona \cite{dep:fiona}, Numpy \cite{dep:numpy}, TensorFlow \cite{dep:tensorflow}, Shapely \cite{dep:shapely}, scikit-image \cite{dep:scikit-image} and scikit-learn \cite{dep:sklearn}, GeoPandas \cite{dep:geopandas}, docker \cite{dep:docker}.
+The source code used in order to produce and present the results in this paper is openly available at \url{https://github.com/JakobGM/project-thesis}.
+Most of the source code is written in Python as it arguably has the best software ecosystem for both GIS workflows \emph{and} deep learning.
+This project would not have been possible if not for the vast array of high quality open source software available, especially within the GIS ecosystem.
+The Geospatial Data Abstraction Library (GDAL) \cite{dep:gdal} has been extensively used in order to process GIS data, and the python wrappers for GDAL, Rasterio \cite{dep:rasterio} for raster data and Fiona \cite{dep:fiona} for vector data, are central building blocks of the data processing pipeline.
+Further, Numpy \cite{dep:numpy}, Shapely \cite{dep:shapely}, scikit-learn \cite{dep:sklearn} / scikit-image \cite{dep:sklearn}, and GeoPandas \cite{dep:geopandas} have been used in order to shape the data into a final format suitable for machine learning purposes.
+The machine learning framework of choice has been the new 2.0 release of TensorFlow \cite{dep:tensorflow}, most of the modelling code having been written with the declarative Keras API.
+This is not an exhaustive list of all dependencies, but a complete list of software dependencies and a reproducible Docker \cite{dep:docker} image is provided with the source code for this project.
 
 \topic{Hardware}
 
@@ -14,7 +20,7 @@ All numerical experiments have been performed by a desktop class computer with t
 
 \begin{itemize}
   \item \textbf{Processor:} \textit{AMD Ryzen 9 3900X} -- 12 cores / 24 threads, \SI{3.8}{\giga\hertz} base clock / \SI{4.6}{\giga\hertz} boost clock.
-  \item \textbf{Graphics card:} \textit{MSI GeForce 2070 Super Gaming X TRIO} -- \SI{8}{\giga\byte} GDDR6 VRAM, \SI{1605}{\mega\hertz} clock speed, \SI{9.062}{\tera\flops} 32-bit performance.
+  \item \textbf{Graphics card:} \textit{MSI GeForce 2070 Super} -- \SI{8}{\giga\byte} GDDR6 VRAM, \SI{1605}{\mega\hertz} clock speed, \SI{9.062}{\tera\flops} 32-bit performance.
   \item \textbf{Memory:} \textit{Corsair Vengeance LPX DDR4 \SI{3200}{\mega\hertz} 32GB}.
   \item \textbf{Storage:} \textit{Intel 660p 1TB M.2 SSD} -- Up to \SI{1800}{\mega\byte\per\second} read and write speed.
 \end{itemize}
