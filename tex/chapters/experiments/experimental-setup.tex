@@ -1,8 +1,13 @@
 \topic{Training procedure}
 
-Training, validation, and test split, and how much data in each split.
-Batch size and shuffling.
-Data augmentation.
+\num{58559} input tiles, including both aerial photography (RGB) and digital surface model (LiDAR elevation), have been preprocessed and persisted to disk.
+This sample space is further split into \num{41018} training tiles, \num{8788} validation tiles, and \num{8753} test tiles, yielding a customary a 70\% / 15\% / 15\% training--validation--testing split when rounded to the nearest percent.
+The training data is randomly shuffled and augmented at the beginning of each epoch in order to reduce overfitting.
+The data augmentation consists of a random application of horizontal and/or vertical flipping in addition to a rotation by a random integer multiple of 90 degrees.
+The training data is subsequently grouped into batches of size 16 before applying the Adam optimizer.
+Training is continued until observed convergence by the use of the IoU evaluation of the validation split.
+The weights corresponding to the epoch yielding the best validation metric is used as the final model parametrization.
+\todo{Add figure for data augmentation?}
 
 \topic{Software}
 
@@ -18,14 +23,17 @@ This is not an exhaustive list of all dependencies, but a complete list of softw
 
 All numerical experiments have been performed by a desktop class computer with the following relevant technical specifications:
 
-\begin{itemize}
-  \item \textbf{Processor:} \textit{AMD Ryzen 9 3900X} -- 12 cores / 24 threads, \SI{3.8}{\giga\hertz} base clock / \SI{4.6}{\giga\hertz} boost clock.
-  \item \textbf{Graphics card:} \textit{MSI GeForce 2070 Super} -- \SI{8}{\giga\byte} GDDR6 VRAM, \SI{1605}{\mega\hertz} clock speed, \SI{9.062}{\tera\flops} 32-bit performance.
+\begin{itemize}[nosep]
+  \item \textbf{Processor:} \textit{AMD Ryzen 9 3900X}. \\
+    12 cores / 24 threads, \SI{3.8}{\giga\hertz} base clock / \SI{4.6}{\giga\hertz} boost clock.
+  \item \textbf{Graphics card:} \textit{MSI GeForce 2070 Super}. \\
+    \SI{8}{\giga\byte} GDDR6 VRAM, \SI{1605}{\mega\hertz} clock speed, \SI{9.062}{\tera\flops} 32-bit performance.
   \item \textbf{Memory:} \textit{Corsair Vengeance LPX DDR4 \SI{3200}{\mega\hertz} 32GB}.
-  \item \textbf{Storage:} \textit{Intel 660p 1TB M.2 SSD} -- Up to \SI{1800}{\mega\byte\per\second} read and write speed.
+  \item \textbf{Storage:} \textit{Intel 660p 1TB M.2 SSD}. \\
+    Up to \SI{1800}{\mega\byte\per\second} read and write speed.
 \end{itemize}
 
 With a batch size of 16, each batched training step takes \SI{218}{\milli\second} of computation, resulting in approximately \SI{14}{\milli\second} per sample image tile.
-With \num{2563} training batches, each training epoch requires approximately \SI{9.5}{\minute}, but with \num{549} additional validation batch evaluations each epoch uses approximately 12 minutes from end to end.
-Most experiments have been trained for 90 epochs, hence requiring altogether 18 hours of training.
-\todo{Find exact time used by validation step.}
+With \num{2563} training batches, each training epoch requires approximately \SI{9.5}{\minute}, but with \num{549} additional validation batch evaluations each epoch uses approximately \num{12.25} minutes from end to end.
+Most experiments have been trained for 90 epochs, hence requiring altogether approximately 18 hours and 20 minutes of training.
+\todo{Clean up this section and add information about preprocessing.}
