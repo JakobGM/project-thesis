@@ -6,5 +6,5 @@
 \renewcommand*{\thealgorithm}{Algorithm \arabic{algorithm}}
 \newcommand*{\systemautorefname}{algorithm}
 \newenvironment{algorithm}[2]
-  {\refstepcounter{algorithm}\begin{framed}\label{#2}\textbf{\thealgorithm:} \texttt{#1}\begin{enumerate}[label=\textbf{\arabic*}]}
-  {\end{enumerate}\end{framed}}
+{\refstepcounter{algorithm}\vspace{0.5em}\begin{minipage}{\textwidth}\begin{framed}\label{#2}\textbf{\thealgorithm:} \texttt{#1}\begin{enumerate}[label=\textbf{\arabic*}]}
+  {\end{enumerate}\end{framed}\end{minipage}\vspace{0.5em}}
