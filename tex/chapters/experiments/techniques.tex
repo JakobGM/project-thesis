@@ -57,18 +57,32 @@ The application of dropout during model training likely increases the generaliza
 
 \topic{Data Augmentation}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_without_augment+without_rgb-validation-iou}
-  \caption{%
-    Data augmentation training.
-  }
-\end{figure}
+Finally we investigate the effect of data augmentation on the LiDAR-only model, the comparative results being presented in~\figref{fig:data-augmentation-experiment}.
+The data augmentation consists of random application of horizontal and/or vertical flipping in addition to a rotation by a random multiple of 90 degrees, resulting in altogether 16 random configurations of each training tile.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_augment+iou}
+  \includegraphics[width=0.66\linewidth,trim={0 0.4cm 0 0},clip]{metrics/lidar_without_augment+without_rgb-validation-iou}
+  \includegraphics[width=0.64\linewidth,trim={0 0.4cm 0 0.9cm},clip]{metric_correlation/without_rgb+lidar_without_augment+iou}
+  \hspace{-0.9em}
   \caption{%
-    Augmentation compared to non-augmentation.
-  }
+    Top: Training procedure of two U-Net models on LiDAR data, one employed with data augmentation shown in \textcolor{blue}{blue}, while the other uses no data augmentation and is shown in \textcolor{orange}{orange}.
+    Bottom: Scatter plot showing the correlation between the evaluation metric performance of two models, one with data augmentation (horizontal) and one without (vertical).
+    See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
+  }%
+  \label{fig:data-augmentation-experiment}
 \end{figure}
+
+No significant discernible trend can be observed in~\figref{fig:correlation-explanation}.
+The observed differences between the two models can as likely be attributed to random noise than any causal effect of the data augmentation procedure.
+The augmentation techniques applied during training, namely flipping and 90 degree rotations, have intentionally been selected in order to be negligible with respect to computational cost.
+They do not require any de facto calculations, they can be applied by simply traversing arrays in a different manner in linear memory, and are therefore constant $\mathcal{O}(1)$ time cost operations.
+Considering that data augmentation is cheaply performed and we have no evidence contrary to it being a positive influence of the generalizability of the model, we conclude that data augmentation should be performed during training.
+
+Finally, it is worth noting that the data augmentation applied in this case is a rather simple and minor form of data augmentation.
+If the subset of labeled observations used for training possesses certain systematic properties that are not necessarily present in the universal set of future cases to be predicted, data augmentation can be used in order to \enquote{prepare} the model for such cases.
+Consider a hypothetical region A where buildings are overwhelmingly built such that the longest building edge faces southwards, while buildings in hypothetical region B does not follow this pattern.
+A model trained on data sourced from region A would likely perform better when making predictions in region B if rotational augmentation is performed during training.
+Arguably rotation and flipping of the LiDAR input tiles corrects a relatively small subset of all systematic properties.
+Aerial RGB photography can be augmented by contrast and saturation adjustments, for instance, augmentation methods which we have not implemented.
+We hypothesize that the effect of augmentation is likely greater for aerial RGB imagery rather than LiDAR data, especially if the validation and test set are captured under different weather and lighting conditions.
