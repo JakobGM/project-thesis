@@ -1,30 +1,59 @@
+In previous sections we have presented techniques such as batch normalization, dropout, and data augmentation, and claimed that these techniques have been empirically shown to combat overfitting and/or decrease training times.
+Unfortunately, machine learning techniques are most often highly context dependent in their efficiency, and this section is intended as a verification of these techniques actually having a positive impact on our model's performance.
+
 \topic{Batch normalization}
+
+We have trained two U-Net models on LiDAR data, one \emph{with} batch normalization and one \emph{without}, the training procedure of both these models being presented in~\figref{fig:batch-normalization-training}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-validation-iou}
+  \includegraphics[width=0.66\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-validation-iou}
   \caption{%
-    Batch normalization training.
-  }
+    Training procedure of two U-Net models on LiDAR data, one employed with batch normalization shown in \textcolor{blue}{blue}, while the other has no batch normalization and shown in \textcolor{orange}{orange}.
+  }%
+  \label{fig:batch-normalization-training}
 \end{figure}
+
+\todo{Add loss plot to show that batch normalization also aids the optimization itself.}
+The comparative performance improvement of the batch normalized model over the non-normalized model becomes immediately clear from~\figref{fig:batch-normalization-training}.
+What is of particular interest is that the batch normalization does not only increase the speed of training, but it also improves the final model performance.
+Of all the A/B tests conducted in this section, this test has had the most significant effect.
 
 \topic{Dropout}
 
+As with the batch normalization experiment, we now train one model \emph{with} max-pooling dropout and one \emph{without}, and the training results are presented in~\figref{fig:dropout-training}.
+
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
+  \includegraphics[width=0.66\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
   \caption{%
-    Dropout training.
+    Training procedure of two U-Net models on LiDAR data, one employed with max-pooling dropout shown in \textcolor{blue}{blue}, while the other uses no max-pooling dropout and is shown in \textcolor{orange}{orange}.
   }
+  \label{fig:dropout-training}
 \end{figure}
+
+While the improvement of batch normalization was immediately obvious, the effect of dropout is more difficult to interpret from~\figref{fig:dropout-training} alone as we only observe a marginal IoU validation metric improvement from \num{0.9335} to \num{0.9363}.
+Methods preventing overfitting will hypothetically bridge the gap between the training- and test-evaluation of the model.
+As dropout is primarily intended as a measure to prevent overfitting, we will investigate the performance of both models on the test set and compare this with their performance on the training set.
+\figref{fig:dropout-train-test} presents a comparison of these two models, a figure similar to the one shown in~\figref{fig:correlation-explanation}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_dropout+iou}
   \caption{%
-    Dropout compared to without dropout.
-  }
+    Scatter plot showing the correlation between the evaluation metric performance of two models, one with max-pooling dropout and one without.
+    The model without dropout is shown along the vertical axis, while the model with dropout is shown along the horizontal axis.
+    See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
+  }%
+  \label{fig:dropout-train-test}
 \end{figure}
+
+The U-Net model without batch normalization largely outperforms the model with batch normalization on the \emph{training} set, having a better IoU evaluation on a staggering 98\% of all training tiles and a mean training IoU of \num{0.974}, substantially better than the batch-normalized model with a mean training IoU of \num{0.960}.
+What is of particular interest, though, is that the batch-normalized model generalizes \emph{much} better to the test tile set, so much so that it narrowly outperforms the model without batch normalization on the test set.
+The 98\% / 2\% split is reduced to an even 50\% / 50\% split, approximately, making the two models tied in a first-past-the-post competition.
+The mean test IoU of the batch normalized model, \num{0.934}, is also better than the mean test IoU of the non-normalized model, \num{0.930}.
+Altogether this can be considered quite strong evidence in favor of max-pooling dropout having reduced the overfitting of our model.
+The application of dropout during model training likely increases the generalizability of our model, improving its ability to predict building outlines with previously unseen data.
 
 \topic{Data Augmentation}
 
