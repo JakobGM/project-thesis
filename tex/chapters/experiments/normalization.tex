@@ -1,15 +1,35 @@
+We will now investigate how the normalization of LiDAR raster elevation values influences the predictive performance of the model.
+The \enquote{\texttt{nodata}-aware local min-max normalization} method described in~\algref{alg:local-min-max-scaling} on page~\pageref{alg:local-min-max-scaling} will be simply referred to as \enquote{dynamic scaling} as it individually scales each elevation tile to the $[0, 1]$ domain.
+Likewise, the \enquote{\texttt{nodata}-aware metric normalization} method described in~\algref{alg:metric-normalization} on page~\pageref{alg:metric-normalization} will be simply referred to as \enquote{constant scaling} as it always scales by a constant factor $\gamma^{-1}$ after subtracting the minimum, regardless of maximum elevation within the given tile.
+The training procedures of two models employing these two different LiDAR normalization methods are shown in~\figref{fig:normalization-training}.
+The global scaler $\gamma$, as specified in~\algref{alg:metric-normalization}, is chosen to be 30.
+Small values for this global scaler, $\gamma < 10$, results in no training convergence whatsoever, while large enough values do to not differ in performance.
+
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_metric_normalization+without_rgb-validation-iou}
+  \includegraphics[width=0.66\linewidth]{metrics/lidar_metric_normalization+without_rgb-validation-iou}
   \caption{%
-    Training of two different normalization methods.
-  }
+    Training procedure of U-Net LiDAR model using two different normalization methods.
+    The model using \enquote{dynamic scaling} as specified in~\algref{alg:local-min-max-scaling} is shown in \textcolor{blue}{blue}, while the model using \enquote{constant scaling} with $\gamma = 30$ as specified in~\algref{alg:metric-normalization} is shown in \textcolor{orange}{orange}.
+  }%
+  \label{fig:normalization-training}
 \end{figure}
+
+\figref{fig:normalization-training} shows a small improvement of using the constant scaling over the dynamic method, an improvement of validation IoU from \num{0.9366} to \num{0.9393}, although not much can be concluded from this figure alone.
+A comparison over the training and test splits of the two models is presented in~\figref{fig:normalization-correlation}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_metric_normalization+iou}
   \caption{%
-    Normalization methods compared.
-  }
+    Scatter plot showing the correlation between models using different LiDAR normalization methods, IoU of the \enquote{constant scaling} model annotated along the vertical axis while the IoU of the \enquote{dynamic scaling} model is annotated along the horizontal axis.
+    See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
+  }%
+  \label{fig:normalization-correlation}
 \end{figure}
+
+The \enquote{constant scaling} normalization method does in fact perform better than the \enquote{dynamic scaling} normalization method over all three sample splits: training, validation, and test.
+When changing the normalization method to the constant scaling method, the mean test IoU metric improves from \num{0.934} to \num{0.938} and 60\% of the test cases perform better.
+
+\todo{Investigate when constant scaling beats dynamic scaling. Correlation with elevation range?}
+\todo{Write about value of $\gamma$.}
