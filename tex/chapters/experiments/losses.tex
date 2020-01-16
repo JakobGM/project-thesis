@@ -1,17 +1,32 @@
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{metrics/lidar_dice_loss+lidar_jaccard_loss+without_rgb-validation-iou}
-  \caption{%
-    Training with different losses.
-  }
-\end{figure}
+So far all model experiments have been exclusively trained with the \textit{binary cross-entropy} loss function as given in equation~\eqref{eq:binary-cross-entropy}.
+While this is the dominant loss function for binary classification tasks, it is still considered a suboptimal surrogate loss function for segmentation evaluation metrics such as the IoU metric.
+Alternative loss functions were discussed in~\secref{sec:segmentation-metrics}, the so-called soft loss variants being of greatest interest.
+Specifically, the \textit{soft Jaccard loss} given in equation~\eqref{eq:soft-jaccard-loss} and \textit{soft dice loss} given in equation~\eqref{eq:soft-dice-loss} having been theoretically and empirically shown to be efficient surrogate loss functions for the IoU metric.
+Three models have been trained and evaluated, the only difference being which loss function that was used during training; binary cross-entropy, soft Jaccard loss, or soft dice loss.
+The training procedures of these three models are visualized in \figref{fig:losses-training}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_jaccard_loss+iou}
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_dice_loss+iou}
+  \includegraphics[width=0.66\linewidth]{metrics/lidar_dice_loss+lidar_jaccard_loss+without_rgb-validation-iou}
   \caption{%
-    Top: Jaccard loss compared to BCE loss.
-    Bottom: Dice loss compared to BCE loss.
+    Three U-Net LiDAR models trained with different loss functions.
+    Binary cross-entropy model shown in \textcolor{blue}{blue}, soft Jaccard in \textcolor{orange}{orange}, and soft dice shown in \textcolor{green}{green}.
+  }%
+  \label{fig:losses-training}
+\end{figure}
+
+The three models presented in~\figref{fig:losses-training} start out at approximately the same point after one epoch, but the binary cross-entropy model quickly outperforms the two other models when it comes to mean validation IoU.
+The soft losses seem to be \emph{worse} surrogate losses for the IoU metric rather than better ones, completely contradicting our prior beliefs.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.49\linewidth,trim={0 0.4cm 0 0.9cm},clip]{metric_correlation/without_rgb+lidar_jaccard_loss+iou}
+  \textcolor{gray}{\vrule}
+  \includegraphics[width=0.49\linewidth,trim={0 0.4cm 0 0.9cm},clip]{metric_correlation/without_rgb+lidar_dice_loss+iou}
+  \caption{%
+    Scatter plot showing the correlation between models using different losses during training.
+    Both the left and right half of this figure compares model IoU against the binary cross-entropy IoU along the horizontal axis.
+    Left figure half shows the soft Jaccard model on the vertical axis, while the right half shows the soft dice loss along the vertical axis.
+    See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
   }
 \end{figure}
