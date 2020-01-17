@@ -4,13 +4,14 @@ The training procedure of the combined data model is shown in~\figref{fig:rgb-li
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-iou}
-  \includegraphics[width=0.495\linewidth]{metrics/with_rgb+without_rgb-train+validation-loss}
+  \includegraphics[width=0.495\textwidth]{iou_distribution/with_rgb}
   \caption{%
-    Training of U-Net models for 89 epochs.
+    \textbf{Left --} IoU evaluation during training of U-Net models for 89 epochs.
     \textcolor{blue}{Blue} indicates the model using just LiDAR data, while \textcolor{orange}{orange} is used to indicate the combined data model (RGB + LiDAR).
-    The left figure shows the IoU, while the right figure shows the binary cross-entropy loss.
     Solid lines indicate validation split metrics, while dashed lines indicate training split metrics.
     The epochs yielding the best validation IoU for each model are annotated as solid circles with respective colors.
+    \textbf{Right --} Test IoU distribution of combined data model, left \SI{5}{\percent} of data cropped.
+    See caption of~\figref{fig:iou-distribution-explanation} for detailed description.
   }%
   \label{fig:rgb-lidar-training}
 \end{figure}

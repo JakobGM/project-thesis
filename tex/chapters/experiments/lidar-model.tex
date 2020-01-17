@@ -1,12 +1,15 @@
 A model using only LiDAR data is trained, and the training procedure is summarized in~\figref{fig:lidar-training}.
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{metrics/without_rgb-train+validation-iou}
+  \includegraphics[width=0.49\linewidth]{metrics/without_rgb-train+validation-iou}
+  \includegraphics[width=0.49\textwidth]{iou_distribution/without_rgb}
   \caption{%
-    Training of U-Net model for 89 epochs, using LiDAR data.
+    \textbf{Left --} Training of U-Net model for 89 epochs, using LiDAR data.
     The training epochs are given along the horizontal axis, while the end-of-epoch IoU evaluations are given along the vertical axis.
     Validation split IoU is shown as a \textcolor{blue}{blue} solid line, while the training split IoU is shown as a \textcolor{blue}{blue} dashed line.
     The epoch yielding the best validation IoU is annotated as a solid \textcolor{blue}{blue} circle, in this case the 87th epoch with a validation IoU of \num{0.9366}.
+    \textbf{Right --} Test IoU distribution of LiDAR model, left \SI{5}{\percent} of data cropped.
+    See caption of~\figref{fig:iou-distribution-explanation} for detailed description.
   }%
   \label{fig:lidar-training}
 \end{figure}

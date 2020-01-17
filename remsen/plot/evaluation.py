@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.ticker import PercentFormatter
 
-from remsen.plot.utils import configure_latex
+from remsen.plot.utils import configure_latex, get_colors
 from remsen.training import Trainer, tensorboard_dataframe
 
 
@@ -16,9 +16,11 @@ def plot_training(
     metric: str = "iou",
     ylim: Optional[Tuple] = None,
     labels: Optional[Dict] = None,
+    save: bool = False,
+    scaler: float = 1.33,
 ) -> None:
     """Plot training sequence from TensorBoard for given model/split/metric."""
-    configure_latex(scaler=1.75)
+    configure_latex(scaler=scaler)
     fig, ax = plt.subplots()
     ax.set_xlabel(r"$\mathrm{Epoch}$")
 
@@ -110,9 +112,10 @@ def plot_training(
     filename = (
         "+".join(sorted(names)) + "-" + "+".join(sorted(splits)) + "-" + metric
     )
-    path = "/code/tex/img/metrics/" + filename + ".pdf"
     fig.tight_layout()
-    fig.savefig(path)
+    if save:
+        path = "/code/tex/img/metrics/" + filename + ".pdf"
+        fig.savefig(path, bbox_inches="tight", pad_inches=0)
     return fig, ax
 
 
@@ -281,3 +284,62 @@ def metric_correlation(
     mpl.rcParams['savefig.dpi'] = 300
     if save:
         fig.savefig(save_path)
+
+
+def plot_test_iou_summary(model: str, save: bool = False):
+    # Configure plotting environment
+    configure_latex(scaler=1.33)
+    colors = get_colors()
+    fig, ax = plt.subplots(1, 1)
+    ax.set_xlabel("Test IoU")
+    ax.set_ylabel("Number of tiles")
+
+    # Filter down to only test tiles
+    df = Trainer.evaluation_statistics(name=model)
+    df = df[df.split == "test"]
+
+    # Clip the left tail of the distribution in order to "zoom in" the histogram
+    plot_df = df.copy()
+    plot_df.iou.clip(lower=0.80, inplace=True)
+    density, bins, patches = ax.hist(plot_df.iou, bins=50)
+
+    # Indicate that the distribution has been clipped
+    fraction = (df.iou <= 0.8).sum() / len(df)
+    x, y = bins[1], density[0]
+    ax.annotate(
+        s=r"$\mathbf{IoU \leq 0.8}$" + f"\n$({100 * fraction:2.0f}" + r"\%)$",
+        xy=(x + 0.0025, y / 2),
+        horizontalalignment="left",
+        color=colors[3],
+    )
+    patches[0].set_color(colors[3])
+
+    # Plot interquartile range
+    median = df.iou.median()
+    ax.axvline(x=median, color=colors[1], label=f"Median = ${median:0.3f}$")
+    lower_quantile, upper_quantile = df.iou.quantile(0.25), df.iou.quantile(0.75)
+    ax.axvline(x=lower_quantile, color=colors[1], linestyle="--")
+    ax.axvline(
+        x=upper_quantile,
+        color=colors[1],
+        linestyle="--",
+        label=f"IQR = $[{lower_quantile:0.2f}, {upper_quantile:0.3f}]$",
+    )
+
+    # Plot mean
+    mean = df.iou.mean()
+    ax.axvline(x=mean, color=colors[2], label=f"Mean = ${mean:0.3f}$")
+
+    # Indicate left tail being clipped on x-axis labels
+    xtickslabels = [f"{value:0.2f}" for value in ax.get_xticks()]
+    xtickslabels[1] = r"$\leq 0.8$"
+    ax.set_xticklabels(xtickslabels)
+
+    ax.legend()
+    fig.tight_layout()
+    if save:
+        save_dir = Path("tex/img/iou_distribution")
+        save_dir.mkdir(exist_ok=True, parents=True)
+        save_path = save_dir / f"{model}.pdf"
+        fig.savefig(save_path, bbox_inches="tight", pad_inches=0)
+    return fig, ax

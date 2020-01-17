@@ -25,10 +25,13 @@ As with the batch normalization experiment, we now train one model \emph{with} m
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.66\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
+  \includegraphics[width=0.495\linewidth]{metrics/lidar_without_dropout+without_rgb-validation-iou}
+  \includegraphics[width=0.495\textwidth]{iou_distribution/lidar_without_dropout}
   \caption{%
-    Training procedure of two U-Net models on LiDAR data, one employed with max-pooling dropout shown in \textcolor{blue}{blue}, while the other uses no max-pooling dropout and is shown in \textcolor{orange}{orange}.
-  }
+    \textbf{Left --} Training procedure of two U-Net models on LiDAR data, one employed with max-pooling dropout shown in \textcolor{blue}{blue}, while the other uses no max-pooling dropout and is shown in \textcolor{orange}{orange}.
+    \textbf{Right --} Test IoU distribution of LiDAR model without dropout, left \SI{6}{\percent} of data cropped.
+    See caption of~\figref{fig:iou-distribution-explanation} for detailed description.
+  }%
   \label{fig:dropout-training}
 \end{figure}
 
@@ -62,12 +65,15 @@ The data augmentation consists of random application of horizontal and/or vertic
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.66\linewidth,trim={0 0.4cm 0 0},clip]{metrics/lidar_without_augment+without_rgb-validation-iou}
-  \includegraphics[width=0.64\linewidth,trim={0 0.4cm 0 0.9cm},clip]{metric_correlation/without_rgb+lidar_without_augment+iou}
+  \includegraphics[width=0.495\linewidth]{metrics/lidar_without_augment+without_rgb-validation-iou}
+  \includegraphics[width=0.495\textwidth]{iou_distribution/with_rgb}
+  \includegraphics[width=0.77\linewidth,trim={0 0.4cm 0 0.9cm},clip]{metric_correlation/without_rgb+lidar_without_augment+iou}
   \hspace{-0.9em}
   \caption{%
-    Top: Training procedure of two U-Net models on LiDAR data, one employed with data augmentation shown in \textcolor{blue}{blue}, while the other uses no data augmentation and is shown in \textcolor{orange}{orange}.
-    Bottom: Scatter plot showing the correlation between the evaluation metric performance of two models, one with data augmentation (horizontal) and one without (vertical).
+    \textbf{Top left --} Training procedure of two U-Net models on LiDAR data, one employed with data augmentation shown in \textcolor{blue}{blue}, while the other uses no data augmentation and is shown in \textcolor{orange}{orange}.
+    \textbf{Top right --} Test IoU distribution of model trained without data augmentation, left \SI{5}{\percent} of data cropped.
+    See caption of~\figref{fig:iou-distribution-explanation} for detailed description.
+    \textbf{Bottom --} Scatter plot showing the correlation between the evaluation metric performance of two models, one with data augmentation (horizontal) and one without (vertical).
     See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
   }%
   \label{fig:data-augmentation-experiment}

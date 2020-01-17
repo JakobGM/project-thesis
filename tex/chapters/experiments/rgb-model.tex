@@ -20,13 +20,16 @@ The evaluation of the RGB model on the test set is shown in~\figref{fig:rgb-mode
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{example-image-a}
+  \includegraphics[width=0.66\textwidth]{iou_distribution/only_rgb}
   \caption{%
-    IoU evaluation of the RGB model using the test data set.
+    Distribution of IoU evaluations of the RGB model over tiles from the test set.
+    The left tail of the distribution ($\mathrm{IoU} \leq 0.8$) constituting \SI{7}{\percent} of the data has been cropped and included into the left-most bin colored in \textcolor{red}{red}.
+    The interquartile range (IQR) is annotated in \textcolor{orange}{orange} and the mean in \textcolor{green}{green}.
   }%
-  \label{fig:rgb-model-test}
+  \label{fig:rgb-model-test}\label{fig:iou-distribution-explanation}
 \end{figure}
 
+\todo{Comment on~\figref{fig:rgb-model-test}}.
 In order to get a more intuitive understanding of the model performance we plot the segmentation corresponding to the \textit{median} IoU metric of the test set in~\figref{fig:rgb-median-prediction}.
 All upcoming prediction plots, unless otherwise stated, will use features exclusively from the test set.
 

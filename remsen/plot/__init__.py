@@ -2,6 +2,7 @@ from remsen.plot.data import imshow_with_mask  # noqa: ignore
 from remsen.plot.evaluation import (  # noqa: ignore
     plot_training,
     metric_correlation,
+    plot_test_iou_summary,
 )
 from remsen.plot.figures import plot_segmentation_types  # noqa: ignore
 from remsen.plot.prediction import (  # noqa: ignore
