@@ -280,7 +280,7 @@ class Trainer:
 
                 # Create inputs for evaluation and evaluate
                 # lidar_input = self.dataset.input_tile_normalizer(tiles=lidar_tile)
-                evaluation = model.evaluate(input_arrays, mask_tile, verbose=0)
+                evaluation = model.test_on_batch(input_arrays, mask_tile)
 
                 metrics = {
                     name: value
