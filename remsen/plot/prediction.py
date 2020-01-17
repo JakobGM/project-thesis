@@ -421,4 +421,3 @@ def plot_rgb_help(save: bool = False):
     fig.tight_layout()
     if save:
         fig.savefig("tex/img/rgb-helps.pdf")
-???
