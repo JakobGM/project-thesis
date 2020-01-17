@@ -124,6 +124,7 @@ def metric_correlation(
     labels: Optional[Tuple[str, str]] = None,
     minimum_building_area: float = 4,
     mask_color: bool = False,
+    save: bool = False,
 ):
     # Enable LaTeX rendering of plots
     configure_latex(scaler=2)
@@ -278,4 +279,5 @@ def metric_correlation(
     # We have used rasterized=True in scatter, so we need to increase DPI
     # before saving.
     mpl.rcParams['savefig.dpi'] = 300
-    fig.savefig(save_path)
+    if save:
+        fig.savefig(save_path)
