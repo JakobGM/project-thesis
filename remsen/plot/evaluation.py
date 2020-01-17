@@ -6,6 +6,8 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.ticker import PercentFormatter
 
+import numpy as np
+
 from remsen.plot.utils import configure_latex, get_colors
 from remsen.training import Trainer, tensorboard_dataframe
 
@@ -339,6 +341,63 @@ def plot_test_iou_summary(model: str, save: bool = False):
     fig.tight_layout()
     if save:
         save_dir = Path("tex/img/iou_distribution")
+        save_dir.mkdir(exist_ok=True, parents=True)
+        save_path = save_dir / f"{model}.pdf"
+        fig.savefig(save_path, bbox_inches="tight", pad_inches=0)
+    return fig, ax
+
+
+def plot_density_correlation(model: str, save: bool = False):
+    # Prepare data
+    df = Trainer.evaluation_statistics(name=model)
+    df = df[df.split == "test"]
+    df["density"] = 100 * df["mask"] / (256 ** 2)
+
+    # Prepare plotting environment
+    configure_latex(scaler=1.1)
+    colors = get_colors()
+    fig, ax = plt.subplots(1, 1)
+    ax.set_xlabel("Building density")
+    ax.set_ylabel(r"$\mathrm{IoU}$")
+    ax.xaxis.set_major_formatter(PercentFormatter())
+
+    # Plot density against test IoU metric
+    ax.scatter(
+        x=df.density,
+        y=df.iou,
+        alpha=0.1,
+        rasterized=True,
+    )
+
+    # Calculate moving means
+    width = 1
+    lower_density, step = np.linspace(
+        start=0,
+        stop=100,
+        num=100 / width,
+        endpoint=False,
+        retstep=True,
+    )
+    assert width == step
+    means = []
+    for lower in lower_density:
+        idx = np.logical_and(df.density >= lower, df.density < lower + width)
+        data = df[idx]
+        means.append(data.iou.mean())
+
+    # Plot moving mean
+    ax.step(
+        x=lower_density,
+        y=means,
+        color=colors[1],
+        where="post",
+        label="Rolling mean",
+    )
+    ax.legend()
+
+    if save:
+        mpl.rcParams['savefig.dpi'] = 300
+        save_dir = Path("tex/img/density_correlation")
         save_dir.mkdir(exist_ok=True, parents=True)
         save_path = save_dir / f"{model}.pdf"
         fig.savefig(save_path, bbox_inches="tight", pad_inches=0)

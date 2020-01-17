@@ -3,6 +3,7 @@ from remsen.plot.evaluation import (  # noqa: ignore
     plot_training,
     metric_correlation,
     plot_test_iou_summary,
+    plot_density_correlation,
 )
 from remsen.plot.figures import plot_segmentation_types  # noqa: ignore
 from remsen.plot.prediction import (  # noqa: ignore
