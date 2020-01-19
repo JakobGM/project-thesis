@@ -32,6 +32,19 @@ A comparison over the training and test splits of the two models is presented in
 
 The \enquote{constant scaling} normalization method does in fact perform better than the \enquote{dynamic scaling} normalization method over all three sample splits: training, validation, and test.
 When changing the normalization method to the constant scaling method, the mean test IoU metric improves from \num{0.934} to \num{0.938} and 60\% of the test cases perform better.
+Although we have established that constant scaling is an overall improvement over dynamic scaling, we have not been able to identify specific problem characteristics which predict when such a normalization performs better.
+It was hypothesized that constant scaling would outperform dynamic scaling whenever the elevation range within a given tile became very small or very large, this being due to the lossy compression of dynamic scaling forcing all elevation values into the $[0, 1]$ range.
+Although the constant scaling model performs better on tiles where the elevation range exceeds two standard deviations, it does so to a degree insignificant to conclude anything.
+Precision went from \SI[round-mode=places,round-precision=2]{89.20540297068338}{\percent} to \SI[round-mode=places,round-precision=2]{89.22041798211237}{\percent}, while recall improved from \SI[round-mode=places,round-precision=2]{88.91553113410536}{\percent} to \SI[round-mode=places,round-precision=2]{89.32751737113643}{\percent}.
 
-\todo{Investigate when constant scaling beats dynamic scaling. Correlation with elevation range?}
-\todo{Write about value of $\gamma$.}
+\begin{figure}[H]
+  \centering
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+lidar_metric_normalization/21414+0/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/without_rgb+lidar_metric_normalization/21414+0/best.pdf}}
+  \caption{%
+    \todo{Rewrite!}
+    Geographic test tiles where the LiDAR model performs much better than the RGB model.
+    The top half shows the greatest improvement when going from RGB to LiDAR, while the bottom half shows the next best improvement for the geographic tiles with above-average building density.
+  }%
+  \label{fig:constant-better-than-dynamic}
+\end{figure}
