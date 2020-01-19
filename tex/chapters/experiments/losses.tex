@@ -7,10 +7,13 @@ The training procedures of these three models are visualized in \figref{fig:loss
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.66\linewidth]{metrics/lidar_dice_loss+lidar_jaccard_loss+without_rgb-validation-iou}
+  \includegraphics[width=0.495\linewidth]{metrics/lidar_dice_loss+lidar_jaccard_loss+without_rgb-validation-iou}
+  \includegraphics[width=0.495\textwidth]{iou_distribution/lidar_jaccard_loss}
   \caption{%
-    Three U-Net LiDAR models trained with different loss functions.
+    \textbf{Left --} Three U-Net LiDAR models trained with different loss functions.
     Binary cross-entropy model shown in \textcolor{blue}{blue}, soft Jaccard in \textcolor{orange}{orange}, and soft dice shown in \textcolor{green}{green}.
+    \textbf{Right~--}~Test IoU distribution of soft Jaccard model, left \SI{6}{\percent} of data cropped.
+    See caption of~\figref{fig:iou-distribution-explanation} for detailed description.
   }%
   \label{fig:losses-training}
 \end{figure}
@@ -29,4 +32,40 @@ The soft losses seem to be \emph{worse} surrogate losses for the IoU metric rath
     Left figure half shows the soft Jaccard model on the vertical axis, while the right half shows the soft dice loss along the vertical axis.
     See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
   }
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/3448+0/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/3448+0/best.pdf}}
+  \rule[1ex]{\textwidth}{.5pt}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/47542+0/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/47542+0/best.pdf}}
+  \caption{%
+    These are tiles from the training split.
+  }%
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/20034+0/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/20034+0/best.pdf}}
+  \rule[1ex]{\textwidth}{.5pt}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/25082+0/worst.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/25082+0/best.pdf}}
+  \caption{%
+    These are tiles from the test split.
+  }%
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/16016+0/best.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/16016+0/worst.pdf}}
+  \rule[1ex]{\textwidth}{.5pt}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/38663+1/best.pdf}}
+  \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/38663+1/worst.pdf}}
+  \caption{%
+    These are tiles from the test split.
+  }%
 \end{figure}
