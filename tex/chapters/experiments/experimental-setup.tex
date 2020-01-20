@@ -1,27 +1,44 @@
-\todo{Write clearly about the baseline model.}
-
 \topic{Training procedure}
 
-\num{58559} input tiles, including both aerial photography (RGB) and digital surface model (LiDAR elevation), have been preprocessed and persisted to disk.
-This sample space is further split into \num{41018} training tiles, \num{8788} validation tiles, and \num{8753} test tiles, yielding a customary a 70\% / 15\% / 15\% training--validation--testing split when rounded to the nearest percent.
+\begin{wrapfigure}[10]{r}{.36\textwidth}
+  \vspace{-0.5\baselineskip}
+  \fbox{\begin{minipage}{\dimexpr\linewidth-2\fboxrule-2\fboxsep}
+    \begin{flushleft}
+      \small
+      \begin{center}\textbf{Training summary}\end{center}
+      \begin{itemize}[nosep,leftmargin=*]
+        \item \num{58559} labeled geographic tiles: \\
+          $\SI{256}{\pixel} \times \SI{256}{\pixel} = \SI{64}{\meter} \times \SI{64}{\meter}$.
+        \item \num{41018} / \num{8788} / \num{8753} \\
+          training / validation / test.
+        \item Random shuffling.
+        \item 16 variations of augmentation.
+        \item Adam optimizer.
+        \item Validation IoU early stopping.
+      \end{itemize}
+    \end{flushleft}
+  \end{minipage}}
+\end{wrapfigure}
+
+The Trondheim dataset produces \num{58559} geographic tiles after being processed, each tile including aerial photography (RGB) data, elevation data (LiDAR elevation), and ground truth masks for building footprints.
+This sample space is split into a customary 70\% / 15\% / 15\% training--validation--testing split.
 The training data is randomly shuffled and augmented at the beginning of each epoch in order to reduce overfitting.
 The data augmentation consists of a random application of horizontal and/or vertical flipping in addition to a rotation by a random integer multiple of 90 degrees.
 The training data is subsequently grouped into batches of size 16 before applying the Adam optimizer.
 Training is continued until observed convergence by the use of the IoU evaluation of the validation split.
 The weights corresponding to the epoch yielding the best validation metric is used as the final model parametrization.
-\todo{Add figure for data augmentation?}
 
 \topic{Software}
 
-The source code used in order to produce and present the results in this paper is openly available at \url{https://github.com/JakobGM/project-thesis}.
-Most of the source code is written in Python as it arguably has the best software ecosystem for both GIS workflows \emph{and} deep learning.
-This project would not have been possible if not for the vast array of high quality open source software available, especially within the GIS ecosystem.
+The source code written in order to produce and present the results in this paper is openly available at \url{https://github.com/JakobGM/project-thesis}.
+The majority of the source code is written in Python as it arguably has the best software ecosystem for both GIS \emph{and} deep learning workflows.
+This work would not have been possible if not for the vast array of high quality open source software available.
 The Geospatial Data Abstraction Library (GDAL) \cite{dep:gdal} has been extensively used in order to process GIS data, and the python wrappers for GDAL, Rasterio \cite{dep:rasterio} for raster data and Fiona \cite{dep:fiona} for vector data, are central building blocks of the data processing pipeline.
-Further, Numpy \cite{dep:numpy}, Shapely \cite{dep:shapely}, scikit-learn \cite{dep:sklearn} / scikit-image \cite{dep:sklearn}, and GeoPandas \cite{dep:geopandas} have been used in order to shape the data into a final format suitable for machine learning purposes.
+% Further, Numpy \cite{dep:numpy}, Shapely \cite{dep:shapely}, scikit-learn \cite{dep:sklearn} / scikit-image \cite{dep:sklearn}, and GeoPandas \cite{dep:geopandas} have been used in order to shape the data into a final format suitable for machine learning purposes.
 The machine learning framework of choice has been the new 2.0 release of TensorFlow \cite{dep:tensorflow}, most of the modelling code having been written with the declarative Keras API.
 This is not an exhaustive list of all dependencies, but a complete list of software dependencies and a reproducible Docker \cite{dep:docker} image is provided with the source code for this project.
 
-\topic{Hardware}
+\topic{Hardware and performance}
 
 All numerical experiments have been performed by a desktop class computer with the following relevant technical specifications:
 
@@ -35,7 +52,25 @@ All numerical experiments have been performed by a desktop class computer with t
     Up to \SI{1800}{\mega\byte\per\second} read and write speed.
 \end{itemize}
 
-With a batch size of 16, each batched training step takes \SI{218}{\milli\second} of computation, resulting in approximately \SI{14}{\milli\second} per sample image tile.
-With \num{2563} training batches, each training epoch requires approximately \SI{9.5}{\minute}, but with \num{549} additional validation batch evaluations each epoch uses approximately \num{12.25} minutes from end to end.
-Most experiments have been trained for 90 epochs, hence requiring altogether approximately 18 hours and 20 minutes of training.
-\todo{Clean up this section and add information about preprocessing.}
+\begin{wrapfigure}[8]{r}{.4\textwidth}
+  \vspace{-0.5\baselineskip}
+  \fbox{\begin{minipage}{\dimexpr\linewidth-2\fboxrule-2\fboxsep}
+    \begin{flushleft}
+      \small
+      \begin{center}\textbf{Model performance}\end{center}
+      \begin{itemize}[nosep,leftmargin=*]
+        \item \SI{218}{\milli\second} per training step (batch 16) \\
+          $\implies$ \SI{14}{\milli\second} per sample.
+        \item \SI{11}{\minute} per training epoch \\
+          $\implies \approx \SI{16.5}{\hour}$ per experiment.
+        \item \SI{8}{\milli\second} per prediction (batch 1) \\
+          $\implies$ 125 predictions per second.
+      \end{itemize}
+    \end{flushleft}
+  \end{minipage}}
+\end{wrapfigure}
+
+With a batch size of 16, each training step requires \SI{218}{\milli\second} of computation, resulting in approximately \SI{14}{\milli\second} per geographic tile.
+When including the streaming of data from disk, updating weights based \num{2563} training batches of size 16, validating the model on \num{549} additional validation batches, and executing various Keras callbacks, each epoch lasts for 11 minutes from end to end.
+Most experiments have been trained for 90 epochs, hence requiring altogether 16 and a half hours of training.
+The final models are able to produce 125 predictions of size $\SI{256}{\pixel} \times \SI{256}{\pixel}$ per second.

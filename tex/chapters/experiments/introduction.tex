@@ -1,7 +1,7 @@
-We will now present our numerical experiments, using the theory presented in~\secref{sec:segmentation} and data produced by the pipeline outlined in~\secref{sec:data}.
-Specifically the U-Net model architecture is used for segmentation as previously described in~\secref{sec:unet}.
+This section will investigate the prediction of building outlines using data produced by the pipeline outlined in~\secref{sec:data}.
+The U-Net model architecture presented in~\secref{sec:unet} is used for semantic segmentation.
 We start by describing the general experimental setup in~\secref{sec:experimental-setup}.
 A comparative investigation into the suitability of the different raster data types (aerial photography and/or LiDAR DSMs) for predicting building outlines is presented in~\secref{sec:features}.
-In~\secref{sec:technique-experiments} we try to determine if techniques intended to combat overfitting and aid training actually have their intended effect; specifically batch normalization, dropout, and data augmentation.
-The different LiDAR normalization methods presented in \algref{alg:local-min-max-scaling} and \algref{alg:metric-normalization} are implemented and compared in~\secref{sec:normalization-experiment}.
-Finally, \secref{sec:loss-experiment} presents the empirical efficiency of different surrogate loss functions.
+In~\secref{sec:technique-experiments} we investigate if techniques intended to combat overfitting and increase training speed actually have their intended effect; specifically batch normalization, dropout, and data augmentation.
+The LiDAR raster normalization methods presented in \algref{alg:local-min-max-scaling} and \algref{alg:metric-normalization} are implemented and compared in~\secref{sec:normalization-experiment}.
+Finally, \secref{sec:loss-experiment} compares the empirical efficiency of different surrogate loss functions.
