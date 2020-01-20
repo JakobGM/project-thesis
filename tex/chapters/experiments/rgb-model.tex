@@ -1,4 +1,4 @@
-We start by training a model based solely on RGB data, every channel normalized as explained in~\secref{sec:raster-normalization}.
+We start by training a model based solely on RGB data, every color channel normalized as explained in~\secref{sec:raster-normalization}.
 The training procedure is illustrated in~\figref{fig:rgb-training}.
 
 \begin{figure}[H]
@@ -16,11 +16,11 @@ The training procedure is illustrated in~\figref{fig:rgb-training}.
 As can be seen in~\figref{fig:rgb-training}, the training and validation IoU metrics improve relatively consistently from epoch to epoch, with the exception of epoch 24 where a large spike can be observed in the validation IoU.
 Such spikes will reappear in later training procedures, but the models always recover in the subsequent epochs.
 Training is continued until validation IoU does not improve, and the epoch corresponding to the best validation IoU used used as the final model parametrization.
-The evaluation of the RGB model on the test set is shown in~\figref{fig:rgb-model-test}.
+The final model is evaluated on the test set and the distribution of the resulting IoU test metrics is shown in~\figref{fig:rgb-model-test}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.66\textwidth]{iou_distribution/only_rgb}
+  \includegraphics[width=0.63\textwidth]{iou_distribution/only_rgb}
   \caption{%
     Distribution of IoU evaluations of the RGB model over tiles from the test set.
     The left tail of the distribution ($\mathrm{IoU} \leq 0.8$) constituting \SI{7}{\percent} of the data has been cropped and included into the left-most bin colored in \textcolor{red}{red}.
@@ -29,7 +29,7 @@ The evaluation of the RGB model on the test set is shown in~\figref{fig:rgb-mode
   \label{fig:rgb-model-test}\label{fig:iou-distribution-explanation}
 \end{figure}
 
-\todo{Comment on~\figref{fig:rgb-model-test}}.
+\figref{fig:rgb-model-test} shows that the IoU test metrics portray a left-skewed distribution with mean 0.9, while 7\% of all test cases have IoU metrics less than or equal to 0.8. % chktex 2
 In order to get a more intuitive understanding of the model performance we plot the segmentation corresponding to the \textit{median} IoU metric of the test set in~\figref{fig:rgb-median-prediction}.
 All upcoming prediction plots, unless otherwise stated, will use features exclusively from the test set.
 
@@ -49,10 +49,16 @@ All upcoming prediction plots, unless otherwise stated, will use features exclus
   \label{fig:rgb-median-prediction}\label{fig:rgb-explanation}
 \end{figure}
 
-Half of the model predictions in the test set are at least as good as the prediction shown in~\figref{fig:rgb-median-prediction}, and likewise for worse predictions.
+Half of the model predictions using the test set are at least as good as the prediction shown in~\figref{fig:rgb-median-prediction}, and likewise for worse predictions.
 We will now investigate the worst-case model predictions in order to identify the conditions under which the model does \emph{not} perform well.
-These conditions can be divided into two categories, those which are closely related to the nature of RGB data, and those who are not.
-Two representative examples from the latter category are shown in~\figref{fig:rgb-fundamental-issues}.
+These conditions can be divided into two categories: those conditions which are closely related to the nature of RGB data, and those who are not.
+Two illustrative examples from the latter category are shown in~\figref{fig:rgb-fundamental-issues}.
+\figref{fig:rgb-fundamental-issues} shows the worst outliers in the test set, prediction \marginref{fig:rgb-fundamental-issues}{a} being the worst prediction \emph{overall}, while prediction \marginref{fig:rgb-fundamental-issues}{b} is the worst prediction with an above-average building density. % chktex 2
+These two predictions demonstrate the two main causes for negative outliers in the metrics.
+The first one, as shown in prediction \marginref{fig:rgb-fundamental-issues}{a}, is when segmentation mask becomes vanishingly small.
+Small masks are not just generally difficult for CNNs to segment, they are also negatively affected by the fact that the IoU metric becomes more sensitive to single-pixel changes.
+That is, misclassifying 100 pixels when the ground truth mask contains \num{10000} pixels yields a much greater IoU metric compared a ground truth mask of only \num{1000} positive pixels.
+The consequence of this phenomenon is demonstrated in~\figref{fig:rgb-density-relationship}, where it becomes clear that the worse model evaluations are generally characterized by being low building density tiles.
 
 \begin{figure}[H]
   \centering
@@ -65,18 +71,12 @@ Two representative examples from the latter category are shown in~\figref{fig:rg
   }%
   \label{fig:rgb-fundamental-issues}
 \end{figure}
-
-\figref{fig:rgb-fundamental-issues} shows the worst outliers in the test set, prediction \marginref{fig:rgb-fundamental-issues}{a} being the worst prediction \emph{overall}, while prediction \marginref{fig:rgb-fundamental-issues}{b} is the worst prediction with an above-average building density. % chktex 2
-These two predictions demonstrate the two main causes for negative outliers in the metrics.
-The first one, as shown in prediction \marginref{fig:rgb-fundamental-issues}{a}, is when segmentation mask becomes vanishingly small.
-Small masks are not just generally difficult for CNNs to segment, they are also negatively affected by the fact that the IoU metric becomes more sensitive to single-pixel changes.
-That is, misclassifying 100 pixels when the ground truth mask contains \num{10000} pixels yields a much greater IoU metric compared a ground truth mask of only \num{1000} positive pixels.
-\todo{How this phenomenon affects the RGB model is demonstrated in~\figref{fig:rgb-density-relationship}.}
-
+\vspace{-\baselineskip}
 \begin{figure}[H]
-  \includegraphics[width=0.5\textwidth]{density_correlation/only_rgb}
+  \includegraphics[width=0.68\textwidth]{density_correlation/only_rgb}
   \caption{%
     Figure showing the relationship between ground truth building density and the respective IoU evaluation for the test set.
+    The \textcolor{orange}{orange} line indicates the interval mean IoU along the building density axis, interval length being 1\%.
   }%
   \label{fig:rgb-density-relationship}
 \end{figure}
@@ -85,32 +85,37 @@ The second issue causing negative outliers is the presence of wrong data in the 
 Such errors are almost exclusively caused by buildings having been built or demolished in the intermittent time period between the datum of the feature data set and the datum of the ground truth data set.
 The presence of errors in the ground truth mask is fortunately rarely observed.
 
-We will now look at the remaining category of negative outliers, a category much more related to the intrinsic properties of RGB data and its use for prediction.
-Inspection of these failures will help us gain some insight into the model prediction behaviour.
+We will now look at the remaining category of negative outliers, a category much more related to the intrinsic properties of RGB data and its use as a predictor.
+Inspection of these failures may help us gain some insight into the internals of the model and how it constructs predictions.
 We present four illustrative examples of when the RGB model faces difficulties in~\figref{fig:rgb-prediction-issues}.
 Prediction \marginref{fig:rgb-prediction-issues}{a} demonstrates the importance of contrast in order to distinguish the edges of building outlines.
-Building outline edges with low contrast and building outline interiors with high contrast \enquote{fake} edges are therefore sometimes wrongly segmented.
-The texture of the roof surface also seems to be taken into account by the model, as shown in prediction \marginref{fig:rgb-prediction-issues}{c} where the presence of white flecks impedes the model's ability to recognize the surface as being part of a roof.
-This issue is not observed with the roof surface on the western half of prediction \marginref{fig:rgb-prediction-issues}{c}, where a more common roof texture is present.
-Sod roofs, roof surfaces covered in greenery as shown in prediction \marginref{fig:rgb-prediction-issues}{d}, cause difficulty for the model, which is not unexpected since it can be considered a type of camouflage.
+Ground truth mask edges with low RGB contrast are often wrongly segmented.
+The same can be said of mask interiors with high contrast \enquote{fake} edges as in \marginref{fig:rgb-prediction-issues}{b}.
+The texture of the roof surface also seems to be taken into account by the model, as shown in prediction \marginref{fig:rgb-prediction-issues}{c} where the presence of white flecks on the eastern roof impedes the model's ability to recognize the surface as being part of a roof, while this issue is not observed with the roof surface on the western half of prediction \marginref{fig:rgb-prediction-issues}{c} where a more common roof texture is present.
+Roof surfaces covered with greenery as shown in prediction \marginref{fig:rgb-prediction-issues}{d} also cause difficulties for the model; not unexpected since it can be considered a type of camouflage.
 
 \begin{figure}[H]
   \centering
   \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-29430-6}}  % chktex 8
   \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-31479-0}}  % chktex 8
+  \caption{Continued on next page\textellipsis}
+  \label{fig:rgb-prediction-issues}
+\end{figure}
+\addtocounter{figure}{-1}
+\begin{figure}[H]
+  \addtocounter{subfigure}{2}
   \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-45783-1}}  % chktex 8
   \marginlabel{\includegraphics[width=\linewidth]{predictions/only_rgb-8117-3}}  % chktex 8
   \caption{%
     Illustrative failures of CNN segmentation of building outlines using RGB data.
   }%
-  \label{fig:rgb-prediction-issues}
 \end{figure}
 
-We hypothesized in~\secref{sec:data-sets} that improper orthophotos (non-orthogonal perspective) would cause a high degree of segmentation misalignment due to the RGB photo being misaligned with respect to the geographically specified building outline.
+We hypothesized in~\secref{sec:data-sets} that improper orthophotos, aerial images with non-orthogonal, non-vertical perspectives, would cause a high degree of segmentation misalignment due to the RGB photo being pixel-misaligned with respect to the geographically specified building outline.
 In practice, however, the RGB model seems to be remarkably well adjusted to misaligned perspectives as can be seen in~\figref{fig:perspective-correction}.
-The RGB tile shown in \marginref{fig:perspective-correction}{a}, for instance, shows a ground truth mask shifted southwards relative to the apparent north edge of the roof.
-Prediction \marginref{fig:perspective-correction}{a} manages to predict a relatively good segmentation mask, remarkably predicting the north edge of the roof quite accurately.
-This correction of perspective is what we wish to see, as it is not the pixels themselves we would like to segment, per se, but rather the \emph{geographic location} of the building outline.
+The \enquote{RGB input} panel shown in prediction \marginref{fig:perspective-correction}{a}, for instance, shows a ground truth mask shifted southwards relative to the apparent north edge of the roof.
+Prediction \marginref{fig:perspective-correction}{a} produces a relatively good segmentation mask under the circumstances, remarkably predicting the north edge of the roof quite accurately.
+This correction of perspective is highly intentional, as it is not the pixels themselves we would like to segment per se, but rather the \emph{geographic location} of the building outline.
 
 \begin{figure}[H]
   \centering
