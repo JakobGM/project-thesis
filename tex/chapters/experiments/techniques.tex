@@ -1,5 +1,5 @@
 In previous sections we have presented techniques such as batch normalization, dropout, and data augmentation, and claimed that these techniques have been empirically shown to combat overfitting and/or decrease training times.
-Unfortunately, machine learning techniques are most often highly context dependent in their efficiency, and this section is intended as a verification of these techniques actually having a positive impact on our model's performance.
+Unfortunately, machine learning techniques are often highly context dependent with respect to their efficiency, and this section is therefore intended as a verification of these techniques in the context of remote sensing data and building footprint segmentation.
 
 \topic{Batch normalization}
 
@@ -7,16 +7,17 @@ We have trained two U-Net models on LiDAR data, one \emph{with} batch normalizat
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.66\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-validation-iou}
+  \includegraphics[width=0.495\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-train+validation-iou}
+  \includegraphics[width=0.495\linewidth]{metrics/lidar_without_batch_normalization+without_rgb-train+validation-loss}
   \caption{%
     Training procedure of two U-Net models on LiDAR data, one employed with batch normalization shown in \textcolor{blue}{blue}, while the other has no batch normalization and shown in \textcolor{orange}{orange}.
+    Left panel shows the IoU metric evaluations, while the right panel shows the binary cross-entropy loss.
   }%
   \label{fig:batch-normalization-training}
 \end{figure}
-
-\todo{Add loss plot to show that batch normalization also aids the optimization itself.}
-The comparative performance improvement of the batch normalized model over the non-normalized model becomes immediately clear from~\figref{fig:batch-normalization-training}.
-What is of particular interest is that the batch normalization does not only increase the speed of training, but it also improves the final model performance.
+\vspace{-\baselineskip}
+The comparative performance improvement of the batch normalized model over the model without batch normalization becomes immediately clear from~\figref{fig:batch-normalization-training}.
+What is of particular interest is that the batch normalization does not only increase the speed of optimizing the loss function, but it also improves the final model performance in form of validation IoU.
 Of all the A/B tests conducted in this section, this test has had the most significant effect.
 
 \topic{Dropout}
@@ -35,14 +36,16 @@ As with the batch normalization experiment, we now train one model \emph{with} m
   \label{fig:dropout-training}
 \end{figure}
 
-While the improvement of batch normalization was immediately obvious, the effect of dropout is more difficult to interpret from~\figref{fig:dropout-training} alone as we only observe a marginal IoU validation metric improvement from \num{0.9335} to \num{0.9363}.
+While the improvement of batch normalization was immediately obvious, the effect of dropout is more difficult to interpret from the left panel of~\figref{fig:dropout-training} alone as we only observe a marginal IoU validation metric improvement from \num{0.9335} to \num{0.9363}.
+On the other hand, the right panel of~\figref{fig:dropout-training} shows that the interquartile range and median of the test IoU metrics are identical across the two models, but that the right-end tail of the distribution has grown thicker.
 Methods preventing overfitting will hypothetically bridge the gap between the training- and test-evaluation of the model.
-As dropout is primarily intended as a measure to prevent overfitting, we will investigate the performance of both models on the test set and compare this with their performance on the training set.
-\figref{fig:dropout-train-test} presents a comparison of these two models, a figure similar to the one shown in~\figref{fig:correlation-explanation}.
-
+As dropout is primarily intended as a measure to prevent overfitting, we will investigate the performance of both models on the training set and compare this with their performance on the test set.
+\figref{fig:dropout-train-test} presents a comparison of these two models, a plot similar to the one shown in~\figref{fig:correlation-explanation}.
+\vspace{-\baselineskip}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\linewidth]{metric_correlation/without_rgb+lidar_without_dropout+iou}
+  \includegraphics[width=0.65\linewidth]{metric_correlation/without_rgb+lidar_without_dropout+iou}
+  \vspace{-\baselineskip}
   \caption{%
     Scatter plot showing the correlation between the evaluation metric performance of two models, one with max-pooling dropout and one without.
     The model without dropout is shown along the vertical axis, while the model with dropout is shown along the horizontal axis.
@@ -51,23 +54,23 @@ As dropout is primarily intended as a measure to prevent overfitting, we will in
   \label{fig:dropout-train-test}
 \end{figure}
 
-The U-Net model without batch normalization largely outperforms the model with batch normalization on the \emph{training} set, having a better IoU evaluation on a staggering 98\% of all training tiles and a mean training IoU of \num{0.974}, substantially better than the batch-normalized model with a mean training IoU of \num{0.960}.
+The U-Net model without batch normalization largely outperforms the model with batch normalization on the \emph{training} set, having a better IoU evaluation on a 98\% of all training tiles and a mean training IoU of \num{0.974}, which is substantially better than the batch-normalized model with a mean training IoU of \num{0.960}.
 What is of particular interest, though, is that the batch-normalized model generalizes \emph{much} better to the test tile set, so much so that it narrowly outperforms the model without batch normalization on the test set.
-The 98\% / 2\% split is reduced to an even 50\% / 50\% split, approximately, making the two models tied in a first-past-the-post competition.
+The 98\% / 2\% split is approximately reduced to an even 50\% / 50\% split, making the two models tied.
 The mean test IoU of the batch normalized model, \num{0.934}, is also better than the mean test IoU of the non-normalized model, \num{0.930}.
 Altogether this can be considered quite strong evidence in favor of max-pooling dropout having reduced the overfitting of our model.
-The application of dropout during model training likely increases the generalizability of our model, improving its ability to predict building outlines with previously unseen data.
+The application of dropout during model training likely increases the generalizability of our model as it improves its ability to predict building outlines from previously unseen remote sensing data.
 
 \topic{Data Augmentation}
 
-Finally we investigate the effect of data augmentation on the LiDAR-only model, the comparative results being presented in~\figref{fig:data-augmentation-experiment}.
+Finally we investigate the effect of data augmentation when training the LiDAR model, comparisons of the two models being presented in~\figref{fig:data-augmentation-experiment}.
 The data augmentation consists of random application of horizontal and/or vertical flipping in addition to a rotation by a random multiple of 90 degrees, resulting in altogether 16 random configurations of each training tile.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.495\linewidth]{metrics/lidar_without_augment+without_rgb-validation-iou}
-  \includegraphics[width=0.495\textwidth]{iou_distribution/with_rgb}
-  \includegraphics[width=0.77\linewidth,trim={0 0.4cm 0 0.9cm},clip]{metric_correlation/without_rgb+lidar_without_augment+iou}
+  \includegraphics[width=0.495\textwidth]{iou_distribution/lidar_without_augment}
+  \includegraphics[width=0.55\linewidth,trim={0 0.4cm 0 0.9cm},clip]{metric_correlation/without_rgb+lidar_without_augment+iou}
   \hspace{-0.9em}
   \caption{%
     \textbf{Top left --} Training procedure of two U-Net models on LiDAR data, one employed with data augmentation shown in \textcolor{blue}{blue}, while the other uses no data augmentation and is shown in \textcolor{orange}{orange}.
@@ -79,16 +82,17 @@ The data augmentation consists of random application of horizontal and/or vertic
   \label{fig:data-augmentation-experiment}
 \end{figure}
 
-No significant discernible trend can be observed in~\figref{fig:correlation-explanation}.
-The observed differences between the two models can as likely be attributed to random noise than any causal effect of the data augmentation procedure.
-The augmentation techniques applied during training, namely flipping and 90 degree rotations, have intentionally been selected in order to be negligible with respect to computational cost.
-They do not require any de facto calculations, they can be applied by simply traversing arrays in a different manner in linear memory, and are therefore constant $\mathcal{O}(1)$ time cost operations.
+No significant difference between the two training schemes can be observed in~\figref{fig:correlation-explanation}.
+The observed differences between the two resulting models can as likely be attributed to random noise than any causal effect of the data augmentation procedure.
+The augmentation techniques applied during training, namely flipping and 90 degree rotations, have intentionally been selected in order to be negligible in computational cost.
+They do not require any de facto calculations as they can be implemented by simply traversing the memory layout in a different manner, and are therefore constant $\mathcal{O}(1)$ time cost operations.
 Considering that data augmentation is cheaply performed and we have no evidence contrary to it being a positive influence of the generalizability of the model, we conclude that data augmentation should be performed during training.
+Finally, it is worth noting that the data augmentations applied in this case are rather simple and minor forms of data augmentation.
+More major augmentation forms might have a bigger effect.
 
-Finally, it is worth noting that the data augmentation applied in this case is a rather simple and minor form of data augmentation.
-If the subset of labeled observations used for training possesses certain systematic properties that are not necessarily present in the universal set of future cases to be predicted, data augmentation can be used in order to \enquote{prepare} the model for such cases.
-Consider a hypothetical region A where buildings are overwhelmingly built such that the longest building edge faces southwards, while buildings in hypothetical region B does not follow this pattern.
-A model trained on data sourced from region A would likely perform better when making predictions in region B if rotational augmentation is performed during training.
-Arguably rotation and flipping of the LiDAR input tiles corrects a relatively small subset of all systematic properties.
-Aerial RGB photography can be augmented by contrast and saturation adjustments, for instance, augmentation methods which we have not implemented.
-We hypothesize that the effect of augmentation is likely greater for aerial RGB imagery rather than LiDAR data, especially if the validation and test set are captured under different weather and lighting conditions.
+% If the subset of labeled observations used for training possesses certain systematic properties that are not necessarily present in the universal set of future cases to be predicted, data augmentation can be used in order to \enquote{prepare} the model for such cases.
+% Consider a hypothetical region A where buildings are overwhelmingly built such that the longest building edge faces southwards, while buildings in hypothetical region B does not follow this pattern.
+% A model trained on data sourced from region A would likely perform better when making predictions in region B if rotational augmentation is performed during training.
+% Arguably rotation and flipping of the LiDAR input tiles corrects a relatively small subset of all systematic properties.
+% Aerial RGB photography can be augmented by contrast and saturation adjustments, for instance, augmentation methods which we have not implemented.
+% We hypothesize that the effect of augmentation is likely greater for aerial RGB imagery rather than LiDAR data, especially if the validation and test set are captured under different weather and lighting conditions.
