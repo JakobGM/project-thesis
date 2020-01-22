@@ -2,9 +2,9 @@ So far all model experiments have been exclusively trained by optimizing the \te
 While BCEL is by far the most popular loss function for binary classification tasks, it is still considered a suboptimal surrogate loss function for segmentation metrics such as IoU.
 Alternative loss functions were discussed in~\secref{sec:segmentation-metrics}, the so-called soft loss variants being of greatest interest.
 The \textit{soft Jaccard loss} given in equation~\eqref{eq:soft-jaccard-loss} and \textit{soft dice loss} given in equation~\eqref{eq:soft-dice-loss} have specifically been shown to be efficient surrogate loss functions for the IoU metric, both theoretically and empirically.
-Three models have been trained and evaluated for this numerical experiment, the only difference being which loss function that has been used during training; binary cross-entropy, soft Jaccard loss, or soft dice loss.
+Three models have been trained and evaluated for this numerical experiment, the only difference being which loss function that has been used during training: binary cross-entropy, soft Jaccard loss, or soft dice loss.
 The training procedures of these three models are visualized in \figref{fig:losses-training}.
-The soft dice loss model is almost identical to the soft Jaccard loss model in behaviour and performance, and we will therefore mainly compare the BCEL model to the soft Jaccard model and ignore the soft dice model in order to avoid repetitiveness.
+The soft dice loss model is almost identical to the soft Jaccard loss model in behaviour and performance, so in order to avoid repetitiveness we will mainly compare the BCEL model to the soft Jaccard model and ignore the soft dice model.
 
 \begin{figure}[H]
   \centering
@@ -18,8 +18,9 @@ The soft dice loss model is almost identical to the soft Jaccard loss model in b
   }%
   \label{fig:losses-training}
 \end{figure}
-
-The three models presented in~\figref{fig:losses-training} start out at approximately the same point after one epoch, but the binary cross-entropy model quickly outperforms the two other models when it comes to mean validation IoU.
+\vspace{-0.5\baselineskip}
+The three models presented in the left panel of~\figref{fig:losses-training} start out at approximately the same point after one epoch, but the binary cross-entropy model quickly outperforms the two other models when it comes to mean validation IoU.
+The same can be said of the test IoU metrics of the soft Jaccard model as presented in the right panel of~\figref{fig:losses-training}, the soft loss model being a performance regression over the BCEL model in every conceivable way.
 The soft losses seem to be \emph{worse} surrogate losses for the IoU metric rather than better ones, completely contradicting our prior beliefs.
 
 \begin{figure}[H]
@@ -32,8 +33,19 @@ The soft losses seem to be \emph{worse} surrogate losses for the IoU metric rath
     Both the left and right half of this figure compares model IoU against the binary cross-entropy IoU along the horizontal axis.
     Left figure half shows the soft Jaccard model on the vertical axis, while the right half shows the soft dice loss along the vertical axis.
     See caption of~\figref{fig:correlation-explanation} for detailed figure explanation.
-  }
+  }%
+  \label{fig:soft-correlations}
 \end{figure}
+\vspace{-0.5\baselineskip}
+\figref{fig:soft-correlations} shows that the soft models perform worse than the BCEL model on the test set.
+Of greater interest, however, is  the large discrepancy between how the BCEL model and the soft models perform on the \emph{training} set.
+There are certain training tiles where the soft models are not able to learn from the labeled data at all, while the BCEL model has no such difficulties.
+When inspecting these cases, they are usually characterized by one of two properties:
+\begin{enumerate}[nosep,label=\arabic*)]
+  \item bad data used as ground truth, or\textellipsis
+  \item exceptionally difficult problems in the form of vanishingly small building outlines.
+\end{enumerate}
+Both these cases are illustrated in~\figref{fig:soft-training-failures}.
 
 \begin{figure}[H]
   \centering
@@ -43,9 +55,18 @@ The soft losses seem to be \emph{worse} surrogate losses for the IoU metric rath
   \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/47542+0/worst.pdf}}
   \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/47542+0/best.pdf}}
   \caption{%
-    These are tiles from the training split.
+    \emph{Training} tiles where the BCEL model performs substantially better than the soft Jaccard model.
   }%
+  \label{fig:soft-training-failures}
 \end{figure}
+
+The regression in performance of the soft Jaccard model on the training set translates to a worse test performance as well, although to a lesser degree.
+Interestingly, whenever the soft Jaccard model performs worse than the BCEL model on test cases, it usually produces \enquote{well-behaved} failures, failures that could conceivably be made by humans as well.
+Such failures are presented in~\figref{fig:soft-test-failures}.
+In the opposite case, whenever the soft Jaccard model performs better than the BCEL model, it is usually due to the BCEL model having made \enquote{badly behaved} failures, failures that would never have been produced by a human.
+The BCEL model does in certain cases produce egregiously bad false positives.
+This can conceivably be caused by the willingness of the BCEL model to learn from clearly wrong ground truth masks in the training set.
+Such false positives are in certain cases corrected by the soft Jaccard model, as presented in~\figref{fig:soft-better-than-bcel}.
 
 \begin{figure}[H]
   \centering
@@ -55,8 +76,9 @@ The soft losses seem to be \emph{worse} surrogate losses for the IoU metric rath
   \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/25082+0/worst.pdf}}
   \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/25082+0/best.pdf}}
   \caption{%
-    These are tiles from the test split.
+    \emph{Test} tiles where the BCEL model performs substantially better than the soft Jaccard model.
   }%
+  \label{fig:soft-test-failures}
 \end{figure}
 
 \begin{figure}[H]
@@ -67,6 +89,7 @@ The soft losses seem to be \emph{worse} surrogate losses for the IoU metric rath
   \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/38663+1/best.pdf}}
   \marginlabel{\includegraphics[width=0.9\linewidth]{prediction_improvement/lidar_jaccard_loss+without_rgb/38663+1/worst.pdf}}
   \caption{%
-    These are tiles from the test split.
+    \emph{Test} tiles where the soft Jaccard model performs substantially better than the BCEL model.
   }%
+  \label{fig:soft-better-than-bcel}
 \end{figure}

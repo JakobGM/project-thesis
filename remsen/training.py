@@ -1,7 +1,8 @@
 import shutil
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 from ipypb import track
 
@@ -347,3 +348,53 @@ def tensorboard_dataframe(
     dataframe["datetime"] = pd.to_datetime(dataframe["datetime"], unit="s")
     dataframe.set_index(keys="epoch", inplace=True)
     return dataframe
+
+
+def model_comparison(models: List[str], titles: Optional[List[str]] = None):
+    iou = []
+    binary_accuracy = []
+    precision = []
+    recall = []
+
+    for model in models:
+        stats = Trainer.evaluation_statistics(name=model)
+        iou.append(stats.iou.mean())
+        binary_accuracy.append(stats.binary_accuracy.mean())
+        precision.append(stats.precision.mean())
+        recall.append(stats.recall.mean())
+
+    dict = {
+        "Model": titles or models,
+        "IoU": iou,
+        "Accuracy": binary_accuracy,
+        "Precision": precision,
+        "Recall": recall,
+    }
+
+    def formatter(value, data, percent=True):
+        data = np.array(data)
+        if percent:
+            value_string = f"{100 * value:2.2f}" + r"\%"
+        else:
+            value_string = f"{value:0.4f}"
+
+        if value == data.max():
+            return r"\textcolor{darkgreen}{" + value_string + r"}"
+        elif value == data.min():
+            return r"\textcolor{red}{" + value_string + r"}"
+        else:
+            return value_string
+
+    df = pd.DataFrame.from_dict(dict)
+    df.set_index("Model", inplace=True)
+    latex = df.to_latex(
+        index=True,
+        formatters={
+            "IoU": partial(formatter, data=iou, percent=False),
+            "Accuracy": partial(formatter, data=binary_accuracy),
+            "Precision": partial(formatter, data=precision),
+            "Recall": partial(formatter, data=recall),
+        },
+        escape=False,
+    )
+    return latex

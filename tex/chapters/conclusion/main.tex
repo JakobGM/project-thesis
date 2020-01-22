@@ -1,0 +1,18 @@
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}\markboth{Introduction}{Introduction}
+
+\begin{center}
+  \begin{tabular}{lrrrr}
+    \toprule
+    {} &                           IoU &                       Accuracy &                      Precision &                         Recall \\
+    Model             &                               &                                &                                &                                \\
+    \midrule
+    RGB               &                        0.9276 &                        99.07\% &                        88.30\% &                        88.06\% \\
+    LiDAR             &                        0.9392 &                        99.29\% & \textcolor{darkgreen}{89.30\%} &                        89.02\% \\
+    Combined          & \textcolor{darkgreen}{0.9464} & \textcolor{darkgreen}{99.35\%} &                        89.25\% &                        89.36\% \\
+    Constant scaling  &                        0.9447 &                        99.34\% &                        89.21\% & \textcolor{darkgreen}{89.38\%} \\
+    Soft dice loss    &       \textcolor{red}{0.9139} &       \textcolor{red}{98.73\%} &       \textcolor{red}{87.63\%} &                        87.60\% \\
+    Soft Jaccard loss &                        0.9184 &                        98.81\% &                        88.05\% &       \textcolor{red}{87.59\%} \\
+    \bottomrule
+  \end{tabular}
+\end{center}
