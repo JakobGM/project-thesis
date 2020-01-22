@@ -1,9 +1,10 @@
-So far all model experiments have been exclusively trained with the \textit{binary cross-entropy} loss function as given in equation~\eqref{eq:binary-cross-entropy}.
-While this is the dominant loss function for binary classification tasks, it is still considered a suboptimal surrogate loss function for segmentation evaluation metrics such as the IoU metric.
+So far all model experiments have been exclusively trained by optimizing the \textit{binary cross-entropy} loss (BCEL) function given in equation~\eqref{eq:binary-cross-entropy}.
+While BCEL is by far the most popular loss function for binary classification tasks, it is still considered a suboptimal surrogate loss function for segmentation metrics such as IoU.
 Alternative loss functions were discussed in~\secref{sec:segmentation-metrics}, the so-called soft loss variants being of greatest interest.
-Specifically, the \textit{soft Jaccard loss} given in equation~\eqref{eq:soft-jaccard-loss} and \textit{soft dice loss} given in equation~\eqref{eq:soft-dice-loss} having been theoretically and empirically shown to be efficient surrogate loss functions for the IoU metric.
-Three models have been trained and evaluated, the only difference being which loss function that was used during training; binary cross-entropy, soft Jaccard loss, or soft dice loss.
+The \textit{soft Jaccard loss} given in equation~\eqref{eq:soft-jaccard-loss} and \textit{soft dice loss} given in equation~\eqref{eq:soft-dice-loss} have specifically been shown to be efficient surrogate loss functions for the IoU metric, both theoretically and empirically.
+Three models have been trained and evaluated for this numerical experiment, the only difference being which loss function that has been used during training; binary cross-entropy, soft Jaccard loss, or soft dice loss.
 The training procedures of these three models are visualized in \figref{fig:losses-training}.
+The soft dice loss model is almost identical to the soft Jaccard loss model in behaviour and performance, and we will therefore mainly compare the BCEL model to the soft Jaccard model and ignore the soft dice model in order to avoid repetitiveness.
 
 \begin{figure}[H]
   \centering
