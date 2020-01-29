@@ -65,8 +65,19 @@ The observed pattern is that the combined data model usually imitates the LiDAR-
 \figref{fig:rgb-help} substantiates this interpretation of how the combined data model improves upon the LiDAR model.
 
 \begin{figure}[H]
-  \centering
-  \includegraphics[width=0.66\linewidth]{rgb-helps}
+  \begin{tikzpicture}
+    \node[anchor=south west,inner sep=0] (image) at (0,0) {\hspace{2em}\includegraphics[width=0.66\linewidth]{rgb-helps}};
+    \begin{scope}[x={(image.south east)},y={(image.north west)},overlay,text width=3cm,font=\footnotesize]
+      \node (first) at (1, 0.775) {};
+      \node (second) at (0, 0.775) {};
+      \node (third) at (0, 0.32) {};
+      \node (fourth) at (1, 0.32) {};
+      \node[draw] at (first) {\textbf{1\textsuperscript{st} quadrant}\\Both combined data model \emph{and} RGB model perform better than the LiDAR model.};
+      \node[draw] at (second) {\textbf{2\textsuperscript{nd} quadrant}\\Combined data model performs better than the LiDAR model, but RGB model performs worse.};
+      \node[draw] at (third) {\textbf{3\textsuperscript{rd} quadrant}\\Both combined data model \emph{and} RGB model perform worse than the LiDAR model.};
+      \node[draw] at (fourth) {\textbf{4\textsuperscript{th} quadrant}\\Combined data model performs worse than the LiDAR model, but the RGB model performs better.};
+    \end{scope}
+  \end{tikzpicture}
   \caption{%
     Scatter plot of points $(x_i, y_i)$, one point for each test tile, $i$.
     The $x$-coordinate is the difference between the RGB model's IoU evaluation and the LiDAR model's IoU evaluation, i.e.\ how much better RGB performs than LiDAR.

@@ -43,6 +43,7 @@ The two models are compared tile-by-tile in the IoU scatter plot presented in~\f
     Tiles belonging to the train split are shown in the left half while the tiles belonging to the test split are shown in the right.
     The horizontal dashed lines in \textcolor{orange}{orange} indicate the \emph{mean} IoU metric of the RGB model for the respective splits, while the vertical dashed lines in \textcolor{green}{green} indicate the \emph{mean} IoU for the LiDAR model.
     Diagonal \textcolor{black}{black} lines indicates $x = y$, and the arrows with accompanying percentages indicate the fraction of points above and below this line.
+    Scatter points located \emph{above} the black diagonal line indicate tiles where the RGB model performs better than the LiDAR model, while scatter points located \emph{below} the diagonal represent tiles where the LiDAR model performs better than the RGB model.
   }%
   \label{fig:rgb-lidar-correlation}\label{fig:correlation-explanation}
 \end{figure}

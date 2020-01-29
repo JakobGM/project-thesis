@@ -40,7 +40,7 @@ The pixel $I_{i, j, c}$ therefore represents a rectangle of width $\Delta_x$ and
 
 Missing data in remote sensing rasters is specified by filling in a predefined \texttt{nodata} placeholder value.
 For RGB data this is often set to $0$, resulting in a black pixel.
-LiDAR rasters often use $\texttt{nodata} = -2^{127} \times (2 - 2^{-23}) \approx 3.4028234664 \times 10^{38}$, the smallest normal number representable by a single-precision floating point number.
+LiDAR rasters often use $\texttt{nodata} = -2^{127} \times (2 - 2^{-23}) \approx -3.4028234664 \times 10^{38}$, the most negative normal number representable by a single-precision floating point number.
 Such \texttt{nodata} values may arise from measurement errors or by pixels situated outside the given coverage area of the dataset, and must be special-cased during data normalization, which we will come back to in~\secref{sec:raster-normalization}.
 
 When we will train models on the combination of LiDAR and aerial photography data, these two types of rasters must be merged in order to attain a consistent three-dimensional array of size $H \times W \times 4$.

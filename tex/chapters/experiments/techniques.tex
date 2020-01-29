@@ -82,7 +82,7 @@ The data augmentation consists of random application of horizontal and/or vertic
   \label{fig:data-augmentation-experiment}
 \end{figure}
 
-No significant difference between the two training schemes can be observed in~\figref{fig:correlation-explanation}.
+No significant difference between the two training schemes can be observed in~\figref{fig:data-augmentation-experiment}.
 The observed differences between the two resulting models can as likely be attributed to random noise than any causal effect of the data augmentation procedure.
 The augmentation techniques applied during training, namely flipping and 90 degree rotations, have intentionally been selected in order to be negligible in computational cost.
 They do not require any de facto calculations as they can be implemented by simply traversing the memory layout in a different manner, and are therefore constant $\mathcal{O}(1)$ time cost operations.
