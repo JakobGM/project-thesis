@@ -1,18 +1,63 @@
-\section*{Conclusion}
-\addcontentsline{toc}{section}{Conclusion}\markboth{Introduction}{Introduction}
+\section*{Conclusion and Further Work}
+\addcontentsline{toc}{section}{Conclusion and Further Work}\markboth{Conclusion and Further Work}{Conclusion and Further Work}
 
-\begin{center}
+A test performance summary of some of the model experiments from~\secref{sec:experiments} is presented in~\tabref{tab:experiment-summary}.
+
+\begin{table}[H]
+  \centering
   \begin{tabular}{lrrrr}
     \toprule
-    {} &                           IoU &                       Accuracy &                      Precision &                         Recall \\
-    Model             &                               &                                &                                &                                \\
+    Model &                           IoU &                       Accuracy &                      Precision &                         Recall \\
     \midrule
     RGB               &                        0.9276 &                        99.07\% &                        88.30\% &                        88.06\% \\
     LiDAR             &                        0.9392 &                        99.29\% & \textcolor{darkgreen}{89.30\%} &                        89.02\% \\
-    Combined          & \textcolor{darkgreen}{0.9464} & \textcolor{darkgreen}{99.35\%} &                        89.25\% &                        89.36\% \\
+    Combined data     & \textcolor{darkgreen}{0.9464} & \textcolor{darkgreen}{99.35\%} &                        89.25\% &                        89.36\% \\
     Constant scaling  &                        0.9447 &                        99.34\% &                        89.21\% & \textcolor{darkgreen}{89.38\%} \\
     Soft dice loss    &       \textcolor{red}{0.9139} &       \textcolor{red}{98.73\%} &       \textcolor{red}{87.63\%} &                        87.60\% \\
     Soft Jaccard loss &                        0.9184 &                        98.81\% &                        88.05\% &       \textcolor{red}{87.59\%} \\
     \bottomrule
   \end{tabular}
-\end{center}
+  \caption{%
+    Summary of numerical experiments.
+    All metrics are averages over the test set.
+    The best model metric along each column is annotated in \textcolor{darkgreen}{green}, while the worst model metric is annotated in \textcolor{red}{red}.
+  }%
+  \label{tab:experiment-summary}
+\end{table} 
+%
+We can conclude that LiDAR data is more suitable for segmenting building footprints than RGB data, but by combining LiDAR \emph{and} RGB you end up with a model that performs even better than LiDAR in isolation.
+When it comes to the method of normalizing LiDAR elevation rasters, dividing by a constant, global scaler produces better results than \enquote{dynamic min-max} scaling.
+It remains to be determined if this \enquote{constant} scaling method works in a combined data setting as well.
+
+In a purely quantitative sense the models trained with soft variant losses perform strictly worse than the models trained with binary cross-entropy loss.
+On the other hand, the soft loss models seem to be less prone to overfitting in addition to portraying a general degree of \enquote{common sense} in its predictions, even when they fail.
+Since there are certain properties of both loss types that are preferable to replicate in an \emph{ideal} model, we propose training a model with a combined loss function, $\mathcal{L}^{*}$, in the form
+%
+\begin{equation*}
+  \mathcal{L}^{*}(P; Y, \alpha)
+  =
+  \alpha \cdot \mathcal{L}_{\mathrm{BCE}}(P; Y)
+  +
+  (1 - \alpha) \cdot \mathcal{L}_{\mathrm{SJL}}(P; Y),
+  \quad \alpha \in [0, 1],
+\end{equation*}
+%
+where $\alpha$ is a hyperparameter to be tuned, and the losses $\mathcal{L}_{\mathrm{BCE}}$ and $\mathcal{L}_{\mathrm{SJL}}$ are respectively defined in equation~\eqref{eq:binary-cross-entropy} and \eqref{eq:soft-jaccard-loss}.
+
+Building footprints can be considered a low-fidelity geographic data type.
+In my upcoming master's thesis I will investigate if the methods presented here can be modified in order to predict higher-fidelity targets, specifically targets related to the three-dimensional geometry of roof surfaces.
+The bottom of~\figref{fig:higher-fidelity-data} demonstrates the type of higher-fidelity data that is available in Norway, namely three-dimensional line segments classified into categories such as \enquote{ridge lines}.
+Being able to predict such features accurately from remote sensing data would provide a much more complex understanding of roof surfaces geometries, yielding insight into interesting properties of surfaces such as orientation, shape, and size.
+The number of real world applications using such features is uncountable, and the quality and fidelity of labeled data available in Norway offers an unique opportunity to apply deep learning techniques in order to predict such features from remote sensing data.
+
+\begin{figure}
+  \includegraphics[width=0.75\linewidth]{ortofoto_bygning.png}
+  \includegraphics[width=0.75\linewidth]{ortofoto_linjesegmenter.png}
+  \caption{%
+    \textbf{Top --} Low-fidelity building footprint data marked in \textcolor{purple}{purple}.
+    \textbf{Bottom --} High-fidelity geometric line segments defined from roof geometries. Ridge lines, for example, are shown in \textcolor{red}{red}.
+    \copyright{Kartverket}.
+  }%
+  \label{fig:higher-fidelity-data}
+\end{figure}
+
