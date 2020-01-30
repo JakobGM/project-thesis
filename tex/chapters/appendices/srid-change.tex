@@ -1,7 +1,10 @@
-\texttt{GDAL} can be used to transform data between coordinate systems, e.g.\ converting from GPS to UTM \texttt{32V}:
+\texttt{GDAL} provides the \texttt{gdaltransform} utility for transforming GIS data between coordinate systems, for example converting from GPS to UTM \texttt{32V} here:
+
 \begin{shellcode}
 $ gdaltransform \
     -s_srs EPSG:4236 \
     -t_srs EPSG:25832 \
     ${source_data} ${target}
 \end{shellcode}
+
+Where \texttt{\$} indicates a shell, such as \texttt{bash}, where \texttt{GDAL} has been installed and is available in the \texttt{PATH}.
