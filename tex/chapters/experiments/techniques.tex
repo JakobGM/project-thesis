@@ -54,10 +54,10 @@ As dropout is primarily intended as a measure to prevent overfitting, we will in
   \label{fig:dropout-train-test}
 \end{figure}
 
-The U-Net model without batch normalization largely outperforms the model with batch normalization on the \emph{training} set, having a better IoU evaluation on a 98\% of all training tiles and a mean training IoU of \num{0.974}, which is substantially better than the batch-normalized model with a mean training IoU of \num{0.960}.
-What is of particular interest, though, is that the batch-normalized model generalizes \emph{much} better to the test tile set, so much so that it narrowly outperforms the model without batch normalization on the test set.
-The 98\% / 2\% split is approximately reduced to an even 50\% / 50\% split, making the two models tied.
-The mean test IoU of the batch normalized model, \num{0.934}, is also better than the mean test IoU of the non-normalized model, \num{0.930}.
+The U-Net model \emph{without} dropout largely outperforms the model with dropout on the \emph{training} set, having a better IoU evaluation on about 98\% of all training tiles and a mean training IoU of \num{0.958}, which is substantially better than the dropout model with a mean training IoU of \num{0.946}.
+What is of particular interest, though, is that the dropout model generalizes \emph{much} better to the test tile set, so much so that it narrowly outperforms the model without dropout on the test set.
+The 98\% / 2\% split is reduced to a more even 53\% / 47\% split, making the two models approximately tied.
+The mean test IoU of the dropout model, \num{0.922}, is also better than the mean test IoU of the non-dropout model, \num{0.918}.
 Altogether this can be considered quite strong evidence in favor of max-pooling dropout having reduced the overfitting of our model.
 The application of dropout during model training likely increases the generalizability of our model as it improves its ability to predict building outlines from previously unseen remote sensing data.
 

@@ -32,7 +32,7 @@ A comparison over the training and test splits of the two models is presented in
 \end{figure}
 
 The \enquote{constant scaling} normalization method does in fact perform better than the \enquote{dynamic scaling} normalization method over all three sample splits: training, validation, and test.
-When normalization method is changed to the constant scaling method, the mean test IoU metric improves from \num{0.934} to \num{0.938}, and 60\% of the test cases perform better.
+When the normalization method is changed to the constant scaling method, the mean test IoU metric improves from \num{0.922} to \num{0.929}, and 63\% of the test cases perform better.
 Some of the test cases where the constant scaling model performs better are tiles containing large, flat areas that are \emph{not} part of a roof, for example cadastral plots situated along the shoreline as presented in~\figref{fig:constant-better-than-dynamic}.
 Although we have established that constant scaling is an overall improvement over dynamic scaling, we have not been able to identify any further problem characteristics where constant scaling generally performs better.
 It was hypothesized that constant scaling would outperform dynamic scaling whenever the elevation range within a given tile became very small or very large, this being due to the lossy compression of dynamic scaling forcing all elevation values into the $[0, 1]$ value range.

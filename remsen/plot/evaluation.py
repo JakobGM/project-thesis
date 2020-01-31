@@ -127,7 +127,7 @@ def metric_correlation(
     metric: str = "iou",
     splits: Iterable[str] = ("train", "test"),
     labels: Optional[Tuple[str, str]] = None,
-    minimum_building_area: float = 4,
+    minimum_building_area: float = 0,
     mask_color: bool = False,
     save: bool = False,
 ):
@@ -140,7 +140,7 @@ def metric_correlation(
     dfy = Trainer.evaluation_statistics(name=y_model)[columns]
 
     # Remove all rows with building area less than the given amount
-    dfx = dfx[dfx["mask"] > minimum_building_area * 16]
+    dfx = dfx[dfx["mask"] >= minimum_building_area * 16]
 
     # Join the two model results
     metrics = dfx.merge(dfy, on=["cadastre", "tile", "split"], how="inner")
@@ -238,8 +238,7 @@ def metric_correlation(
             linestyle="--",
         )
         ax.text(
-            x=x_min + 0.03,
-            # y=y_mean - 0.02,
+            x=x_min + 0.125,
             y=y_mean + 0.5 * (y_max - y_mean),
             s=r"$\mathbf{\overline{IoU} = " + f"{y_mean:0.3f}" + r"}$",
             color=colors[1],

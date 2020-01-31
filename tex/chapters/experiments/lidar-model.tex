@@ -49,7 +49,7 @@ The two models are compared tile-by-tile in the IoU scatter plot presented in~\f
 \end{figure}
 
 If the RGB and LiDAR models would have been indistinguishable w.r.t.\ predictive performance then the scatter points would be entirely situated along the diagonal black lines in~\figref{fig:rgb-lidar-correlation}, which is clearly not the case here due to the LiDAR model outperforming the RGB model.
-While LiDAR is on average better than RGB, RGB still outperforms LiDAR in about \SI{14}{\percent} of the test cases.
+While LiDAR is on average better than RGB, RGB still outperforms LiDAR in about \SI{21}{\percent} of the test cases.
 This may be partly caused by the randomness introduced into the training procedure, and thus the final model parametrization, but may also be an indication of RGB containing predictive information that LiDAR does not possess in certain cases.
 If this is the case, then a combined data model which uses both LiDAR \emph{and} RGB might outperform both of these single data source models.
 % Another thing to notice is how discrepancy between the train split and test split when it comes to the mean IoU metric is much larger for the RGB model (\num{0.04}) than for the LiDAR model (\num{0.026}).
