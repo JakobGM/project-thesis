@@ -358,6 +358,7 @@ def model_comparison(models: List[str], titles: Optional[List[str]] = None):
 
     for model in models:
         stats = Trainer.evaluation_statistics(name=model)
+        stats = stats[stats.split == "test"]
         iou.append(stats.iou.mean())
         binary_accuracy.append(stats.binary_accuracy.mean())
         precision.append(stats.precision.mean())

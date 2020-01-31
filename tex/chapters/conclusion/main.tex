@@ -9,12 +9,12 @@ A test performance summary of some of the model experiments from~\secref{sec:exp
     \toprule
     Model &                           IoU &                       Accuracy &                      Precision &                         Recall \\
     \midrule
-    RGB               &                        0.9276 &                        99.07\% &                        88.30\% &                        88.06\% \\
-    LiDAR             &                        0.9392 &                        99.29\% & \textcolor{darkgreen}{89.30\%} &                        89.02\% \\
-    Combined data     & \textcolor{darkgreen}{0.9464} & \textcolor{darkgreen}{99.35\%} &                        89.25\% &                        89.36\% \\
-    Constant scaling  &                        0.9447 &                        99.34\% &                        89.21\% & \textcolor{darkgreen}{89.38\%} \\
-    Soft dice loss    &       \textcolor{red}{0.9139} &       \textcolor{red}{98.73\%} &       \textcolor{red}{87.63\%} &                        87.60\% \\
-    Soft Jaccard loss &                        0.9184 &                        98.81\% &                        88.05\% &       \textcolor{red}{87.59\%} \\
+    RGB               &       \textcolor{red}{0.9005} &                        98.67\% &       \textcolor{red}{87.85\%} &       \textcolor{red}{87.26\%} \\
+    LiDAR             &                        0.9216 &                        99.03\% &                        89.21\% &                        88.92\% \\
+    Combined          & \textcolor{darkgreen}{0.9304} & \textcolor{darkgreen}{99.12\%} & \textcolor{darkgreen}{89.30\%} &                        89.29\% \\
+    Constant scaling  &                        0.9292 &                        99.10\% &                        89.22\% & \textcolor{darkgreen}{89.33\%} \\
+    Soft dice loss    &                        0.9039 &       \textcolor{red}{98.58\%} &                        87.90\% &                        87.97\% \\
+    Soft Jaccard loss &                        0.9081 &                        98.64\% &                        88.38\% &                        87.86\% \\
     \bottomrule
   \end{tabular}
   \caption{%
